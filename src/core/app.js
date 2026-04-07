@@ -283,24 +283,12 @@ export const app = {
                             ${diasRestantes > 0 ? `<small>${diasRestantes} días</small>` : ''}
                         </div>
                     ` : ''}
-                    <button onclick="window.app.openConfiguracion()" class="btn-icon" title="Configuración">
-                        ⚙️
-                    </button>
-                    <button onclick="window.app.logout()" class="btn-logout" title="Cerrar sesión">
-                        🚪
-                    </button>
+                    <!-- Los botones se agregarán aquí dinámicamente -->
                 </div>
             </div>
         `;
         
-        // Evento para menú móvil
-        const mobileBtn = document.getElementById('mobile-menu-btn');
-        if (mobileBtn) {
-            mobileBtn.addEventListener('click', () => {
-                const sidebar = document.getElementById('app-sidebar');
-                sidebar.classList.toggle('open');
-            });
-        }
+        // Los botones se agregarán después por ThemeSwitcher
     },
 
     // Renderizar footer
