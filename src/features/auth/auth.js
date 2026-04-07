@@ -4,6 +4,7 @@
 
 import { app } from '../../core/app.js';
 import { router } from '../../core/router.js';
+import { utils } from '../../core/utils.js';
 
 console.log('🔐 Auth Feature cargado');
 
@@ -30,7 +31,8 @@ export const auth = {
     handleLogin: async function(e) {
         e.preventDefault();
         
-        const clave = document.getElementById('license-key')?.value.trim().toUpperCase();
+        const claveInput = document.getElementById('license-key');
+        const clave = claveInput?.value.trim().toUpperCase();
         
         if (!clave) {
             this.mostrarError('Ingresa una clave de licencia');
@@ -40,7 +42,7 @@ export const auth = {
         const licenciaData = this.licenciasValidas[clave];
         
         if (!licenciaData) {
-            this.mostrarError('Clave inválida');
+            this.mostrarError('Clave inválida. Usa una de prueba.');
             return;
         }
         
@@ -56,10 +58,11 @@ export const auth = {
         
         // Guardar licencia
         app.setLicencia(licencia);
-        localStorage.setItem('barberhub_licencia', JSON.stringify(licencia));
+        
+        // Mostrar éxito
+        this.mostrarExito('✅ Licencia ' + licencia.tipo + ' activada. Redirigiendo...');
         
         // Navegar a dashboard
-        this.mostrarExito('Licencia activada. Redirigiendo...');
         setTimeout(() => {
             router.navegar('/dashboard');
         }, 1500);
@@ -68,15 +71,16 @@ export const auth = {
     mostrarError: function(mensaje) {
         const errorEl = document.getElementById('auth-error');
         if (errorEl) {
-            errorEl.textContent = '❌ ' + mensaje;
+            errorEl.textContent = mensaje;
             errorEl.style.display = 'block';
+            setTimeout(() => errorEl.style.display = 'none', 5000);
         }
     },
 
     mostrarExito: function(mensaje) {
         const successEl = document.getElementById('auth-success');
         if (successEl) {
-            successEl.textContent = '✅ ' + mensaje;
+            successEl.textContent = mensaje;
             successEl.style.display = 'block';
         }
     }
