@@ -6,6 +6,7 @@ import { router } from './router.js';
 import { storage } from './storage.js';
 import { utils } from './utils.js';
 import { Sidebar } from '../components/Sidebar.js';
+import { ThemeSwitcher } from '../components/ThemeSwitcher.js';
 
 console.log('🏗️ Core App cargado');
 
@@ -49,6 +50,9 @@ export const app = {
             this.renderHeader();
             Sidebar.render();
             this.renderFooter();
+            
+            // ✅ INICIALIZAR THEME SWITCHER AQUÍ
+            ThemeSwitcher.init(); 
             
             // Configurar eventos globales
             this.configurarEventosGlobales();
