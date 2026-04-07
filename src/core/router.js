@@ -1,117 +1,159 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (PATHS ABSOLUTOS PARA DYNAMIC IMPORT)
+// BARBERHUB - ROUTER (CORREGIDO)
 // ─────────────────────────────────────────────────────────────────────
 
-import { routes } from '../config/routes.js';
-
-console.log('🧭 Router cargado');
-
-// ✅ Detectar base path para GitHub Pages
-// Si la app está en https://usuario.github.io/repo/, el basePath es /repo
-const getBasePath = () => {
-    const pathname = window.location.pathname;
-    // Para GitHub Pages: /username/repo/ → extraer /repo
-    const parts = pathname.split('/').filter(p => p);
-    if (parts.length >= 2 && parts[0] === 'barberhub') {
-        return '/barberhub';
-    }
-    return '';
-};
-
-const BASE_PATH = getBasePath();
-
-// ✅ Router object
-const routerObj = {
-    rutaActual: null,
-
-    navegar: function(ruta, params = {}) {
-        console.log('🧭 Navegando a:', ruta);
-        window.location.hash = `#${ruta}`;
-        this.manejarRuta(ruta, params);
+export const router = {
+    rutas: {
+        '/': 'dashboard',
+        '/dashboard': 'dashboard',
+        '/auth': 'auth',
+        '/clientes': 'clientes',
+        '/cortes': 'cortes',
+        '/inventario': 'inventario',
+        '/caja': 'caja',
+        '/reportes': 'reportes',
+        '/configuracion': 'configuracion'
     },
 
-    manejarRuta: async function(rutaForzada = null, params = {}) {
-        const hash = window.location.hash.replace('#', '');
-        const urlParams = new URLSearchParams(window.location.search);
-        const ruta = rutaForzada || hash || urlParams.get('route') || '/dashboard';
+    // Determinar base path para GitHub Pages
+    getBasePath: function() {
+        // Detecta si está en subdirectorio o en root
+        const pathname = window.location.pathname;
+        if (pathname.includes('/barberhub/')) {
+            return '/barberhub';
+        }
+        return '';
+    },
+
+    navegar: function(ruta, agregarHistorial = true) {
+        const basePath = this.getBasePath();
+        const nuevaUrl = basePath + ruta;
         
-        const rutaConfig = routes[ruta];
-        
-        if (!rutaConfig) {
-            console.error('❌ Ruta no encontrada:', ruta);
-            this.navegar('/404');
-            return;
+        if (agregarHistorial) {
+            window.history.pushState({}, '', nuevaUrl);
         }
         
-        // Verificar autenticación usando window.app (evita ciclo de imports)
-        if (rutaConfig.requiereAuth && !window.app?.estado?.licencia) {
-            this.navegar('/auth');
-            return;
+        this.manejarRuta();
+    },
+
+    manejarRuta: async function() {
+        const basePath = this.getBasePath();
+        let rutaActual = window.location.pathname;
+        
+        // Remover base path si existe
+        if (basePath && rutaActual.startsWith(basePath)) {
+            rutaActual = rutaActual.slice(basePath.length) || '/';
         }
         
-        if (rutaConfig.feature) {
-            await this.cargarFeature(rutaConfig.feature);
+        // Obtener feature name
+        let featureName = this.rutas[rutaActual];
+        if (!featureName) {
+            featureName = 'dashboard';
         }
         
-        await this.renderizarVista(rutaConfig, params);
-        this.rutaActual = ruta;
-        document.title = `${rutaConfig.titulo} - BarberHub`;
+        console.log('📍 Navegando a:', rutaActual, 'Feature:', featureName);
+        
+        // Cargar CSS y HTML del feature
+        await this.cargarFeature(featureName);
+        await this.renderizarVista(featureName);
+        
+        // Actualizar estado del app
+        if (window.app && window.app.cargarFeature) {
+            window.app.cargarFeature(featureName);
+        }
     },
 
     cargarFeature: async function(featureName) {
-        console.log('🔌 Cargando feature:', featureName);
+        const basePath = this.getBasePath();
         
-        // ✅ CSS: path absoluto desde el dominio root
-        const cssPath = `${BASE_PATH}/src/features/${featureName}/${featureName}.css`;
+        // ✅ CORRECCIÓN: Usar paths correctos para GitHub Pages
+        const cssPath = `${basePath}/src/features/${featureName}/${featureName}.css`;
         
-        const featureCss = document.getElementById('feature-css');
-        if (featureCss) {
-            featureCss.href = cssPath;
+        console.log('🎨 Cargando CSS:', cssPath);
+        
+        // Cargar CSS del feature
+        let featureCss = document.getElementById('feature-css');
+        if (!featureCss) {
+            featureCss = document.createElement('link');
+            featureCss.id = 'feature-css';
+            featureCss.rel = 'stylesheet';
+            document.head.appendChild(featureCss);
         }
+        
+        featureCss.href = cssPath;
+        
+        // Esperar un poco para que cargue el CSS
+        return new Promise(resolve => setTimeout(resolve, 100));
     },
 
-    renderizarVista: async function(rutaConfig, params) {
-        const main = document.getElementById('app-main');
-        if (!main) { console.error('❌ No se encontró #app-main'); return; }
+    renderizarVista: async function(featureName) {
+        const basePath = this.getBasePath();
+        const container = document.getElementById('app-view');
+        
+        if (!container) {
+            console.error('❌ Contenedor app-view no encontrado');
+            return;
+        }
+        
+        // ✅ CORRECCIÓN: Path correcto para HTML
+        const htmlPath = `${basePath}/src/features/${featureName}/${featureName}.html`;
+        
+        console.log('📄 Cargando HTML:', htmlPath);
         
         try {
-            // ✅ CORRECCIÓN CLAVE: Paths absolutos desde el dominio root para dynamic import
-            const featurePath = `${BASE_PATH}/src/features/${rutaConfig.feature}`;
+            const response = await fetch(htmlPath);
             
-            // Cargar HTML con fetch (path absoluto)
-            const htmlResponse = await fetch(`${featurePath}/${rutaConfig.feature}.html`);
-            if (!htmlResponse.ok) throw new Error(`HTML: ${htmlResponse.status} - ${featurePath}/${rutaConfig.feature}.html`);
-            const html = await htmlResponse.text();
-            main.innerHTML = html;
-            
-            // ✅ CORRECCIÓN CLAVE: Dynamic import con path absoluto
-            // El import() se resuelve desde el dominio root, no desde el archivo JS
-            const module = await import(`${featurePath}/${rutaConfig.feature}.js`);
-            if (module.init) {
-                module.init(params);
+            if (!response.ok) {
+                throw new Error(`HTML: ${response.status} - ${htmlPath}`);
             }
             
-            console.log('✅ Vista renderizada:', rutaConfig.feature);
+            const html = await response.text();
+            container.innerHTML = html;
+            
+            // Cargar el JS del feature después de insertar el HTML
+            await this.cargarJavaScript(featureName);
+            
+            console.log(`✅ Vista ${featureName} cargada correctamente`);
+            
         } catch (error) {
             console.error('❌ Error cargando vista:', error);
-            main.innerHTML = `
-                <div style="text-align:center;padding:50px;">
-                    <h2 style="color:#f44336;">❌ Error: ${error.message}</h2>
-                    <p>Verifica que los archivos existen en GitHub</p>
-                    <button onclick="window.location.hash='#/auth'" 
-                            style="margin-top:20px;padding:15px 30px;background:#1a1a1a;color:white;border:none;border-radius:10px;cursor:pointer;">
-                        ↩️ Volver a Login
-                    </button>
+            container.innerHTML = `
+                <div class="error-container">
+                    <h2>⚠️ Error al cargar la página</h2>
+                    <p>No se pudo cargar ${featureName}</p>
+                    <p class="error-details">${error.message}</p>
+                    <button onclick="location.reload()">Recargar</button>
                 </div>
             `;
         }
     },
 
-    volver: function() {
-        history.back();
+    cargarJavaScript: async function(featureName) {
+        const basePath = this.getBasePath();
+        
+        // Remover script anterior si existe
+        const oldScript = document.getElementById('feature-script');
+        if (oldScript) {
+            oldScript.remove();
+        }
+        
+        // Crear nuevo script
+        const scriptPath = `${basePath}/src/features/${featureName}/${featureName}.js`;
+        console.log('📦 Cargando JS:', scriptPath);
+        
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.id = 'feature-script';
+            script.src = scriptPath;
+            script.onload = () => {
+                console.log(`✅ JS ${featureName} cargado`);
+                resolve();
+            };
+            script.onerror = () => {
+                console.warn(`⚠️ No se encontró JS para ${featureName}`);
+                resolve(); // Resolvemos igual aunque no haya JS
+            };
+            document.body.appendChild(script);
+        });
     }
 };
-
-// ✅ Exportación explícita con alias
-export { routerObj as router };
-export default routerObj;
