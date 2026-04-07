@@ -1,83 +1,66 @@
-// ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - DASHBOARD FEATURE
-// ─────────────────────────────────────────────────────────────────────
+// src/features/dashboard/dashboard.js
 
-import { app } from '../../core/app.js';
-import { storage } from '../../core/storage.js';
-import { utils } from '../../core/utils.js';
+console.log('📊 Dashboard feature cargado');
 
-console.log('📊 Dashboard Feature cargado');
+async function cargarStats() {
+    try {
+        // Simular carga de datos (reemplazar con llamadas reales a storage)
+        const citasHoy = await window.storage?.obtenerTodos('citas') || [];
+        const clientes = await window.storage?.obtenerTodos('clientes') || [];
+        
+        const citasDeHoy = citasHoy.filter(cita => {
+            const fechaCita = new Date(cita.fecha);
+            const hoy = new Date();
+            return fechaCita.toDateString() === hoy.toDateString();
+        });
+        
+        document.getElementById('citas-hoy').textContent = citasDeHoy.length;
+        document.getElementById('clientes-totales').textContent = clientes.length;
+        document.getElementById('ingresos-hoy').textContent = `$${citasDeHoy.length * 350}`;
+        document.getElementById('servicios-hoy').textContent = citasDeHoy.length;
+        
+    } catch (error) {
+        console.error('Error cargando stats:', error);
+    }
+}
 
-export const dashboard = {
-    init: async function(params) {
-        console.log('📊 Dashboard Feature inicializado');
-        await this.cargarEstadisticas();
-        await this.cargarCitasHoy();
-    },
-
-    cargarEstadisticas: async function() {
-        const hoy = utils.fechaActual();
+async function cargarProximasCitas() {
+    const container = document.getElementById('proximas-citas');
+    if (!container) return;
+    
+    try {
+        const citas = await window.storage?.obtenerTodos('citas') || [];
+        const proximas = citas.slice(0, 5);
         
-        // Obtener citas de hoy
-        const citas = await storage.obtenerTodos('citas');
-        const citasHoy = citas.filter(c => c.fecha === hoy);
-        
-        // Calcular ingresos
-        const ingresos = citasHoy
-            .filter(c => c.estado === 'completada')
-            .reduce((sum, c) => sum + (c.precio || 0), 0);
-        
-        // Clientes únicos
-        const clientesUnicos = new Set(citasHoy.map(c => c.clienteId)).size;
-        
-        // Actualizar UI
-        document.getElementById('stat-citas-hoy').textContent = citasHoy.length;
-        document.getElementById('stat-clientes-hoy').textContent = clientesUnicos;
-        document.getElementById('stat-ingresos-hoy').textContent = utils.formatoMoneda(ingresos);
-        document.getElementById('stat-barberos-hoy').textContent = '0'; // Implementar después
-    },
-
-    cargarCitasHoy: async function() {
-        const hoy = utils.fechaActual();
-        const citas = await storage.obtenerTodos('citas');
-        const citasHoy = citas.filter(c => c.fecha === hoy);
-        
-        const container = document.getElementById('citas-hoy-lista');
-        
-        if (!container) return;
-        
-        if (citasHoy.length === 0) {
-            container.innerHTML = `
-                <p style="text-align:center;color:var(--color-secondary);padding:20px;">
-                    📅 No hay citas para hoy
-                </p>
-            `;
+        if (proximas.length === 0) {
+            container.innerHTML = '<p class="text-center">No hay citas programadas</p>';
             return;
         }
         
-        const clientes = await storage.obtenerTodos('clientes');
-        const barberos = await storage.obtenerTodos('barberos');
-        
-        container.innerHTML = citasHoy.map(c => {
-            const cliente = clientes.find(cl => cl.id == c.clienteId);
-            const barbero = barberos.find(b => b.id == c.barberoId);
-            
-            return `
-                <div class="cita-item">
-                    <div class="cita-info">
-                        <strong>${c.hora || 'N/A'} - ${cliente ? cliente.nombre : 'Cliente'}</strong>
-                        <small style="color:var(--color-secondary);">
-                            ${barbero ? barbero.nombre : 'Sin barbero'}
-                        </small>
+        container.innerHTML = proximas.map(cita => `
+            <div class="cita-item card-circular" style="padding: 15px; margin-bottom: 10px; background: var(--bg-tertiary);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>${cita.clienteNombre || 'Cliente'}</strong>
+                        <p style="margin: 5px 0 0; font-size: 0.8rem;">${cita.servicio || 'Corte'}</p>
                     </div>
-                    <span class="estado-cita estado-${c.estado || 'pendiente'}">
-                        ${c.estado || 'pendiente'}
-                    </span>
+                    <div style="text-align: right;">
+                        <span style="color: var(--primary);">${cita.hora || '10:00'}</span>
+                        <p style="margin: 5px 0 0; font-size: 0.7rem;">${cita.estado || 'Pendiente'}</p>
+                    </div>
                 </div>
-            `;
-        }).join('');
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error cargando citas:', error);
     }
-};
+}
 
-// Exportar init para el router
-export const init = dashboard.init.bind(dashboard);
+// Inicializar dashboard
+document.addEventListener('DOMContentLoaded', () => {
+    cargarStats();
+    cargarProximasCitas();
+});
+
+export { cargarStats, cargarProximasCitas };
