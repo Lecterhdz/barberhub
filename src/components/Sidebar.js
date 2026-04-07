@@ -2,7 +2,7 @@
 // BARBERHUB - SIDEBAR COMPONENT
 // ─────────────────────────────────────────────────────────────────────
 
-import { router } from './src/core/router.js';
+import { router } from '../core/router.js';
 
 console.log('🧩 Sidebar Component cargado');
 
