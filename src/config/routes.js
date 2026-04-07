@@ -1,63 +1,90 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - CONFIGURACIÓN DE RUTAS
+// BARBERHUB - ROUTER (IMPORTS RELATIVOS AL HTML)
 // ─────────────────────────────────────────────────────────────────────
 
-export const routes = {
-    '/auth': {
-        feature: 'auth',
-        titulo: 'Iniciar Sesión',
-        requiereAuth: false,
-        permisos: ['public']
+// ✅ IMPORTANTE: Paths relativos al index.html (raíz del repo)
+import { routes } from './src/config/routes.js';
+import { app } from './src/core/app.js';
+
+console.log('🧭 Router cargado');
+
+export const router = {
+    rutaActual: null,
+
+    navegar: function(ruta, params = {}) {
+        console.log('🧭 Navegando a:', ruta);
+        window.location.hash = `#${ruta}`;
+        this.manejarRuta(ruta, params);
     },
-    '/dashboard': {
-        feature: 'dashboard',
-        titulo: 'Dashboard',
-        requiereAuth: true,
-        permisos: ['todos']
+
+    manejarRuta: async function(rutaForzada = null, params = {}) {
+        const hash = window.location.hash.replace('#', '');
+        const urlParams = new URLSearchParams(window.location.search);
+        const ruta = rutaForzada || hash || urlParams.get('route') || '/dashboard';
+        
+        const rutaConfig = routes[ruta];
+        
+        if (!rutaConfig) {
+            console.error('❌ Ruta no encontrada:', ruta);
+            this.navegar('/404');
+            return;
+        }
+        
+        if (rutaConfig.requiereAuth && !app.estado.licencia) {
+            this.navegar('/auth');
+            return;
+        }
+        
+        if (rutaConfig.feature) {
+            await app.cargarFeature(rutaConfig.feature);
+        }
+        
+        await this.renderizarVista(rutaConfig, params);
+        this.rutaActual = ruta;
+        document.title = `${rutaConfig.titulo} - BarberHub`;
     },
-    '/citas': {
-        feature: 'citas',
-        titulo: 'Citas',
-        requiereAuth: true,
-        permisos: ['todos']
+
+    renderizarVista: async function(rutaConfig, params) {
+        const main = document.getElementById('app-main');
+        if (!main) {
+            console.error('❌ No se encontró #app-main');
+            return;
+        }
+        
+        try {
+            // ✅ Paths relativos al index.html
+            const featurePath = `./src/features/${rutaConfig.feature}`;
+            
+            // Cargar HTML
+            const htmlResponse = await fetch(`${featurePath}/${rutaConfig.feature}.html`);
+            if (!htmlResponse.ok) throw new Error(`HTML: ${htmlResponse.status}`);
+            const html = await htmlResponse.text();
+            main.innerHTML = html;
+            
+            // Cargar JS del feature
+            const module = await import(`${featurePath}/${rutaConfig.feature}.js`);
+            if (module.init) {
+                module.init(params);
+            }
+            
+            console.log('✅ Vista renderizada:', rutaConfig.feature);
+        } catch (error) {
+            console.error('❌ Error cargando vista:', error);
+            main.innerHTML = `
+                <div style="text-align:center;padding:50px;">
+                    <h2 style="color:#f44336;">❌ Error: ${error.message}</h2>
+                    <button onclick="window.location.hash='#/auth'" 
+                            style="margin-top:20px;padding:15px 30px;background:#1a1a1a;color:white;border:none;border-radius:10px;cursor:pointer;">
+                        ↩️ Volver a Login
+                    </button>
+                </div>
+            `;
+        }
     },
-    '/clientes': {
-        feature: 'clientes',
-        titulo: 'Clientes',
-        requiereAuth: true,
-        permisos: ['todos']
-    },
-    '/barberos': {
-        feature: 'barberos',
-        titulo: 'Barberos',
-        requiereAuth: true,
-        permisos: ['admin']
-    },
-    '/servicios': {
-        feature: 'servicios',
-        titulo: 'Servicios',
-        requiereAuth: true,
-        permisos: ['admin']
-    },
-    '/productos': {
-        feature: 'productos',
-        titulo: 'Productos',
-        requiereAuth: true,
-        permisos: ['todos']
-    },
-    '/reportes': {
-        feature: 'reportes',
-        titulo: 'Reportes',
-        requiereAuth: true,
-        permisos: ['admin']
-    },
-    '/404': {
-        feature: 'auth',
-        titulo: 'Error',
-        requiereAuth: false,
-        permisos: ['public']
+
+    volver: function() {
+        history.back();
     }
 };
 
-// Exportar para uso global
-window.routes = routes;
+window.router = router;
