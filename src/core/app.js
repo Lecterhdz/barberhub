@@ -17,6 +17,7 @@ export const app = {
         featureActivo: null
     },
 
+    // En app.js, modifica la función init:
     init: async function() {
         console.log('💈 BarberHub iniciando...');
         
@@ -29,20 +30,25 @@ export const app = {
         // Verificar autenticación
         const autenticado = await this.verificarAuth();
         
+        // Renderizar header y sidebar siempre
+        this.renderHeader();
+        Sidebar.render();
+        this.renderFooter();
+        
         if (autenticado) {
-            // Renderizar header y sidebar
-            this.renderHeader();
-            Sidebar.render();
-            this.renderFooter();
-            
-            // Navegar a dashboard
+            // Navegar a dashboard (usando hash)
             router.navegar('/dashboard');
         } else {
-            // Navegar a login
+            // Navegar a login (usando hash)
             router.navegar('/auth');
         }
         
-        // Escuchar cambios de ruta
+        // Escuchar cambios de ruta (hashchange)
+        window.addEventListener('hashchange', () => {
+            router.manejarRuta();
+        });
+        
+        // También manejar popstate para compatibilidad
         window.addEventListener('popstate', () => {
             router.manejarRuta();
         });
