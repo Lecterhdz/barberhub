@@ -93,13 +93,22 @@ export const app = {
         router.navegar('/auth');
     },
 
+    // En src/core/app.js, reemplaza cargarFeature con:
+    
     cargarFeature: async function(featureName) {
         console.log('🔌 Cargando feature:', featureName);
         
-        // Actualizar CSS de feature
+        // ✅ CORRECCIÓN: Path absoluto desde repo root
+        const BASE_PATH = window.location.pathname.includes('/barberhub/') 
+            ? '/barberhub' 
+            : '';
+        
+        const cssPath = `${BASE_PATH}/src/features/${featureName}/${featureName}.css`;
+        
+        // Actualizar CSS del feature
         const featureCss = document.getElementById('feature-css');
         if (featureCss) {
-            featureCss.href = `../src/features/${featureName}/${featureName}.css`;
+            featureCss.href = cssPath;
         }
         
         this.estado.featureActivo = featureName;
