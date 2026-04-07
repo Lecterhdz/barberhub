@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (CORREGIDO PARA TU ESTRUCTURA)
+// BARBERHUB - ROUTER (HASH-BASED PARA GITHUB PAGES)
 // ─────────────────────────────────────────────────────────────────────
 
 export const router = {
@@ -15,62 +15,47 @@ export const router = {
         '/configuracion': 'configuracion'
     },
 
-    // Detectar si estamos en GitHub Pages
-    getBasePath: function() {
-        // GitHub Pages sirve desde /barberhub/ o desde root?
-        const pathname = window.location.pathname;
+    // Obtener la ruta actual desde el hash
+    getCurrentRoute: function() {
+        let hash = window.location.hash;
+        // Remover el # inicial
+        hash = hash.substring(1);
         
-        // Si el path contiene /barberhub/ o similar
-        if (pathname.includes('/barberhub/')) {
-            return '/barberhub';
+        // Si está vacío, usar /
+        if (!hash || hash === '') {
+            return '/';
         }
         
-        // Si estamos en una subcarpeta (ej: /nombre-repo/)
-        const parts = pathname.split('/').filter(p => p);
-        if (parts.length > 0 && !parts[0].includes('.')) {
-            // Podría ser un repo name
-            return `/${parts[0]}`;
+        // Remover query params si existen
+        const queryIndex = hash.indexOf('?');
+        if (queryIndex !== -1) {
+            hash = hash.substring(0, queryIndex);
         }
         
-        return '';
+        return hash;
     },
 
     navegar: function(ruta, agregarHistorial = true) {
-        const basePath = this.getBasePath();
-        const nuevaUrl = basePath + ruta;
+        // Usar hash para la navegación
+        const nuevaUrl = `#${ruta}`;
         
         if (agregarHistorial) {
-            window.history.pushState({}, '', nuevaUrl);
+            window.location.hash = ruta;
+        } else {
+            window.location.replace(nuevaUrl);
         }
         
+        // Forzar manejo de ruta
         this.manejarRuta();
     },
 
     manejarRuta: async function() {
-        const basePath = this.getBasePath();
-        let rutaActual = window.location.pathname;
-        
-        // Remover base path si existe
-        if (basePath && rutaActual.startsWith(basePath)) {
-            rutaActual = rutaActual.slice(basePath.length) || '/';
-        }
-        
-        // Si está vacío o es solo slash
-        if (!rutaActual || rutaActual === '') {
-            rutaActual = '/';
-        }
+        let rutaActual = this.getCurrentRoute();
         
         // Obtener feature name
         let featureName = this.rutas[rutaActual];
         if (!featureName) {
-            // Intentar con la última parte de la ruta
-            const parts = rutaActual.split('/').filter(p => p);
-            if (parts.length > 0) {
-                featureName = this.rutas[`/${parts[0]}`];
-            }
-            if (!featureName) {
-                featureName = 'dashboard';
-            }
+            featureName = 'dashboard';
         }
         
         console.log('📍 Navegando a:', rutaActual, 'Feature:', featureName);
@@ -83,12 +68,24 @@ export const router = {
         if (window.app && window.app.cargarFeature) {
             window.app.cargarFeature(featureName);
         }
+        
+        // Actualizar sidebar activo
+        this.actualizarSidebarActivo(rutaActual);
+    },
+
+    actualizarSidebarActivo: function(rutaActual) {
+        // Remover clase active de todos los items del sidebar
+        document.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.classList.remove('active');
+            const linkPath = link.getAttribute('href');
+            if (linkPath === rutaActual) {
+                link.classList.add('active');
+            }
+        });
     },
 
     cargarFeatureCSS: async function(featureName) {
-        // Usar rutas relativas como en tu index.html
         const cssPath = `./src/features/${featureName}/${featureName}.css`;
-        
         console.log('🎨 Cargando CSS:', cssPath);
         
         const featureCss = document.getElementById('feature-css');
@@ -100,7 +97,6 @@ export const router = {
     },
 
     renderizarVista: async function(featureName) {
-        // ✅ CORRECCIÓN: Usar 'app-main' como en tu HTML
         const container = document.getElementById('app-main');
         
         if (!container) {
@@ -108,7 +104,6 @@ export const router = {
             return;
         }
         
-        // Usar ruta relativa
         const htmlPath = `./src/features/${featureName}/${featureName}.html`;
         
         console.log('📄 Cargando HTML:', htmlPath);
@@ -155,7 +150,6 @@ export const router = {
             oldScript.remove();
         }
         
-        // Ruta relativa
         const scriptPath = `./src/features/${featureName}/${featureName}.js`;
         console.log('📦 Cargando JS:', scriptPath);
         
@@ -172,10 +166,15 @@ export const router = {
             
             script.onerror = () => {
                 console.warn(`⚠️ No se encontró JS para ${featureName}`);
-                resolve(); // Resolvemos igual aunque no haya JS
+                resolve();
             };
             
             document.body.appendChild(script);
         });
     }
 };
+
+// Escuchar cambios en el hash
+window.addEventListener('hashchange', () => {
+    router.manejarRuta();
+});
