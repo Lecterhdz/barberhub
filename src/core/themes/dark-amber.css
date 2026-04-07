@@ -1,0 +1,28 @@
+/* ─────────────────────────────────────────────────────────────────────
+   BARBERHUB - DARK AMBER THEME (Negro + Dorado)
+   ───────────────────────────────────────────────────────────────────── */
+
+:root {
+    --color-primary: #1a1a1a;
+    --color-primary-light: #333333;
+    --color-secondary: #FFD700;
+    --color-secondary-light: #FFE55C;
+    --color-accent: #d32f2f;
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+}
+
+.card {
+    border-top: 3px solid var(--color-secondary);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    color: white;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 5px 15px rgba(255,215,0,0.3);
+}
