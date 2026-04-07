@@ -30,8 +30,10 @@ export const app = {
         const autenticado = await this.verificarAuth();
         
         if (autenticado) {
-            // Cargar sidebar
+            // Renderizar header y sidebar
+            this.renderHeader();
             Sidebar.render();
+            this.renderFooter();
             
             // Navegar a dashboard
             router.navegar('/dashboard');
@@ -49,25 +51,26 @@ export const app = {
     },
 
     cargarEstado: async function() {
-        const estadoGuardado = localStorage.getItem('barberhub_estado');
+        const estadoGuardado = storage.localStorage.get('barberhub_estado');
         if (estadoGuardado) {
-            this.estado = { ...this.estado, ...JSON.parse(estadoGuardado) };
+            this.estado = { ...this.estado, ...estadoGuardado };
         }
     },
 
     guardarEstado: function() {
-        localStorage.setItem('barberhub_estado', JSON.stringify(this.estado));
+        storage.localStorage.set('barberhub_estado', this.estado);
     },
 
     verificarAuth: async function() {
-        const licencia = localStorage.getItem('barberhub_licencia');
+        const licencia = storage.localStorage.get('barberhub_licencia');
         if (licencia) {
-            this.estado.licencia = JSON.parse(licencia);
+            this.estado.licencia = licencia;
             
             // Verificar expiración
             if (new Date() > new Date(this.estado.licencia.expiracion)) {
                 this.estado.licencia = null;
-                localStorage.removeItem('barberhub_licencia');
+                storage.localStorage.remove('barberhub_licencia');
+                this.guardarEstado();
                 return false;
             }
             
@@ -76,20 +79,16 @@ export const app = {
         return false;
     },
 
-    setUsuario: function(usuario) {
-        this.estado.usuario = usuario;
-        this.guardarEstado();
-    },
-
     setLicencia: function(licencia) {
         this.estado.licencia = licencia;
+        storage.localStorage.set('barberhub_licencia', licencia);
         this.guardarEstado();
     },
 
     logout: function() {
         this.estado.usuario = null;
         this.estado.licencia = null;
-        localStorage.removeItem('barberhub_licencia');
+        storage.localStorage.remove('barberhub_licencia');
         this.guardarEstado();
         router.navegar('/auth');
     },
@@ -97,24 +96,58 @@ export const app = {
     cargarFeature: async function(featureName) {
         console.log('🔌 Cargando feature:', featureName);
         
-        // Remover CSS de feature anterior
+        // Actualizar CSS de feature
         const featureCss = document.getElementById('feature-css');
         if (featureCss) {
             featureCss.href = `../src/features/${featureName}/${featureName}.css`;
         }
         
         this.estado.featureActivo = featureName;
+    },
+
+    renderHeader: function() {
+        const header = document.getElementById('app-header');
+        if (!header) return;
         
-        // Aquí podrías cargar dinámicamente el JS si no está precargado
-        // const module = await import(`../src/features/${featureName}/${featureName}.js`);
-        // module.init();
+        const licencia = this.estado.licencia;
+        
+        header.innerHTML = `
+            <div class="header-content">
+                <div>
+                    <h1 class="header-title">💈 BarberHub</h1>
+                    <p class="header-subtitle">Gestión Inteligente para Barberías</p>
+                </div>
+                <div class="header-actions">
+                    ${licencia ? `
+                        <div class="license-badge">
+                            ✅ ${licencia.tipo} - Exp: ${utils.formatoFecha(licencia.expiracion)}
+                        </div>
+                    ` : ''}
+                    <button onclick="window.app.logout()" class="btn-logout">
+                        🚪 Salir
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+
+    renderFooter: function() {
+        const footer = document.getElementById('app-footer');
+        if (!footer) return;
+        
+        footer.innerHTML = `
+            <p>© 2026 BarberHub - Gestión Inteligente para Barberías</p>
+            <p style="margin-top:10px;font-size:12px;opacity:0.7;">
+                Los datos se guardan localmente. Exporta regularmente.
+            </p>
+        `;
     }
 };
 
-// Iniciar app cuando DOM esté listo
+// Exportar para uso global
+window.app = app;
+
+// Iniciar cuando DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
-
-// Exportar para uso global en features
-window.app = app;
