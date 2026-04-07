@@ -1,0 +1,32 @@
+/* Tema Oscuro Neón - BarberHub */
+
+[data-theme="dark-neon"] {
+    --theme-gradient: linear-gradient(135deg, #00ff88, #00ffff);
+    --theme-glow: 0 0 20px rgba(0, 255, 136, 0.3);
+    --theme-card-bg: linear-gradient(135deg, #141414, #1e1e1e);
+}
+
+[data-theme="dark-neon"] .stat-card {
+    background: linear-gradient(135deg, #141414, #1e1e1e);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+[data-theme="dark-neon"] .stat-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--theme-glow);
+}
+
+[data-theme="dark-neon"] .btn-primary {
+    background: var(--theme-gradient);
+}
+
+[data-theme="dark-neon"] .sidebar-link.active {
+    background: var(--theme-gradient);
+}
+
+[data-theme="dark-neon"] .header-title {
+    background: var(--theme-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
