@@ -1,0 +1,66 @@
+/* ─────────────────────────────────────────────────────────────────────
+   BARBERHUB - DESIGN TOKENS (VARIABLES CSS)
+   ───────────────────────────────────────────────────────────────────── */
+
+:root {
+    /* Colores Primarios */
+    --color-primary: #1a1a1a;
+    --color-primary-light: #333333;
+    --color-secondary: #FFD700;
+    --color-secondary-light: #FFE55C;
+    
+    /* Colores de Acento */
+    --color-accent: #d32f2f;
+    --color-success: #4CAF50;
+    --color-warning: #FF9800;
+    --color-error: #f44336;
+    --color-info: #2196F3;
+    
+    /* Fondos */
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --bg-dark: #1a1a1a;
+    
+    /* Texto */
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-light: #999999;
+    --text-inverse: #ffffff;
+    
+    /* Bordes */
+    --border-color: #e0e0e0;
+    --border-radius: 10px;
+    --border-radius-lg: 15px;
+    
+    /* Espaciados */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 40px;
+    
+    /* Sombras */
+    --shadow-sm: 0 2px 5px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 15px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
+    
+    /* Tipografía */
+    --font-family: 'Segoe UI', 'Roboto', sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-size-xxl: 36px;
+    
+    /* Transiciones */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    /* Breakpoints */
+    --breakpoint-sm: 640px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-xl: 1280px;
+}
