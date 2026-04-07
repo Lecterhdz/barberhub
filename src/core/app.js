@@ -5,7 +5,7 @@
 import { router } from './router.js';
 import { storage } from './storage.js';
 import { utils } from './utils.js';
-import Sidebar from '../components/Sidebar.js';
+import { Sidebar } from '../components/Sidebar.js';
 
 console.log('🏗️ Core App cargado');
 
