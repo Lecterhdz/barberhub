@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (HASH-BASED PARA GITHUB PAGES)
+// BARBERHUB - ROUTER (Hash-based para GitHub Pages)
 // ─────────────────────────────────────────────────────────────────────
 
 export const router = {
@@ -8,25 +8,26 @@ export const router = {
         '/dashboard': 'dashboard',
         '/auth': 'auth',
         '/clientes': 'clientes',
-        '/cortes': 'cortes',
+        '/citas': 'citas',
+        '/cortes': 'servicios',
+        '/servicios': 'servicios',
         '/inventario': 'inventario',
         '/caja': 'caja',
         '/reportes': 'reportes',
-        '/configuracion': 'configuracion'
+        '/configuracion': 'configuracion',
+        '/config': 'configuracion'
     },
-
-    // Obtener la ruta actual desde el hash
+    
+    // Obtener ruta actual del hash
     getCurrentRoute: function() {
         let hash = window.location.hash;
-        // Remover el # inicial
-        hash = hash.substring(1);
+        hash = hash.substring(1); // Remover #
         
-        // Si está vacío, usar /
         if (!hash || hash === '') {
             return '/';
         }
         
-        // Remover query params si existen
+        // Remover query params
         const queryIndex = hash.indexOf('?');
         if (queryIndex !== -1) {
             hash = hash.substring(0, queryIndex);
@@ -34,143 +35,188 @@ export const router = {
         
         return hash;
     },
-
+    
+    // Navegar a una ruta
     navegar: function(ruta, agregarHistorial = true) {
-        // Usar hash para la navegación
-        const nuevaUrl = `#${ruta}`;
-        
         if (agregarHistorial) {
             window.location.hash = ruta;
         } else {
-            window.location.replace(nuevaUrl);
+            window.location.replace(`#${ruta}`);
         }
-        
-        // Forzar manejo de ruta
         this.manejarRuta();
     },
-
+    
+    // Manejar la ruta actual
     manejarRuta: async function() {
-        let rutaActual = this.getCurrentRoute();
-        
-        // Obtener feature name
+        const rutaActual = this.getCurrentRoute();
         let featureName = this.rutas[rutaActual];
+        
         if (!featureName) {
-            featureName = 'dashboard';
+            // Intentar con la primera parte de la ruta
+            const parts = rutaActual.split('/').filter(p => p);
+            if (parts.length > 0) {
+                featureName = this.rutas[`/${parts[0]}`];
+            }
+            if (!featureName) {
+                featureName = 'dashboard';
+            }
         }
         
         console.log('📍 Navegando a:', rutaActual, 'Feature:', featureName);
         
-        // Cargar CSS y HTML del feature
-        await this.cargarFeatureCSS(featureName);
-        await this.renderizarVista(featureName);
-        
-        // Actualizar estado del app
-        if (window.app && window.app.cargarFeature) {
-            window.app.cargarFeature(featureName);
-        }
+        // Cargar el feature
+        await this.cargarFeature(featureName);
         
         // Actualizar sidebar activo
         this.actualizarSidebarActivo(rutaActual);
     },
-
-    actualizarSidebarActivo: function(rutaActual) {
-        // Remover clase active de todos los items del sidebar
-        document.querySelectorAll('.sidebar-nav a').forEach(link => {
-            link.classList.remove('active');
-            const linkPath = link.getAttribute('href');
-            if (linkPath === rutaActual) {
-                link.classList.add('active');
+    
+    // Cargar feature (CSS + HTML + JS)
+    cargarFeature: async function(featureName) {
+        try {
+            // Cargar CSS
+            await this.cargarCSS(featureName);
+            
+            // Cargar HTML
+            await this.cargarHTML(featureName);
+            
+            // Cargar JS
+            await this.cargarJS(featureName);
+            
+            // Notificar que el feature está listo
+            window.dispatchEvent(new CustomEvent('feature-loaded', {
+                detail: { feature: featureName }
+            }));
+            
+            console.log(`✅ Feature ${featureName} cargado correctamente`);
+            
+        } catch (error) {
+            console.error(`❌ Error cargando feature ${featureName}:`, error);
+            this.mostrarError(featureName, error);
+        }
+    },
+    
+    // Cargar CSS del feature
+    cargarCSS: function(featureName) {
+        return new Promise((resolve) => {
+            const cssPath = `./src/features/${featureName}/${featureName}.css`;
+            const featureCss = document.getElementById('feature-css');
+            
+            if (featureCss) {
+                featureCss.href = cssPath;
+                featureCss.onload = () => resolve();
+                featureCss.onerror = () => {
+                    console.warn(`⚠️ CSS no encontrado: ${cssPath}`);
+                    resolve();
+                };
+            } else {
+                resolve();
+            }
+            
+            // Timeout por si tarda demasiado
+            setTimeout(resolve, 1000);
+        });
+    },
+    
+    // Cargar HTML del feature
+    cargarHTML: function(featureName) {
+        return new Promise(async (resolve, reject) => {
+            const container = document.getElementById('app-main');
+            if (!container) {
+                reject(new Error('Contenedor app-main no encontrado'));
+                return;
+            }
+            
+            const htmlPath = `./src/features/${featureName}/${featureName}.html`;
+            
+            try {
+                const response = await fetch(htmlPath);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const html = await response.text();
+                container.innerHTML = html;
+                resolve();
+            } catch (error) {
+                console.error(`Error cargando HTML: ${htmlPath}`, error);
+                container.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-icon">⚠️</div>
+                        <h2>Error al cargar la página</h2>
+                        <p>No se pudo cargar ${featureName}</p>
+                        <p class="error-details">${error.message}</p>
+                        <button class="btn btn-primary" onclick="location.reload()">
+                            Recargar página
+                        </button>
+                    </div>
+                `;
+                reject(error);
             }
         });
     },
-
-    cargarFeatureCSS: async function(featureName) {
-        const cssPath = `./src/features/${featureName}/${featureName}.css`;
-        console.log('🎨 Cargando CSS:', cssPath);
-        
-        const featureCss = document.getElementById('feature-css');
-        if (featureCss) {
-            featureCss.href = cssPath;
-        }
-        
-        return new Promise(resolve => setTimeout(resolve, 50));
-    },
-
-    renderizarVista: async function(featureName) {
-        const container = document.getElementById('app-main');
-        
-        if (!container) {
-            console.error('❌ Contenedor app-main no encontrado');
-            return;
-        }
-        
-        const htmlPath = `./src/features/${featureName}/${featureName}.html`;
-        
-        console.log('📄 Cargando HTML:', htmlPath);
-        
-        try {
-            const response = await fetch(htmlPath);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${htmlPath}`);
+    
+    // Cargar JS del feature
+    cargarJS: function(featureName) {
+        return new Promise((resolve) => {
+            // Remover script anterior
+            const oldScript = document.getElementById('feature-script');
+            if (oldScript) {
+                oldScript.remove();
             }
             
-            const html = await response.text();
-            container.innerHTML = html;
-            
-            // Cargar el JS del feature
-            await this.cargarJavaScript(featureName);
-            
-            // Disparar evento de carga
-            window.dispatchEvent(new CustomEvent('feature-loaded', { 
-                detail: { feature: featureName } 
-            }));
-            
-            console.log(`✅ Vista ${featureName} cargada correctamente`);
-            
-        } catch (error) {
-            console.error('❌ Error cargando vista:', error);
-            container.innerHTML = `
-                <div class="error-container" style="padding: 40px; text-align: center;">
-                    <h2>⚠️ Error al cargar la página</h2>
-                    <p>No se pudo cargar ${featureName}</p>
-                    <p style="color: #888; font-size: 12px;">${error.message}</p>
-                    <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px;">
-                        Recargar
-                    </button>
-                </div>
-            `;
-        }
-    },
-
-    cargarJavaScript: async function(featureName) {
-        // Remover script anterior si existe
-        const oldScript = document.getElementById('feature-script');
-        if (oldScript) {
-            oldScript.remove();
-        }
-        
-        const scriptPath = `./src/features/${featureName}/${featureName}.js`;
-        console.log('📦 Cargando JS:', scriptPath);
-        
-        return new Promise((resolve) => {
+            const scriptPath = `./src/features/${featureName}/${featureName}.js`;
             const script = document.createElement('script');
             script.id = 'feature-script';
             script.src = scriptPath;
             script.type = 'module';
             
-            script.onload = () => {
-                console.log(`✅ JS ${featureName} cargado`);
-                resolve();
-            };
-            
+            script.onload = () => resolve();
             script.onerror = () => {
-                console.warn(`⚠️ No se encontró JS para ${featureName}`);
+                console.warn(`⚠️ JS no encontrado: ${scriptPath}`);
                 resolve();
             };
             
             document.body.appendChild(script);
+            
+            // Timeout por si tarda demasiado
+            setTimeout(resolve, 2000);
         });
+    },
+    
+    // Actualizar link activo en sidebar
+    actualizarSidebarActivo: function(rutaActual) {
+        const links = document.querySelectorAll('.sidebar-link');
+        links.forEach(link => {
+            const linkPath = link.getAttribute('data-path');
+            if (linkPath === rutaActual) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    },
+    
+    // Mostrar error
+    mostrarError: function(featureName, error) {
+        const container = document.getElementById('app-main');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="error-container">
+                <div class="error-icon">❌</div>
+                <h2>Error de navegación</h2>
+                <p>No se pudo cargar ${featureName}</p>
+                <p class="error-details">${error.message}</p>
+                <div class="error-actions">
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        Recargar
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.router.navegar('/dashboard')">
+                        Ir al Dashboard
+                    </button>
+                </div>
+            </div>
+        `;
     }
 };
 
@@ -178,3 +224,11 @@ export const router = {
 window.addEventListener('hashchange', () => {
     router.manejarRuta();
 });
+
+// Escuchar popstate para retroceso/avance
+window.addEventListener('popstate', () => {
+    router.manejarRuta();
+});
+
+// Exportar para uso global
+window.router = router;
