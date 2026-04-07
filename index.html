@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>BarberHub - Gestión Inteligente</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💈</text></svg>">
+    
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="../src/styles/variables.css">
+    <link rel="stylesheet" href="../src/styles/base.css">
+    <link rel="stylesheet" href="../src/styles/layout.css">
+    <link rel="stylesheet" href="../src/core/themes/dark-amber.css">
+    
+    <!-- Feature Styles (se cargan dinámicamente) -->
+    <link rel="stylesheet" href="../src/features/auth/auth.css" id="feature-css">
+</head>
+<body>
+    <!-- App Container -->
+    <div id="app">
+        <!-- Header (inyectado por core) -->
+        <header id="app-header"></header>
+        
+        <!-- Main Content (cambiado por router) -->
+        <main id="app-main"></main>
+        
+        <!-- Sidebar (inyectado por core) -->
+        <aside id="app-sidebar"></aside>
+        
+        <!-- Footer (inyectado por core) -->
+        <footer id="app-footer"></footer>
+    </div>
+
+    <!-- Core Scripts (siempre cargados) -->
+    <script type="module" src="../src/core/utils.js"></script>
+    <script type="module" src="../src/core/storage.js"></script>
+    <script type="module" src="../src/core/router.js"></script>
+    <script type="module" src="../src/core/app.js"></script>
+    
+    <!-- Config -->
+    <script type="module" src="../src/config/firebase.js"></script>
+    <script type="module" src="../src/config/routes.js"></script>
+    
+    <!-- Components -->
+    <script type="module" src="../src/components/Button.js"></script>
+    <script type="module" src="../src/components/Card.js"></script>
+    <script type="module" src="../src/components/Modal.js"></script>
+    <script type="module" src="../src/components/Sidebar.js"></script>
+    
+    <!-- Features (se cargan según ruta) -->
+    <script type="module" src="../src/features/auth/auth.js"></script>
+    <script type="module" src="../src/features/dashboard/dashboard.js"></script>
+    <script type="module" src="../src/features/citas/citas.js"></script>
+    <script type="module" src="../src/features/clientes/clientes.js"></script>
+    <script type="module" src="../src/features/barberos/barberos.js"></script>
+    <script type="module" src="../src/features/servicios/servicios.js"></script>
+    <script type="module" src="../src/features/productos/productos.js"></script>
+    <script type="module" src="../src/features/reportes/reportes.js"></script>
+
+    <script>
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('✅ SW registrado:', reg.scope))
+                .catch(err => console.log('⚠️ SW error:', err));
+        }
+    </script>
+</body>
+</html>
