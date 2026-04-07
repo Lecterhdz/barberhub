@@ -1,28 +1,56 @@
-/* ─────────────────────────────────────────────────────────────────────
-   BARBERHUB - DARK AMBER THEME (Negro + Dorado)
-   ───────────────────────────────────────────────────────────────────── */
+/* Tema Claro Clean - BarberHub */
 
-:root {
-    --color-primary: #1a1a1a;
-    --color-primary-light: #333333;
-    --color-secondary: #FFD700;
-    --color-secondary-light: #FFE55C;
-    --color-accent: #d32f2f;
-    --bg-primary: #f5f7fa;
-    --bg-secondary: #ffffff;
-    --text-primary: #333333;
-    --text-secondary: #666666;
+[data-theme="light-clean"] {
+    --theme-gradient: linear-gradient(135deg, #ff6b35, #ff9f4a);
+    --theme-glow: 0 0 20px rgba(255, 107, 53, 0.2);
+    --theme-card-bg: #ffffff;
 }
 
-.card {
-    border-top: 3px solid var(--color-secondary);
+[data-theme="light-clean"] .stat-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: var(--shadow-sm);
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+[data-theme="light-clean"] .stat-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="light-clean"] .card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+}
+
+[data-theme="light-clean"] .sidebar-link:hover {
+    background: #f0f2f5;
+}
+
+[data-theme="light-clean"] .sidebar-link.active {
+    background: var(--theme-gradient);
     color: white;
 }
 
-.btn-primary:hover {
-    box-shadow: 0 5px 15px rgba(255,215,0,0.3);
+[data-theme="light-clean"] .btn-primary {
+    background: var(--theme-gradient);
+}
+
+[data-theme="light-clean"] .license-badge {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+}
+
+[data-theme="light-clean"] .btn-logout {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+}
+
+[data-theme="light-clean"] .form-control {
+    background: #f5f7fa;
+    border: 1px solid #e0e0e0;
+    color: #333;
+}
+
+[data-theme="light-clean"] .form-control:focus {
+    border-color: var(--color-primary);
 }
