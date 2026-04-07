@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (NAVEGACIÓN ENTRE VISTAS)
+// BARBERHUB - ROUTER (CORREGIDO PARA GITHUB PAGES)
 // ─────────────────────────────────────────────────────────────────────
 
 import { routes } from '../config/routes.js';
@@ -7,25 +7,32 @@ import { app } from './app.js';
 
 console.log('🧭 Router cargado');
 
+// Obtener base path dinámicamente
+const getBasePath = () => {
+    const path = window.location.pathname;
+    // Si estamos en github.io/username/repo/, extraer /username/repo/
+    if (path.includes('/barberhub/')) {
+        return '/barberhub/';
+    }
+    return '/';
+};
+
 export const router = {
     rutaActual: null,
 
     navegar: function(ruta, params = {}) {
         console.log('🧭 Navegando a:', ruta);
-        
-        // Actualizar URL sin recargar
-        history.pushState({ ruta, params }, '', `?route=${ruta}`);
-        
-        // Manejar la ruta
+        // Usar hash para evitar problemas con GitHub Pages
+        window.location.hash = `#${ruta}`;
         this.manejarRuta(ruta, params);
     },
 
-    manejarRuta: function(rutaForzada = null, params = {}) {
-        // Obtener ruta de URL o parámetro
+    manejarRuta: async function(rutaForzada = null, params = {}) {
+        // Obtener ruta del hash o parámetro
+        const hash = window.location.hash.replace('#', '');
         const urlParams = new URLSearchParams(window.location.search);
-        const ruta = rutaForzada || urlParams.get('route') || '/dashboard';
+        const ruta = rutaForzada || hash || urlParams.get('route') || '/dashboard';
         
-        // Verificar si la ruta existe
         const rutaConfig = routes[ruta];
         
         if (!rutaConfig) {
@@ -34,7 +41,7 @@ export const router = {
             return;
         }
         
-        // Verificar permisos
+        // Verificar autenticación
         if (rutaConfig.requiereAuth && !app.estado.licencia) {
             this.navegar('/auth');
             return;
@@ -42,13 +49,14 @@ export const router = {
         
         // Cargar feature
         if (rutaConfig.feature) {
-            app.cargarFeature(rutaConfig.feature);
+            await app.cargarFeature(rutaConfig.feature);
         }
         
         // Renderizar vista
-        this.renderizarVista(rutaConfig, params);
+        await this.renderizarVista(rutaConfig, params);
         
         this.rutaActual = ruta;
+        document.title = `${rutaConfig.titulo} - BarberHub`;
     },
 
     renderizarVista: async function(rutaConfig, params) {
@@ -59,22 +67,35 @@ export const router = {
             return;
         }
         
-        // Cargar HTML de la feature
         try {
-            const response = await fetch(`../src/features/${rutaConfig.feature}/${rutaConfig.feature}.html`);
+            // ✅ CORRECCIÓN: Usar ruta relativa desde la raíz del repo
+            const featurePath = `./src/features/${rutaConfig.feature}`;
+            
+            // Cargar HTML
+            const response = await fetch(`${featurePath}/${rutaConfig.feature}.html`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const html = await response.text();
             main.innerHTML = html;
             
-            // Inicializar feature si tiene init
-            const featureModule = await import(`../src/features/${rutaConfig.feature}/${rutaConfig.feature}.js`);
-            if (featureModule.init) {
-                featureModule.init(params);
+            // Cargar e inicializar JS del feature
+            const module = await import(`./src/features/${rutaConfig.feature}/${rutaConfig.feature}.js`);
+            if (module.init) {
+                module.init(params);
             }
             
             console.log('✅ Vista renderizada:', rutaConfig.feature);
         } catch (error) {
             console.error('❌ Error cargando vista:', error);
-            main.innerHTML = '<div class="error">Error cargando la vista</div>';
+            main.innerHTML = `
+                <div style="text-align:center;padding:50px;">
+                    <h2 style="color:#f44336;">❌ Error cargando la vista</h2>
+                    <p>${error.message}</p>
+                    <button onclick="window.location.hash='#/dashboard'" 
+                            style="margin-top:20px;padding:15px 30px;background:#1a1a1a;color:white;border:none;border-radius:10px;cursor:pointer;">
+                        ↩️ Volver al Dashboard
+                    </button>
+                </div>
+            `;
         }
     },
 
@@ -83,5 +104,4 @@ export const router = {
     }
 };
 
-// Exportar para uso global
 window.router = router;
