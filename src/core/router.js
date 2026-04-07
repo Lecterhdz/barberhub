@@ -2,7 +2,7 @@
 // BARBERHUB - ROUTER (PATHS ABSOLUTOS PARA GITHUB PAGES)
 // ─────────────────────────────────────────────────────────────────────
 
-import { routes } from '../../config/routes.js';
+import { routes } from '../config/routes.js';
 import { app } from './app.js';
 
 console.log('🧭 Router cargado');
