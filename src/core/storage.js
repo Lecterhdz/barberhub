@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - STORAGE WRAPPER (IndexedDB + localStorage)
+// BARBERHUB - STORAGE WRAPPER (IndexedDB)
 // ─────────────────────────────────────────────────────────────────────
 
 console.log('💾 Storage cargado');
@@ -27,35 +27,40 @@ export const storage = {
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 
-                // Crear stores si no existen
-                if (!db.objectStoreNames.contains('citas')) {
-                    db.createObjectStore('citas', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('clientes')) {
-                    db.createObjectStore('clientes', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('barberos')) {
-                    db.createObjectStore('barberos', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('servicios')) {
-                    db.createObjectStore('servicios', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('productos')) {
-                    db.createObjectStore('productos', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('ventas')) {
-                    db.createObjectStore('ventas', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('config')) {
-                    db.createObjectStore('config', { keyPath: 'clave' });
-                }
+                // Crear object stores
+                const stores = [
+                    'citas', 'clientes', 'barberos', 
+                    'servicios', 'productos', 'ventas', 'config'
+                ];
+                
+                stores.forEach(storeName => {
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        const store = db.createObjectStore(storeName, { 
+                            keyPath: 'id', 
+                            autoIncrement: true 
+                        });
+                        
+                        // Crear índices para búsquedas
+                        if (storeName === 'citas') {
+                            store.createIndex('fecha', 'fecha', { unique: false });
+                            store.createIndex('clienteId', 'clienteId', { unique: false });
+                            store.createIndex('estado', 'estado', { unique: false });
+                        }
+                        if (storeName === 'clientes') {
+                            store.createIndex('telefono', 'telefono', { unique: false });
+                        }
+                        if (storeName === 'productos') {
+                            store.createIndex('categoria', 'categoria', { unique: false });
+                        }
+                    }
+                });
                 
                 console.log('✅ DB stores creados');
             };
         });
     },
 
-    // Generic CRUD
+    // CRUD Genérico
     guardar: async function(storeName, datos) {
         return new Promise((resolve, reject) => {
             const tx = this.db.transaction(storeName, 'readwrite');
@@ -112,21 +117,20 @@ export const storage = {
         });
     },
 
-    // LocalStorage helpers
-    localStorage: {
-        set: function(clave, valor) {
-            localStorage.setItem(clave, JSON.stringify(valor));
-        },
-        get: function(clave) {
-            const valor = localStorage.getItem(clave);
-            return valor ? JSON.parse(valor) : null;
-        },
-        remove: function(clave) {
-            localStorage.removeItem(clave);
-        }
+    // Búsquedas específicas
+    obtenerPorFecha: async function(storeName, campo, valor) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+            const index = store.index(campo);
+            const request = index.getAll(valor);
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
     },
 
-    // Exportar/Importar
+    // Exportar todos los datos
     exportar: async function() {
         const datos = {};
         const stores = ['citas', 'clientes', 'barberos', 'servicios', 'productos', 'ventas', 'config'];
@@ -149,20 +153,33 @@ export const storage = {
         return datos;
     },
 
+    // Importar datos
     importar: async function(datosJSON) {
         const datos = JSON.parse(datosJSON);
         
-        for (const [store, items] of Object.entries(datos)) {
-            if (store !== 'fecha' && store !== 'version' && Array.isArray(items)) {
-                const tx = this.db.transaction(store, 'readwrite');
-                const store_ = tx.objectStore(store);
-                store_.clear();
-                items.forEach(item => store_.add(item));
+        for (const [storeName, items] of Object.entries(datos)) {
+            if (storeName !== 'fecha' && storeName !== 'version' && Array.isArray(items)) {
+                const tx = this.db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                await store.clear();
+                for (const item of items) {
+                    await store.add(item);
+                }
             }
         }
         
         alert('✅ Datos importados correctamente');
         location.reload();
+    },
+
+    // LocalStorage helper
+    localStorage: {
+        set: (clave, valor) => localStorage.setItem(clave, JSON.stringify(valor)),
+        get: (clave) => {
+            const valor = localStorage.getItem(clave);
+            return valor ? JSON.parse(valor) : null;
+        },
+        remove: (clave) => localStorage.removeItem(clave)
     }
 };
 
