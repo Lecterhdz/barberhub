@@ -2,9 +2,9 @@
 // BARBERHUB - DASHBOARD FEATURE
 // ─────────────────────────────────────────────────────────────────────
 
-import { app } from '../../src/core/app.js';
-import { storage } from '../../src/core/storage.js';
-import { utils } from '../../src/core/utils.js';
+import { app } from '../../core/app.js';
+import { storage } from '../../core/storage.js';
+import { utils } from '../../core/utils.js';
 
 console.log('📊 Dashboard Feature cargado');
 
