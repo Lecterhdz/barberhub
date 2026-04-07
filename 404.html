@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarberHub - Redirigiendo...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .loader {
+            text-align: center;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #333;
+            border-top-color: #ff6b35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="spinner"></div>
+        <p>Redirigiendo a BarberHub...</p>
+    </div>
+    <script>
+        // Obtener la ruta actual
+        const path = window.location.pathname;
+        console.log('🔄 404 redirect desde:', path);
+        
+        // Extraer la ruta después de /barberhub/
+        let newPath = path.replace('/barberhub', '') || '/';
+        
+        // Si la ruta está vacía o es /, ir a /
+        if (newPath === '' || newPath === '/') {
+            newPath = '/';
+        }
+        
+        // Redirigir al index con la ruta como hash o query param
+        // Método 1: Usar hash
+        window.location.href = `/barberhub/#${newPath}`;
+        
+        // Método 2 alternativo (descomentar si el método 1 no funciona):
+        // window.location.href = `/barberhub/index.html?redirect=${encodeURIComponent(newPath)}`;
+    </script>
+</body>
+</html>
