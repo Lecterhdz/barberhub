@@ -1,47 +1,51 @@
-<!-- ─────────────────────────────────────────────────────────────────────
-     BARBERHUB - DASHBOARD FEATURE VIEW
-     ───────────────────────────────────────────────────────────────────── -->
-
 <div class="dashboard-container">
-    <!-- Stats Grid -->
+    <!-- Stats Cards Circulares -->
     <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number" id="stat-citas-hoy">0</div>
-            <div class="stat-label">📅 Citas Hoy</div>
+        <div class="stat-card card-circular">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value" id="citas-hoy">0</div>
+            <div class="stat-label">Citas Hoy</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number" id="stat-clientes-hoy">0</div>
-            <div class="stat-label">👥 Clientes Hoy</div>
+        
+        <div class="stat-card card-circular">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value" id="clientes-totales">0</div>
+            <div class="stat-label">Clientes Registrados</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number" id="stat-ingresos-hoy">$0</div>
-            <div class="stat-label">💰 Ingresos Hoy</div>
+        
+        <div class="stat-card card-circular">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="ingresos-hoy">$0</div>
+            <div class="stat-label">Ingresos Hoy</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number" id="stat-barberos-hoy">0</div>
-            <div class="stat-label">✂️ Barberos Activos</div>
+        
+        <div class="stat-card card-circular">
+            <div class="stat-icon">✂️</div>
+            <div class="stat-value" id="servicios-hoy">0</div>
+            <div class="stat-label">Servicios Realizados</div>
         </div>
     </div>
-
-    <!-- Citas del Día -->
+    
+    <!-- Próximas Citas -->
     <div class="card">
-        <h2>📅 Citas de Hoy</h2>
-        <div id="citas-hoy-lista"></div>
+        <div class="card-header">
+            <h3 class="card-title">📋 Próximas Citas</h3>
+            <button class="btn-primary" onclick="window.router.navegar('/citas')">
+                Ver todas →
+            </button>
+        </div>
+        <div id="proximas-citas" class="citas-list">
+            <p class="text-center">Cargando citas...</p>
+        </div>
     </div>
-
-    <!-- Acciones Rápidas -->
+    
+    <!-- Servicios Populares -->
     <div class="card">
-        <h2>⚡ Acciones Rápidas</h2>
-        <div class="button-grid">
-            <button onclick="window.router.navegar('/citas')" class="btn btn-primary">
-                📅 Nueva Cita
-            </button>
-            <button onclick="window.router.navegar('/clientes')" class="btn btn-secondary">
-                👥 Nuevo Cliente
-            </button>
-            <button onclick="window.router.navegar('/reportes')" class="btn btn-secondary">
-                📄 Ver Reportes
-            </button>
+        <div class="card-header">
+            <h3 class="card-title">⭐ Servicios Populares</h3>
+        </div>
+        <div id="servicios-populares" class="servicios-list">
+            <p class="text-center">Cargando servicios...</p>
         </div>
     </div>
 </div>
