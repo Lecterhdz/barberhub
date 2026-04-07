@@ -2,10 +2,10 @@
 // BARBERHUB - CORE APP (NÚCLEO NO MODIFICABLE)
 // ─────────────────────────────────────────────────────────────────────
 
-import { router } from './src/core/router.js';
-import { storage } from './src/core/storage.js';
-import { utils } from './src/core/utils.js';
-import { Sidebar } from './src/components/Sidebar.js';
+import { router } from './router.js';
+import { storage } from './storage.js';
+import { utils } from './utils.js';
+import { Sidebar } from '../components/Sidebar.js';
 
 console.log('🏗️ Core App cargado');
 
