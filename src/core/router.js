@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (CORREGIDO)
+// BARBERHUB - ROUTER (CORREGIDO PARA TU ESTRUCTURA)
 // ─────────────────────────────────────────────────────────────────────
 
 export const router = {
@@ -15,13 +15,23 @@ export const router = {
         '/configuracion': 'configuracion'
     },
 
-    // Determinar base path para GitHub Pages
+    // Detectar si estamos en GitHub Pages
     getBasePath: function() {
-        // Detecta si está en subdirectorio o en root
+        // GitHub Pages sirve desde /barberhub/ o desde root?
         const pathname = window.location.pathname;
+        
+        // Si el path contiene /barberhub/ o similar
         if (pathname.includes('/barberhub/')) {
             return '/barberhub';
         }
+        
+        // Si estamos en una subcarpeta (ej: /nombre-repo/)
+        const parts = pathname.split('/').filter(p => p);
+        if (parts.length > 0 && !parts[0].includes('.')) {
+            // Podría ser un repo name
+            return `/${parts[0]}`;
+        }
+        
         return '';
     },
 
@@ -45,16 +55,28 @@ export const router = {
             rutaActual = rutaActual.slice(basePath.length) || '/';
         }
         
+        // Si está vacío o es solo slash
+        if (!rutaActual || rutaActual === '') {
+            rutaActual = '/';
+        }
+        
         // Obtener feature name
         let featureName = this.rutas[rutaActual];
         if (!featureName) {
-            featureName = 'dashboard';
+            // Intentar con la última parte de la ruta
+            const parts = rutaActual.split('/').filter(p => p);
+            if (parts.length > 0) {
+                featureName = this.rutas[`/${parts[0]}`];
+            }
+            if (!featureName) {
+                featureName = 'dashboard';
+            }
         }
         
         console.log('📍 Navegando a:', rutaActual, 'Feature:', featureName);
         
         // Cargar CSS y HTML del feature
-        await this.cargarFeature(featureName);
+        await this.cargarFeatureCSS(featureName);
         await this.renderizarVista(featureName);
         
         // Actualizar estado del app
@@ -63,40 +85,31 @@ export const router = {
         }
     },
 
-    cargarFeature: async function(featureName) {
-        const basePath = this.getBasePath();
-        
-        // ✅ CORRECCIÓN: Usar paths correctos para GitHub Pages
-        const cssPath = `${basePath}/src/features/${featureName}/${featureName}.css`;
+    cargarFeatureCSS: async function(featureName) {
+        // Usar rutas relativas como en tu index.html
+        const cssPath = `./src/features/${featureName}/${featureName}.css`;
         
         console.log('🎨 Cargando CSS:', cssPath);
         
-        // Cargar CSS del feature
-        let featureCss = document.getElementById('feature-css');
-        if (!featureCss) {
-            featureCss = document.createElement('link');
-            featureCss.id = 'feature-css';
-            featureCss.rel = 'stylesheet';
-            document.head.appendChild(featureCss);
+        const featureCss = document.getElementById('feature-css');
+        if (featureCss) {
+            featureCss.href = cssPath;
         }
         
-        featureCss.href = cssPath;
-        
-        // Esperar un poco para que cargue el CSS
-        return new Promise(resolve => setTimeout(resolve, 100));
+        return new Promise(resolve => setTimeout(resolve, 50));
     },
 
     renderizarVista: async function(featureName) {
-        const basePath = this.getBasePath();
-        const container = document.getElementById('app-view');
+        // ✅ CORRECCIÓN: Usar 'app-main' como en tu HTML
+        const container = document.getElementById('app-main');
         
         if (!container) {
-            console.error('❌ Contenedor app-view no encontrado');
+            console.error('❌ Contenedor app-main no encontrado');
             return;
         }
         
-        // ✅ CORRECCIÓN: Path correcto para HTML
-        const htmlPath = `${basePath}/src/features/${featureName}/${featureName}.html`;
+        // Usar ruta relativa
+        const htmlPath = `./src/features/${featureName}/${featureName}.html`;
         
         console.log('📄 Cargando HTML:', htmlPath);
         
@@ -104,55 +117,64 @@ export const router = {
             const response = await fetch(htmlPath);
             
             if (!response.ok) {
-                throw new Error(`HTML: ${response.status} - ${htmlPath}`);
+                throw new Error(`HTTP ${response.status}: ${htmlPath}`);
             }
             
             const html = await response.text();
             container.innerHTML = html;
             
-            // Cargar el JS del feature después de insertar el HTML
+            // Cargar el JS del feature
             await this.cargarJavaScript(featureName);
+            
+            // Disparar evento de carga
+            window.dispatchEvent(new CustomEvent('feature-loaded', { 
+                detail: { feature: featureName } 
+            }));
             
             console.log(`✅ Vista ${featureName} cargada correctamente`);
             
         } catch (error) {
             console.error('❌ Error cargando vista:', error);
             container.innerHTML = `
-                <div class="error-container">
+                <div class="error-container" style="padding: 40px; text-align: center;">
                     <h2>⚠️ Error al cargar la página</h2>
                     <p>No se pudo cargar ${featureName}</p>
-                    <p class="error-details">${error.message}</p>
-                    <button onclick="location.reload()">Recargar</button>
+                    <p style="color: #888; font-size: 12px;">${error.message}</p>
+                    <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px;">
+                        Recargar
+                    </button>
                 </div>
             `;
         }
     },
 
     cargarJavaScript: async function(featureName) {
-        const basePath = this.getBasePath();
-        
         // Remover script anterior si existe
         const oldScript = document.getElementById('feature-script');
         if (oldScript) {
             oldScript.remove();
         }
         
-        // Crear nuevo script
-        const scriptPath = `${basePath}/src/features/${featureName}/${featureName}.js`;
+        // Ruta relativa
+        const scriptPath = `./src/features/${featureName}/${featureName}.js`;
         console.log('📦 Cargando JS:', scriptPath);
         
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const script = document.createElement('script');
             script.id = 'feature-script';
             script.src = scriptPath;
+            script.type = 'module';
+            
             script.onload = () => {
                 console.log(`✅ JS ${featureName} cargado`);
                 resolve();
             };
+            
             script.onerror = () => {
                 console.warn(`⚠️ No se encontró JS para ${featureName}`);
                 resolve(); // Resolvemos igual aunque no haya JS
             };
+            
             document.body.appendChild(script);
         });
     }
