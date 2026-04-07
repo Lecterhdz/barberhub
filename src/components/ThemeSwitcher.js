@@ -1,114 +1,119 @@
-// ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - THEME SWITCHER COMPONENT
-// ─────────────────────────────────────────────────────────────────────
+// src/components/ThemeSwitcher.js (versión mejorada)
 
 export const ThemeSwitcher = {
     temas: [
-        { id: 'dark-amber', nombre: 'Ámbar Oscuro', icono: '🌙', color: '#ff6b35' },
-        { id: 'dark-neon', nombre: 'Neón Oscuro', icono: '💚', color: '#00ff88' },
-        { id: 'light-clean', nombre: 'Claro Limpio', icono: '☀️', color: '#ff6b35' }
+        { id: 'dark-amber', nombre: 'Ámbar', icono: '🌙', color: '#ff6b35' },
+        { id: 'dark-neon', nombre: 'Neón', icono: '💚', color: '#00ff88' },
+        { id: 'light-clean', nombre: 'Claro', icono: '☀️', color: '#ff9f4a' }
     ],
     
     temaActual: 'dark-amber',
     
     init: function() {
-        // Cargar tema guardado
+        console.log('🎨 Inicializando ThemeSwitcher...');
+        
         const temaGuardado = localStorage.getItem('barberhub_tema');
-        if (temaGuardado && this.temas.find(t => t.id === temaGuardado)) {
+        if (temaGuardado) {
             this.temaActual = temaGuardado;
         }
         
         this.aplicarTema(this.temaActual);
-        this.renderizarBoton();
+        this.agregarBotonesAlHeader();
     },
     
-    renderizarBoton: function() {
-        // Verificar si ya existe el botón
-        if (document.getElementById('theme-switcher-btn')) return;
+    agregarBotonesAlHeader: function() {
+        // Esperar a que el header esté listo
+        const checkHeader = setInterval(() => {
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions && !document.querySelector('.theme-buttons-container')) {
+                clearInterval(checkHeader);
+                this.crearGrupoBotones(headerActions);
+            }
+        }, 100);
         
-        const headerActions = document.querySelector('.header-actions');
-        if (!headerActions) return;
-        
-        const temaActualObj = this.temas.find(t => t.id === this.temaActual);
-        
-        const btn = document.createElement('button');
-        btn.id = 'theme-switcher-btn';
-        btn.className = 'btn-icon theme-switcher-btn';
-        btn.title = 'Cambiar tema';
-        btn.innerHTML = `
-            <span class="theme-icon">${temaActualObj?.icono || '🎨'}</span>
-            <span class="theme-name">${temaActualObj?.nombre || 'Tema'}</span>
-            <span class="theme-arrow">▼</span>
+        setTimeout(() => clearInterval(checkHeader), 5000);
+    },
+    
+    crearGrupoBotones: function(headerActions) {
+        // Crear contenedor de botones de tema
+        const container = document.createElement('div');
+        container.className = 'theme-buttons-container';
+        container.style.cssText = `
+            display: flex;
+            gap: 8px;
+            margin-right: 10px;
         `;
         
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.mostrarMenu();
+        // Crear botones individuales para cada tema
+        this.temas.forEach(tema => {
+            const btn = document.createElement('button');
+            btn.className = `theme-btn ${this.temaActual === tema.id ? 'active' : ''}`;
+            btn.setAttribute('data-theme', tema.id);
+            btn.title = tema.nombre;
+            btn.innerHTML = tema.icono;
+            btn.style.cssText = `
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: 2px solid ${this.temaActual === tema.id ? tema.color : 'transparent'};
+                background: var(--bg-tertiary);
+                cursor: pointer;
+                font-size: 1.2rem;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            btn.onmouseenter = () => {
+                btn.style.transform = 'scale(1.1)';
+                btn.style.borderColor = tema.color;
+            };
+            btn.onmouseleave = () => {
+                btn.style.transform = 'scale(1)';
+                if (this.temaActual !== tema.id) {
+                    btn.style.borderColor = 'transparent';
+                }
+            };
+            
+            btn.onclick = () => {
+                this.cambiarTema(tema.id);
+                this.actualizarBotonActivo(tema.id);
+            };
+            
+            container.appendChild(btn);
         });
         
-        headerActions.insertBefore(btn, headerActions.firstChild);
-    },
-    
-    mostrarMenu: function() {
-        // Remover menú existente
-        const menuExistente = document.getElementById('theme-menu');
-        if (menuExistente) {
-            menuExistente.remove();
-            return;
+        // Agregar contenedor al principio de header-actions
+        headerActions.insertBefore(container, headerActions.firstChild);
+        
+        // Mover los botones existentes si los hay
+        const existingConfigBtn = document.querySelector('.btn-icon');
+        const existingLogoutBtn = document.querySelector('.btn-logout');
+        
+        if (existingConfigBtn) {
+            headerActions.appendChild(existingConfigBtn);
+        }
+        if (existingLogoutBtn) {
+            headerActions.appendChild(existingLogoutBtn);
         }
         
-        const menu = document.createElement('div');
-        menu.id = 'theme-menu';
-        menu.className = 'theme-menu';
+        console.log('✅ Botones de tema agregados');
+    },
+    
+    actualizarBotonActivo: function(themeId) {
+        const tema = this.temas.find(t => t.id === themeId);
+        const btns = document.querySelectorAll('.theme-btn');
         
-        menu.innerHTML = `
-            <div class="theme-menu-header">
-                <span>🎨</span>
-                <h4>Seleccionar tema</h4>
-            </div>
-            <div class="theme-menu-options">
-                ${this.temas.map(tema => `
-                    <button class="theme-option ${this.temaActual === tema.id ? 'active' : ''}" 
-                            data-theme="${tema.id}">
-                        <span class="theme-option-icon">${tema.icono}</span>
-                        <div class="theme-option-info">
-                            <span class="theme-option-name">${tema.nombre}</span>
-                            <span class="theme-option-color" style="background: ${tema.color}"></span>
-                        </div>
-                        ${this.temaActual === tema.id ? '<span class="theme-check">✓</span>' : ''}
-                    </button>
-                `).join('')}
-            </div>
-        `;
-        
-        document.body.appendChild(menu);
-        
-        // Posicionar el menú
-        const btn = document.getElementById('theme-switcher-btn');
-        const rect = btn.getBoundingClientRect();
-        menu.style.top = `${rect.bottom + 5}px`;
-        menu.style.right = `${window.innerWidth - rect.right}px`;
-        
-        // Eventos de los botones
-        menu.querySelectorAll('.theme-option').forEach(option => {
-            option.addEventListener('click', () => {
-                const themeId = option.dataset.theme;
-                this.cambiarTema(themeId);
-                menu.remove();
-            });
-        });
-        
-        // Cerrar al hacer clic fuera
-        const cerrarMenu = (e) => {
-            if (!menu.contains(e.target) && e.target !== btn) {
-                menu.remove();
-                document.removeEventListener('click', cerrarMenu);
+        btns.forEach(btn => {
+            if (btn.getAttribute('data-theme') === themeId) {
+                btn.style.borderColor = tema.color;
+                btn.classList.add('active');
+            } else {
+                btn.style.borderColor = 'transparent';
+                btn.classList.remove('active');
             }
-        };
-        
-        setTimeout(() => {
-            document.addEventListener('click', cerrarMenu);
-        }, 100);
+        });
     },
     
     cambiarTema: function(themeId) {
@@ -118,35 +123,22 @@ export const ThemeSwitcher = {
         this.temaActual = themeId;
         this.aplicarTema(themeId);
         
-        // Guardar en localStorage
         localStorage.setItem('barberhub_tema', themeId);
         
-        // Actualizar botón
-        const btn = document.getElementById('theme-switcher-btn');
-        if (btn) {
-            btn.innerHTML = `
-                <span class="theme-icon">${tema.icono}</span>
-                <span class="theme-name">${tema.nombre}</span>
-                <span class="theme-arrow">▼</span>
-            `;
-        }
-        
-        // Notificar cambio
         if (window.app && window.app.estado) {
             window.app.estado.tema = themeId;
-            window.app.guardarEstado();
+            if (window.app.guardarEstado) window.app.guardarEstado();
         }
         
-        // Mostrar notificación
-        this.mostrarNotificacion(`Tema cambiado a ${tema.nombre}`, 'success');
+        console.log(`🎨 Tema cambiado a: ${tema.nombre}`);
+        
+        this.mostrarNotificacion(`${tema.icono} Tema: ${tema.nombre}`, 'success');
     },
     
     aplicarTema: function(themeId) {
-        // Actualizar data-theme en el body
         document.body.setAttribute('data-theme', themeId);
         document.documentElement.setAttribute('data-theme', themeId);
         
-        // Actualizar el link del tema CSS
         let themeLink = document.getElementById('theme-css');
         if (!themeLink) {
             themeLink = document.createElement('link');
@@ -156,8 +148,6 @@ export const ThemeSwitcher = {
         }
         
         themeLink.href = `./src/core/themes/${themeId}.css`;
-        
-        console.log(`🎨 Tema cambiado a: ${themeId}`);
     },
     
     mostrarNotificacion: function(mensaje, tipo) {
@@ -169,16 +159,29 @@ export const ThemeSwitcher = {
                 <p>${mensaje}</p>
             </div>
         `;
+        notification.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 10px;
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--color-primary);
+        `;
         document.body.appendChild(notification);
         
         setTimeout(() => {
-            notification.classList.add('fade-out');
+            notification.style.animation = 'fadeOut 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }, 2000);
     }
 };
 
-// Inicializar automáticamente cuando el DOM esté listo
+// Inicializar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         ThemeSwitcher.init();
@@ -186,6 +189,3 @@ if (document.readyState === 'loading') {
 } else {
     ThemeSwitcher.init();
 }
-
-// Exportar para uso global
-window.ThemeSwitcher = ThemeSwitcher;
