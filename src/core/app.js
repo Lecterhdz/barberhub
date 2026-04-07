@@ -141,6 +141,10 @@ export const app = {
 window.app = app;
 
 // Iniciar cuando DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        app.init();
+    });
+} else {
     app.init();
-});
+}
