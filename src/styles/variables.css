@@ -2,10 +2,14 @@
    BARBERHUB - DESIGN TOKENS (VARIABLES CSS)
    ───────────────────────────────────────────────────────────────────── */
 
-:root {
+/* Tema Oscuro Ámbar (Default) */
+:root,
+[data-theme="dark-amber"] {
     /* Colores Primarios */
-    --color-primary: #1a1a1a;
-    --color-primary-light: #333333;
+    --color-primary: #ff6b35;
+    --color-primary-light: #ff9f4a;
+    --color-primary-dark: #e55a2b;
+    
     --color-secondary: #FFD700;
     --color-secondary-light: #FFE55C;
     
@@ -17,20 +21,23 @@
     --color-info: #2196F3;
     
     /* Fondos */
-    --bg-primary: #f5f7fa;
-    --bg-secondary: #ffffff;
-    --bg-dark: #1a1a1a;
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3d3d3d;
+    --bg-hover: #4d4d4d;
+    --bg-dark: #0d0d0d;
     
     /* Texto */
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --text-light: #999999;
-    --text-inverse: #ffffff;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-light: #808080;
+    --text-inverse: #333333;
     
     /* Bordes */
-    --border-color: #e0e0e0;
+    --border-color: #404040;
     --border-radius: 10px;
     --border-radius-lg: 15px;
+    --border-radius-xl: 20px;
     
     /* Espaciados */
     --spacing-xs: 5px;
@@ -40,12 +47,12 @@
     --spacing-xl: 40px;
     
     /* Sombras */
-    --shadow-sm: 0 2px 5px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 15px rgba(0,0,0,0.1);
-    --shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 15px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 25px rgba(0,0,0,0.4);
     
     /* Tipografía */
-    --font-family: 'Segoe UI', 'Roboto', sans-serif;
+    --font-family: 'Segoe UI', 'Roboto', 'Inter', sans-serif;
     --font-size-xs: 12px;
     --font-size-sm: 14px;
     --font-size-md: 16px;
@@ -63,4 +70,45 @@
     --breakpoint-md: 768px;
     --breakpoint-lg: 1024px;
     --breakpoint-xl: 1280px;
+}
+
+/* Tema Oscuro Neón */
+[data-theme="dark-neon"] {
+    --color-primary: #00ff88;
+    --color-primary-light: #44ffaa;
+    --color-primary-dark: #00cc66;
+    
+    --color-secondary: #00ffff;
+    --color-secondary-light: #44ffff;
+    
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #141414;
+    --bg-tertiary: #1e1e1e;
+    --bg-hover: #2a2a2a;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #00ff88;
+    --text-light: #888888;
+}
+
+/* Tema Claro Clean */
+[data-theme="light-clean"] {
+    --color-primary: #ff6b35;
+    --color-primary-light: #ff9f4a;
+    --color-primary-dark: #e55a2b;
+    
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f2f5;
+    --bg-hover: #e8eaed;
+    
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-light: #999999;
+    
+    --border-color: #e0e0e0;
+    
+    --shadow-sm: 0 2px 5px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 15px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 25px rgba(0,0,0,0.1);
 }
