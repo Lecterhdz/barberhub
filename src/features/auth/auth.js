@@ -2,9 +2,9 @@
 // BARBERHUB - AUTH FEATURE (MÓDULO INDEPENDIENTE)
 // ─────────────────────────────────────────────────────────────────────
 
-import { app } from '../../src/core/app.js';
-import { router } from '../../src/core/router.js';
-import { utils } from '../../src/core/utils.js';
+import { app } from '../../core/app.js';
+import { router } from '../../core/router.js';
+import { utils } from '../../core/utils.js';
 
 console.log('🔐 Auth Feature cargado');
 
