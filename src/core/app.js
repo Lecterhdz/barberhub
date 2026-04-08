@@ -252,17 +252,13 @@ export const app = {
         storage.localStorage.set('barberhub_licencia', licencia);
         this.guardarEstado();
         
-        // Quitar clase auth-page
-        document.body.classList.remove('auth-page');
-        
-        // Recargar sidebar
-        Sidebar.render();
+        // Forzar actualización del header
+        this.renderHeader();
         
         // Disparar evento
         window.dispatchEvent(new CustomEvent('license-activated', { detail: licencia }));
         
-        // Mostrar notificación
-        this.mostrarNotificacion(`Licencia ${licencia.tipo} activada`, 'success');
+        console.log('✅ Licencia guardada:', licencia);
     },
 
     // Cerrar sesión
