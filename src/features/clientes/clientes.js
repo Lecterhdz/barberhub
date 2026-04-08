@@ -8,8 +8,6 @@ let itemsPerPage = 10;
 let currentFilter = 'todos';
 let currentSearch = '';
 let editingId = null;
-let renderizadoInicial = false;
-let primeraVez = true;
 
 // Inicializar
 async function init() {
@@ -32,11 +30,8 @@ async function cargarClientes() {
             await guardarClientes();
         }
         
-        // Renderizar SOLO UNA VEZ
-        if (!renderizadoInicial) {
-            renderizarTabla();
-            renderizadoInicial = true;
-        }
+        // ✅ SIEMPRE RENDERIZAR
+        renderizarTabla();
         
     } catch (error) {
         console.error('Error:', error);
@@ -89,14 +84,8 @@ function formatearFecha(fecha) {
     return new Date(fecha).toLocaleDateString('es-ES');
 }
 
-// RENDERIZAR TABLA
+// ✅ RENDERIZAR TABLA - SIEMPRE EJECUTA
 function renderizarTabla() {
-    if (!primeraVez) {
-        console.log('⏳ Ya renderizado, ignorando');
-        return;
-    }
-    primeraVez = false;
-    
     console.log('🎨 renderizarTabla() - Clientes:', clientes.length);
     
     const tbody = document.getElementById('clientes-table-body');
@@ -132,9 +121,9 @@ function renderizarTabla() {
                 <td style="color: #ff6b35; font-weight: bold;">$${(c.gastoTotal || 0).toLocaleString()}</td>
                 <td><span style="padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: ${c.estado === 'activo' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}; color: ${c.estado === 'activo' ? '#4caf50' : '#f44336'};">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
                 <td>
-                    <button class="btn-icon-sm" onclick="verCliente(${c.id})">👁️</button>
-                    <button class="btn-icon-sm" onclick="editarCliente(${c.id})">✏️</button>
-                    <button class="btn-icon-sm" onclick="eliminarCliente(${c.id})">🗑️</button>
+                    <button class="btn-icon-sm" onclick="window.verCliente(${c.id})">👁️</button>
+                    <button class="btn-icon-sm" onclick="window.editarCliente(${c.id})">✏️</button>
+                    <button class="btn-icon-sm" onclick="window.eliminarCliente(${c.id})">🗑️</button>
                 </td>
             </tr>
         `;
@@ -267,7 +256,7 @@ function setupEventListeners() {
     }
 }
 
-// Exponer función de renderizado
+// ✅ Exponer función de renderizado para que otros módulos la llamen
 window.renderizarTablaClientes = renderizarTabla;
 
 // Inicializar
@@ -278,9 +267,3 @@ if (document.readyState === 'loading') {
 }
 
 export { init };
-window.addEventListener('dom-ready', (e) => {
-    if (e.detail.feature === 'clientes') {
-        console.log('🔄 DOM listo, re-renderizando clientes');
-        renderizarTabla();
-    }
-});
