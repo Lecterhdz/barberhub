@@ -1,32 +1,29 @@
 /* Tema Oscuro Neón - BarberHub */
 
 [data-theme="dark-neon"] {
-    --theme-gradient: linear-gradient(135deg, #00ff88, #00ffff);
-    --theme-glow: 0 0 20px rgba(0, 255, 136, 0.3);
-    --theme-card-bg: linear-gradient(135deg, #141414, #1e1e1e);
+    --color-primary: #00ff88;
+    --color-primary-light: #44ffaa;
+    --color-primary-dark: #00cc66;
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #141414;
+    --bg-tertiary: #1e1e1e;
+    --text-primary: #ffffff;
+    --text-secondary: #00ff88;
+    --border-color: #2a2a2a;
 }
 
-[data-theme="dark-neon"] .stat-card {
-    background: linear-gradient(135deg, #141414, #1e1e1e);
-    border: 1px solid rgba(0, 255, 136, 0.2);
-}
-
-[data-theme="dark-neon"] .stat-card:hover {
-    border-color: var(--color-primary);
-    box-shadow: var(--theme-glow);
-}
-
-[data-theme="dark-neon"] .btn-primary {
-    background: var(--theme-gradient);
-}
-
-[data-theme="dark-neon"] .sidebar-link.active {
-    background: var(--theme-gradient);
-}
-
-[data-theme="dark-neon"] .header-title {
-    background: var(--theme-gradient);
+[data-theme="dark-neon"] .header-title,
+[data-theme="dark-neon"] .sidebar-header h3 {
+    background: linear-gradient(135deg, #00ff88, #00ffff);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+[data-theme="dark-neon"] .sidebar-link.active {
+    color: #00ff88;
+}
+
+[data-theme="dark-neon"] .btn-primary {
+    background: linear-gradient(135deg, #00ff88, #00ffff);
 }
