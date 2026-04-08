@@ -21,6 +21,7 @@ async function init() {
     setupEventListeners();
     renderizarTabla();
     actualizarResumen();
+    setupModalClose();
 }
 
 // Cargar datos
@@ -370,6 +371,21 @@ async function guardarVenta(event) {
     actualizarResumen();
     cerrarModal();
     window.utils?.mostrarNotificacion('Venta registrada', 'success');
+}
+
+function setupModalClose() {
+    const modal = document.getElementById('venta-modal');
+    if (modal) {
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+    }
+    const cierreModal = document.getElementById('cerrar-caja-modal');
+    if (cierreModal) {
+        const closeBtn = cierreModal.querySelector('.modal-close');
+        if (closeBtn) closeBtn.onclick = () => cierreModal.style.display = 'none';
+        cierreModal.onclick = (e) => { if (e.target === cierreModal) cierreModal.style.display = 'none'; };
+    }
 }
 
 // Cerrar caja
