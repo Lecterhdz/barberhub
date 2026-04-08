@@ -1,0 +1,253 @@
+<!-- ─────────────────────────────────────────────────────────────────────
+     BARBERHUB - REPORTES FEATURE VIEW
+     ───────────────────────────────────────────────────────────────────── -->
+
+<div class="reportes-container">
+    <!-- Header -->
+    <div class="reportes-header">
+        <div>
+            <h2>📈 Reportes y Estadísticas</h2>
+            <p class="reportes-subtitle">Visualiza y exporta reportes de tu negocio</p>
+        </div>
+        <div class="reportes-actions">
+            <button class="btn btn-primary" id="btn-exportar-pdf">
+                📄 Exportar PDF
+            </button>
+            <button class="btn btn-secondary" id="btn-exportar-excel">
+                📊 Exportar Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs de reportes -->
+    <div class="reportes-tabs">
+        <button class="reportes-tab active" data-tab="ventas">💰 Ventas</button>
+        <button class="reportes-tab" data-tab="citas">📅 Citas</button>
+        <button class="reportes-tab" data-tab="clientes">👥 Clientes</button>
+        <button class="reportes-tab" data-tab="barberos">✂️ Barberos</button>
+        <button class="reportes-tab" data-tab="inventario">📦 Inventario</button>
+    </div>
+
+    <!-- Filtros de fecha -->
+    <div class="reportes-filtros">
+        <div class="filtros-fecha">
+            <button class="filtro-fecha-btn" data-fecha="hoy">Hoy</button>
+            <button class="filtro-fecha-btn" data-fecha="ayer">Ayer</button>
+            <button class="filtro-fecha-btn active" data-fecha="semana">Esta Semana</button>
+            <button class="filtro-fecha-btn" data-fecha="mes">Este Mes</button>
+            <button class="filtro-fecha-btn" data-fecha="trimestre">Este Trimestre</button>
+            <button class="filtro-fecha-btn" data-fecha="anio">Este Año</button>
+        </div>
+        <div class="filtros-personalizado" id="filtros-personalizado" style="display: none;">
+            <input type="date" id="fecha-inicio" class="filtro-fecha-input">
+            <span>a</span>
+            <input type="date" id="fecha-fin" class="filtro-fecha-input">
+            <button id="aplicar-filtro" class="btn btn-sm">Aplicar</button>
+        </div>
+    </div>
+
+    <!-- Panel Ventas -->
+    <div id="panel-ventas" class="reporte-panel active">
+        <!-- Resumen ventas -->
+        <div class="resumen-grid">
+            <div class="resumen-card">
+                <div class="resumen-icon">💰</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Total Ventas</span>
+                    <span class="resumen-valor" id="total-ventas-reporte">$0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">📊</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Transacciones</span>
+                    <span class="resumen-valor" id="total-transacciones">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">💵</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Ticket Promedio</span>
+                    <span class="resumen-valor" id="ticket-promedio">$0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">📈</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">vs período anterior</span>
+                    <span class="resumen-valor" id="vs-anterior">+0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de ventas -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">📈 Evolución de Ventas</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="ventas-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Ventas por método de pago -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">💳 Ventas por Método de Pago</h3>
+            </div>
+            <div class="chart-container-small">
+                <canvas id="metodos-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top productos/servicios -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">⭐ Top 10 Productos/Servicios</h3>
+            </div>
+            <div class="top-items-list" id="top-items">
+                <div class="loading-spinner">Cargando datos...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Citas -->
+    <div id="panel-citas" class="reporte-panel" style="display: none;">
+        <div class="resumen-grid">
+            <div class="resumen-card">
+                <div class="resumen-icon">📅</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Total Citas</span>
+                    <span class="resumen-valor" id="total-citas">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">✅</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Completadas</span>
+                    <span class="resumen-valor" id="citas-completadas-reporte">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">❌</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Canceladas</span>
+                    <span class="resumen-valor" id="citas-canceladas">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">📊</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Tasa de ocupación</span>
+                    <span class="resumen-valor" id="tasa-ocupacion">0%</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">📊 Citas por Barbero</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="citas-barberos-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Clientes -->
+    <div id="panel-clientes" class="reporte-panel" style="display: none;">
+        <div class="resumen-grid">
+            <div class="resumen-card">
+                <div class="resumen-icon">👥</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Total Clientes</span>
+                    <span class="resumen-valor" id="total-clientes">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">🆕</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Nuevos Clientes</span>
+                    <span class="resumen-valor" id="nuevos-clientes">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">⭐</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Clientes Frecuentes</span>
+                    <span class="resumen-valor" id="clientes-frecuentes">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🏆 Top Clientes</h3>
+            </div>
+            <div class="top-items-list" id="top-clientes">
+                <div class="loading-spinner">Cargando datos...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Barberos -->
+    <div id="panel-barberos" class="reporte-panel" style="display: none;">
+        <div class="resumen-grid">
+            <div class="resumen-card">
+                <div class="resumen-icon">✂️</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Total Barberos</span>
+                    <span class="resumen-valor" id="total-barberos">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">💰</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Comisiones pagadas</span>
+                    <span class="resumen-valor" id="total-comisiones">$0</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🏆 Ranking de Barberos</h3>
+            </div>
+            <div class="top-items-list" id="ranking-barberos">
+                <div class="loading-spinner">Cargando datos...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Inventario -->
+    <div id="panel-inventario" class="reporte-panel" style="display: none;">
+        <div class="resumen-grid">
+            <div class="resumen-card">
+                <div class="resumen-icon">📦</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Total Productos</span>
+                    <span class="resumen-valor" id="total-productos">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">⚠️</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Stock Bajo</span>
+                    <span class="resumen-valor" id="stock-bajo-total">0</span>
+                </div>
+            </div>
+            <div class="resumen-card">
+                <div class="resumen-icon">💰</div>
+                <div class="resumen-info">
+                    <span class="resumen-label">Valor Inventario</span>
+                    <span class="resumen-valor" id="valor-inventario">$0</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">⚠️ Productos con Stock Bajo</h3>
+            </div>
+            <div class="top-items-list" id="productos-stock-bajo">
+                <div class="loading-spinner">Cargando datos...</div>
+            </div>
+        </div>
+    </div>
+</div>
