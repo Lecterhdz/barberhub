@@ -131,6 +131,9 @@ function renderizarTabla() {
     document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
 }
 
+window.renderizarTablaClientes = renderizarTabla;
+window.clientesData = () => clientes;
+
 // ============ FUNCIONES GLOBALES ============
 window.verCliente = function(id) {
     const c = clientes.find(c => c.id === id);
