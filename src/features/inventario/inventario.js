@@ -20,6 +20,7 @@ async function init() {
     setupEventListeners();
     renderizarTabla();
     verificarAlertasStock();
+    setupModalClose();
 }
 
 // Cargar productos
@@ -357,6 +358,21 @@ function editarDesdeVer() {
 // Cerrar modal
 function cerrarModal(modalId = 'producto-modal') {
     document.getElementById(modalId).style.display = 'none';
+}
+
+function setupModalClose() {
+    const modal = document.getElementById('producto-modal');
+    if (modal) {
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+    }
+    const verModal = document.getElementById('producto-ver-modal');
+    if (verModal) {
+        const closeBtn = verModal.querySelector('.modal-close');
+        if (closeBtn) closeBtn.onclick = () => verModal.style.display = 'none';
+        verModal.onclick = (e) => { if (e.target === verModal) verModal.style.display = 'none'; };
+    }
 }
 
 // Configurar eventos
