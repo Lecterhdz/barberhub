@@ -259,11 +259,32 @@ function setupEventListeners() {
 // ✅ Exponer función de renderizado para que otros módulos la llamen
 window.renderizarTablaClientes = renderizarTabla;
 
-// Inicializar
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
+// ✅ Función de inicialización que se puede llamar múltiples veces
+async function iniciar() {
+    console.log('👥 Iniciando clientes...');
+    await cargarClientes();
+    setupEventListeners();
+    setupModalClose();
 }
 
-export { init };
+// ✅ Exponer globalmente
+window.iniciarClientes = iniciar;
+window.renderizarTablaClientes = renderizarTabla;
+
+// ✅ Inicializar automáticamente cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciar);
+} else {
+    // Si el DOM ya está cargado, esperar un poco
+    setTimeout(iniciar, 100);
+}
+
+// ✅ También escuchar cuando el feature se carga (para cuando se navega de vuelta)
+window.addEventListener('feature-loaded', (e) => {
+    if (e.detail.feature === 'clientes') {
+        console.log('🔄 Feature clientes recargado');
+        iniciar();
+    }
+});
+
+export { iniciar as init };
