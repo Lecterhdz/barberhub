@@ -1,0 +1,145 @@
+<!-- ─────────────────────────────────────────────────────────────────────
+     BARBERHUB - SERVICIOS FEATURE VIEW
+     ───────────────────────────────────────────────────────────────────── -->
+
+<div class="servicios-container">
+    <!-- Header -->
+    <div class="servicios-header">
+        <div>
+            <h2>✂️ Catálogo de Servicios</h2>
+            <p class="servicios-subtitle">Administra los servicios que ofrece tu barbería</p>
+        </div>
+        <button class="btn btn-primary" id="btn-nuevo-servicio">
+            + Nuevo Servicio
+        </button>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="servicios-filtros">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" 
+                   id="search-servicio" 
+                   placeholder="Buscar servicio..."
+                   class="search-input">
+        </div>
+        <div class="filtros-actions">
+            <select id="filtro-categoria" class="filtro-select">
+                <option value="todos">Todas las categorías</option>
+                <option value="Corte">✂️ Corte</option>
+                <option value="Barba">🧔 Barba</option>
+                <option value="Color">🎨 Color</option>
+                <option value="Tratamiento">💆 Tratamiento</option>
+                <option value="Paquete">✨ Paquete</option>
+            </select>
+            <select id="filtro-estado" class="filtro-select">
+                <option value="todos">Todos los estados</option>
+                <option value="activo">Activos</option>
+                <option value="inactivo">Inactivos</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Grid de Servicios -->
+    <div class="servicios-grid" id="servicios-grid">
+        <div class="loading-spinner">Cargando servicios...</div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" id="pagination">
+        <button class="page-btn" id="prev-page" disabled>Anterior</button>
+        <span id="page-info">Página 1 de 1</span>
+        <button class="page-btn" id="next-page" disabled>Siguiente</button>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Servicio -->
+<div id="servicio-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Nuevo Servicio</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form id="servicio-form">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del servicio *</label>
+                        <input type="text" id="servicio-nombre" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría *</label>
+                        <select id="servicio-categoria" required class="form-control">
+                            <option value="Corte">✂️ Corte</option>
+                            <option value="Barba">🧔 Barba</option>
+                            <option value="Color">🎨 Color</option>
+                            <option value="Tratamiento">💆 Tratamiento</option>
+                            <option value="Paquete">✨ Paquete</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precio *</label>
+                        <input type="number" id="servicio-precio" required class="form-control" step="50" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Duración (minutos) *</label>
+                        <input type="number" id="servicio-duracion" required class="form-control" step="15" min="15">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="servicio-estado" class="form-control">
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ícono</label>
+                        <select id="servicio-icono" class="form-control">
+                            <option value="✂️">✂️ Corte</option>
+                            <option value="🧔">🧔 Barba</option>
+                            <option value="🎨">🎨 Color</option>
+                            <option value="💆">💆 Tratamiento</option>
+                            <option value="✨">✨ Paquete</option>
+                            <option value="💈">💈 Barbería</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea id="servicio-descripcion" rows="3" class="form-control" placeholder="Describe el servicio..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Barberos que ofrecen este servicio</label>
+                    <div id="servicio-barberos" class="barberos-checkbox-group">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelar-modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ver Servicio -->
+<div id="servicio-ver-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Detalles del Servicio</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="servicio-detalle">
+            <!-- Contenido dinámico -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cerrar-ver-modal">Cerrar</button>
+            <button class="btn btn-primary" id="editar-desde-ver">Editar</button>
+        </div>
+    </div>
+</div>
