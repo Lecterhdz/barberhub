@@ -707,20 +707,20 @@ body,
 /* Footer */
 .footer-content {
     text-align: center;
-    padding: 20px;
+    padding: 12px 20px;  /* Reducido de 20px a 12px */
 }
 
 .footer-links {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin: 10px 0;
+    gap: 15px;
+    margin: 5px 0;  /* Reducido de 10px a 5px */
 }
 
 .footer-links a {
     color: var(--text-secondary);
     text-decoration: none;
-    font-size: 0.8rem;
+    font-size: 0.75rem;  /* Reducido de 0.8rem a 0.75rem */
 }
 
 .footer-links a:hover {
@@ -728,8 +728,9 @@ body,
 }
 
 .footer-note {
-    font-size: 0.7rem;
-    opacity: 0.6;
+    font-size: 0.65rem;  /* Reducido de 0.7rem a 0.65rem */
+    opacity: 0.5;  /* Reducido de 0.6 a 0.5 para que sea más sutil */
+    margin-top: 4px;
 }
 /* Desktop grande (sidebar visible) */
 @media (min-width: 1025px) {
