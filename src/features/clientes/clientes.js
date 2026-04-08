@@ -15,22 +15,30 @@ async function init() {
     await cargarClientes();
     setupEventListeners();
     setupModalClose();
-    renderizarTabla();
 }
 
 // Cargar clientes desde storage
 async function cargarClientes() {
     try {
         const stored = await window.storage?.obtenerTodos('clientes');
+        console.log('Clientes cargados desde storage:', stored);
+        
         if (stored && stored.length > 0) {
             clientes = stored;
         } else {
+            console.log('No hay clientes, cargando datos de ejemplo...');
             clientes = getClientesEjemplo();
             await guardarClientes();
         }
+        
+        // Forzar renderizado después de cargar
+        renderizarTabla();
+        actualizarDashboardStats();
+        
     } catch (error) {
         console.error('Error cargando clientes:', error);
         clientes = getClientesEjemplo();
+        renderizarTabla();
     }
 }
 
@@ -40,19 +48,39 @@ async function guardarClientes() {
         for (const cliente of clientes) {
             await window.storage?.guardar('clientes', cliente);
         }
+        console.log('Clientes guardados:', clientes.length);
     } catch (error) {
         console.error('Error guardando clientes:', error);
+    }
+}
+
+// Actualizar estadísticas en el dashboard
+async function actualizarDashboardStats() {
+    try {
+        const totalClientes = clientes.length;
+        // Guardar en localStorage para que el dashboard lo pueda leer
+        localStorage.setItem('dashboard_stats', JSON.stringify({
+            totalClientes: totalClientes,
+            ultimaActualizacion: new Date().toISOString()
+        }));
+        
+        // Disparar evento para actualizar dashboard
+        window.dispatchEvent(new CustomEvent('clientes-actualizados', { 
+            detail: { total: totalClientes } 
+        }));
+    } catch (error) {
+        console.error('Error actualizando stats:', error);
     }
 }
 
 // Datos de ejemplo
 function getClientesEjemplo() {
     return [
-        { id: 1, nombre: 'Carlos López', telefono: '555-1234', email: 'carlos@email.com', direccion: 'Calle 123', visitas: 12, ultimaVisita: '2024-01-15', gastoTotal: 4200, estado: 'activo', notas: 'Cliente frecuente', nacimiento: '1985-05-10' },
-        { id: 2, nombre: 'Miguel Ángel', telefono: '555-5678', email: 'miguel@email.com', direccion: 'Av. Principal 456', visitas: 8, ultimaVisita: '2024-01-10', gastoTotal: 2800, estado: 'activo', notas: '', nacimiento: '1990-08-22' },
-        { id: 3, nombre: 'Juan Pérez', telefono: '555-9012', email: 'juan@email.com', direccion: 'Boulevard 789', visitas: 5, ultimaVisita: '2024-01-05', gastoTotal: 1750, estado: 'activo', notas: 'Prefiere cortes clásicos', nacimiento: '1982-03-15' },
-        { id: 4, nombre: 'Roberto Gómez', telefono: '555-3456', email: 'roberto@email.com', direccion: 'Callejón 101', visitas: 3, ultimaVisita: '2023-12-20', gastoTotal: 1050, estado: 'inactivo', notas: '', nacimiento: '1995-11-30' },
-        { id: 5, nombre: 'Ana Martínez', telefono: '555-7890', email: 'ana@email.com', direccion: 'Pasaje 202', visitas: 15, ultimaVisita: '2024-01-18', gastoTotal: 5250, estado: 'activo', notas: 'Cliente VIP', nacimiento: '1988-07-08' }
+        { id: 1, nombre: 'Carlos López', telefono: '555-1234', email: 'carlos@email.com', direccion: 'Calle 123', visitas: 12, ultimaVisita: '2024-01-15', gastoTotal: 4200, estado: 'activo', notas: 'Cliente frecuente', nacimiento: '1985-05-10', fechaRegistro: '2024-01-01' },
+        { id: 2, nombre: 'Miguel Ángel', telefono: '555-5678', email: 'miguel@email.com', direccion: 'Av. Principal 456', visitas: 8, ultimaVisita: '2024-01-10', gastoTotal: 2800, estado: 'activo', notas: '', nacimiento: '1990-08-22', fechaRegistro: '2024-01-02' },
+        { id: 3, nombre: 'Juan Pérez', telefono: '555-9012', email: 'juan@email.com', direccion: 'Boulevard 789', visitas: 5, ultimaVisita: '2024-01-05', gastoTotal: 1750, estado: 'activo', notas: 'Prefiere cortes clásicos', nacimiento: '1982-03-15', fechaRegistro: '2024-01-03' },
+        { id: 4, nombre: 'Roberto Gómez', telefono: '555-3456', email: 'roberto@email.com', direccion: 'Callejón 101', visitas: 3, ultimaVisita: '2023-12-20', gastoTotal: 1050, estado: 'inactivo', notas: '', nacimiento: '1995-11-30', fechaRegistro: '2024-01-04' },
+        { id: 5, nombre: 'Ana Martínez', telefono: '555-7890', email: 'ana@email.com', direccion: 'Pasaje 202', visitas: 15, ultimaVisita: '2024-01-18', gastoTotal: 5250, estado: 'activo', notas: 'Cliente VIP', nacimiento: '1988-07-08', fechaRegistro: '2024-01-05' }
     ];
 }
 
@@ -79,12 +107,17 @@ function filtrarClientes() {
 // Renderizar tabla
 function renderizarTabla() {
     const tbody = document.getElementById('clientes-table-body');
-    if (!tbody) return;
+    if (!tbody) {
+        console.warn('Tabla de clientes no encontrada');
+        return;
+    }
     
     const filtered = filtrarClientes();
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
     const start = (currentPage - 1) * itemsPerPage;
     const paginated = filtered.slice(start, start + itemsPerPage);
+    
+    console.log('Renderizando tabla con', paginated.length, 'clientes');
     
     if (paginated.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="loading-cell">No hay clientes registrados</td></tr>`;
@@ -138,23 +171,19 @@ window.verCliente = function(id) {
     const modal = document.getElementById('cliente-ver-modal');
     const detalle = document.getElementById('cliente-detalle');
     
+    if (!modal || !detalle) return;
+    
     detalle.innerHTML = `
-        <div class="cliente-detalle-header" style="text-align: center; margin-bottom: 20px;">
-            <div class="cliente-avatar" style="width: 80px; height: 80px; font-size: 2.5rem; margin: 0 auto 10px;">${cliente.nombre.charAt(0)}</div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width: 80px; height: 80px; font-size: 2.5rem; background: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">${cliente.nombre.charAt(0)}</div>
             <h3>${cliente.nombre}</h3>
-            <p class="cliente-desde">Cliente desde: ${formatearFecha(cliente.fechaRegistro || new Date())}</p>
         </div>
-        
-        <div class="cliente-info-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-            <div class="info-item"><label>📞 Teléfono</label><p>${cliente.telefono}</p></div>
-            <div class="info-item"><label>✉️ Email</label><p>${cliente.email || 'No registrado'}</p></div>
-            <div class="info-item"><label>🎂 Nacimiento</label><p>${cliente.nacimiento ? formatearFecha(cliente.nacimiento) : 'No registrado'}</p></div>
-            <div class="info-item"><label>📍 Dirección</label><p>${cliente.direccion || 'No registrada'}</p></div>
-            <div class="info-item"><label>✂️ Visitas</label><p>${cliente.visitas || 0}</p></div>
-            <div class="info-item"><label>💰 Gasto total</label><p>$${(cliente.gastoTotal || 0).toLocaleString()}</p></div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div><strong>📞 Teléfono:</strong><br>${cliente.telefono}</div>
+            <div><strong>✉️ Email:</strong><br>${cliente.email || 'No registrado'}</div>
+            <div><strong>✂️ Visitas:</strong><br>${cliente.visitas || 0}</div>
+            <div><strong>💰 Gasto total:</strong><br>$${(cliente.gastoTotal || 0).toLocaleString()}</div>
         </div>
-        
-        ${cliente.notas ? `<div class="cliente-historial"><h4>📝 Notas</h4><p>${cliente.notas}</p></div>` : ''}
     `;
     
     modal.style.display = 'flex';
@@ -180,12 +209,13 @@ window.editarCliente = function(id) {
 
 // Eliminar cliente
 window.eliminarCliente = async function(id) {
-    const confirmar = await window.utils?.confirmar('¿Eliminar este cliente?');
+    const confirmar = confirm('¿Eliminar este cliente?');
     if (confirmar) {
         clientes = clientes.filter(c => c.id !== id);
         await guardarClientes();
         renderizarTabla();
-        window.utils?.mostrarNotificacion('Cliente eliminado', 'success');
+        actualizarDashboardStats();
+        alert('Cliente eliminado');
     }
 };
 
@@ -212,7 +242,8 @@ async function guardarCliente(event) {
         estado: document.getElementById('cliente-estado').value,
         visitas: 0,
         gastoTotal: 0,
-        ultimaVisita: null
+        ultimaVisita: null,
+        fechaRegistro: new Date().toISOString()
     };
     
     if (editingId) {
@@ -223,16 +254,16 @@ async function guardarCliente(event) {
             clienteData.gastoTotal = clientes[index].gastoTotal || 0;
             clientes[index] = { ...clientes[index], ...clienteData };
         }
-        window.utils?.mostrarNotificacion('Cliente actualizado', 'success');
+        alert('Cliente actualizado');
     } else {
         clienteData.id = Date.now();
-        clienteData.fechaRegistro = new Date().toISOString();
         clientes.push(clienteData);
-        window.utils?.mostrarNotificacion('Cliente agregado', 'success');
+        alert('Cliente agregado');
     }
     
     await guardarClientes();
     renderizarTabla();
+    actualizarDashboardStats();
     cerrarModal();
 }
 
@@ -247,23 +278,15 @@ function setupModalClose() {
     const modal = document.getElementById('cliente-modal');
     if (modal) {
         const closeBtn = modal.querySelector('.modal-close');
-        if (closeBtn) {
-            closeBtn.onclick = () => modal.style.display = 'none';
-        }
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.style.display = 'none';
-        };
+        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     }
     
     const verModal = document.getElementById('cliente-ver-modal');
     if (verModal) {
         const closeBtn = verModal.querySelector('.modal-close');
-        if (closeBtn) {
-            closeBtn.onclick = () => verModal.style.display = 'none';
-        }
-        verModal.onclick = (e) => {
-            if (e.target === verModal) verModal.style.display = 'none';
-        };
+        if (closeBtn) closeBtn.onclick = () => verModal.style.display = 'none';
+        verModal.onclick = (e) => { if (e.target === verModal) verModal.style.display = 'none'; };
     }
 }
 
@@ -296,11 +319,8 @@ function setupEventListeners() {
         }
     });
     
-    // Cerrar modales con ESC
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            cerrarModal();
-        }
+        if (e.key === 'Escape') cerrarModal();
     });
 }
 
