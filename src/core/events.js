@@ -184,22 +184,20 @@ function initClientes() {
             window.utils.mostrarNotificacion('Cliente agregado', 'success');
             document.getElementById('cliente-modal').style.display = 'none';
             
-            // ✅ REFRESCAR VISTA
-            await refreshCurrentView();
+            // ✅ SOLO ACTUALIZAR DATOS, NO RECARGAR
+            await loadStore();
             
-            // Recargar la página de clientes
-            if (window.router) {
-                window.router.navegar('/clientes');
+            // ✅ ACTUALIZAR LA TABLA DIRECTAMENTE
+            if (window.renderizarTablaClientes) {
+                window.renderizarTablaClientes();
+            } else {
+                // Si no existe la función global, recargar el feature
+                if (window.router) {
+                    window.router.manejarRuta();
+                }
             }
         };
     }
-    
-    // Escuchar refresh
-    window.addEventListener('refresh-clientes', async () => {
-        if (window.router) {
-            window.router.navegar('/clientes');
-        }
-    });
 }
 
 // ============================================
