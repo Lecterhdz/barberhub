@@ -146,7 +146,11 @@ export const router = {
                 const html = await response.text();
                 container.innerHTML = html;
                 // ✅ Disparar evento de que el DOM está listo
-                window.dispatchEvent(new CustomEvent('dom-ready', { detail: { feature: featureName } }));
+                window.dispatchEvent(new CustomEvent('feature-html-loaded', { 
+                    detail: { feature: featureName } 
+                }));
+                
+                resolve();
                 await new Promise(r => setTimeout(r, 50));
                 resolve();
             } catch (error) {
