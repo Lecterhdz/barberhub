@@ -25,6 +25,56 @@ async function loadStore() {
     }
 }
 
+// Función para cerrar cualquier modal
+function cerrarModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Función para configurar cierre de modales
+function setupModalClose(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    // Botón X
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn && !closeBtn.hasListener) {
+        closeBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+        closeBtn.hasListener = true;
+    }
+    
+    // Clic fuera del modal
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+// Función para refrescar la vista actual
+async function refreshCurrentView() {
+    const currentPath = window.location.hash.substring(1);
+    let feature = 'dashboard';
+    
+    if (currentPath.includes('clientes')) feature = 'clientes';
+    else if (currentPath.includes('barberos')) feature = 'barberos';
+    else if (currentPath.includes('citas')) feature = 'citas';
+    else if (currentPath.includes('servicios')) feature = 'servicios';
+    else if (currentPath.includes('inventario')) feature = 'inventario';
+    else if (currentPath.includes('caja')) feature = 'caja';
+    else if (currentPath.includes('reportes')) feature = 'reportes';
+    
+    // Recargar datos y re-renderizar
+    await loadStore();
+    
+    // Disparar evento para que el feature se refresque
+    window.dispatchEvent(new CustomEvent('refresh-view', { detail: { feature } }));
+}
+
 // Inicializar eventos globales
 export async function initGlobalEvents() {
     console.log('🔌 Inicializando eventos globales...');
@@ -35,6 +85,22 @@ export async function initGlobalEvents() {
         console.log(`📦 Feature cargado: ${feature}`);
         await loadStore();
         initFeatureEvents(feature);
+        
+        // Configurar cierre de modales para este feature
+        setTimeout(() => {
+            const modals = ['cliente-modal', 'barbero-modal', 'cita-modal', 'servicio-modal', 'producto-modal', 'venta-modal', 'cerrar-caja-modal'];
+            modals.forEach(modalId => setupModalClose(modalId));
+        }, 100);
+    });
+    
+    // Escuchar refresh de vista
+    window.addEventListener('refresh-view', async (e) => {
+        const feature = e.detail.feature;
+        console.log(`🔄 Refrescando vista: ${feature}`);
+        await loadStore();
+        
+        // Disparar evento específico para cada feature
+        window.dispatchEvent(new CustomEvent(`refresh-${feature}`, {}));
     });
 }
 
@@ -101,6 +167,7 @@ function initClientes() {
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
+            
             const cliente = {
                 id: Date.now(),
                 nombre: document.getElementById('cliente-nombre').value,
@@ -109,20 +176,28 @@ function initClientes() {
                 direccion: document.getElementById('cliente-direccion').value,
                 estado: document.getElementById('cliente-estado').value,
                 visitas: 0,
-                gastoTotal: 0
+                gastoTotal: 0,
+                fechaRegistro: new Date().toISOString()
             };
+            
             await window.storage.guardar('clientes', cliente);
             window.utils.mostrarNotificacion('Cliente agregado', 'success');
             document.getElementById('cliente-modal').style.display = 'none';
-            window.router.navegar('/clientes');
+            
+            // ✅ REFRESCAR VISTA
+            await refreshCurrentView();
+            
+            // Recargar la página de clientes
+            if (window.router) {
+                window.router.navegar('/clientes');
+            }
         };
     }
     
-    // Cerrar modales con ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.getElementById('cliente-modal').style.display = 'none';
-            document.getElementById('cliente-ver-modal').style.display = 'none';
+    // Escuchar refresh
+    window.addEventListener('refresh-clientes', async () => {
+        if (window.router) {
+            window.router.navegar('/clientes');
         }
     });
 }
@@ -140,6 +215,8 @@ function initBarberos() {
             document.getElementById('barbero-form').reset();
             document.getElementById('barbero-comision').value = '40';
             document.getElementById('barbero-estado').value = 'activo';
+            document.getElementById('barbero-horario-inicio').value = '09:00';
+            document.getElementById('barbero-horario-fin').value = '18:00';
             document.getElementById('barbero-modal').style.display = 'flex';
         };
     }
@@ -155,6 +232,7 @@ function initBarberos() {
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
+            
             const barbero = {
                 id: Date.now(),
                 nombre: document.getElementById('barbero-nombre').value,
@@ -164,14 +242,25 @@ function initBarberos() {
                 comision: parseInt(document.getElementById('barbero-comision').value),
                 estado: document.getElementById('barbero-estado').value,
                 horarioInicio: document.getElementById('barbero-horario-inicio').value,
-                horarioFin: document.getElementById('barbero-horario-fin').value
+                horarioFin: document.getElementById('barbero-horario-fin').value,
+                citasAtendidas: 0,
+                ingresosGenerados: 0,
+                rating: 0
             };
+            
             await window.storage.guardar('barberos', barbero);
             window.utils.mostrarNotificacion('Barbero agregado', 'success');
             document.getElementById('barbero-modal').style.display = 'none';
+            
+            // ✅ REFRESCAR VISTA
+            await refreshCurrentView();
             window.router.navegar('/barberos');
         };
     }
+    
+    window.addEventListener('refresh-barberos', async () => {
+        if (window.router) window.router.navegar('/barberos');
+    });
 }
 
 // ============================================
@@ -180,7 +269,6 @@ function initBarberos() {
 function initCitas() {
     console.log('📅 Inicializando citas...');
     
-    // Cargar selectores
     cargarSelectoresCitas();
     
     const btnNuevo = document.getElementById('btn-nueva-cita');
@@ -202,7 +290,6 @@ function initCitas() {
         };
     }
     
-    // Cambio de servicio actualiza precio
     const servicioSelect = document.getElementById('cita-servicio');
     if (servicioSelect) {
         servicioSelect.onchange = () => {
@@ -216,7 +303,9 @@ function initCitas() {
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
+            
             const servicioOption = document.getElementById('cita-servicio').options[document.getElementById('cita-servicio').selectedIndex];
+            
             const cita = {
                 id: Date.now(),
                 clienteId: parseInt(document.getElementById('cita-cliente').value),
@@ -231,12 +320,20 @@ function initCitas() {
                 estado: document.getElementById('cita-estado').value,
                 notas: document.getElementById('cita-notas').value
             };
+            
             await window.storage.guardar('citas', cita);
             window.utils.mostrarNotificacion('Cita agendada', 'success');
             document.getElementById('cita-modal').style.display = 'none';
+            
+            // ✅ REFRESCAR VISTA
+            await refreshCurrentView();
             window.router.navegar('/citas');
         };
     }
+    
+    window.addEventListener('refresh-citas', async () => {
+        if (window.router) window.router.navegar('/citas');
+    });
 }
 
 async function cargarSelectoresCitas() {
@@ -282,6 +379,7 @@ function initServicios() {
             document.getElementById('modal-title').textContent = 'Nuevo Servicio';
             document.getElementById('servicio-form').reset();
             document.getElementById('servicio-estado').value = 'activo';
+            document.getElementById('servicio-icono').value = '✂️';
             document.getElementById('servicio-modal').style.display = 'flex';
         };
     }
@@ -297,6 +395,7 @@ function initServicios() {
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
+            
             const servicio = {
                 id: Date.now(),
                 nombre: document.getElementById('servicio-nombre').value,
@@ -305,14 +404,23 @@ function initServicios() {
                 duracion: parseInt(document.getElementById('servicio-duracion').value),
                 estado: document.getElementById('servicio-estado').value,
                 icono: document.getElementById('servicio-icono').value,
-                descripcion: document.getElementById('servicio-descripcion').value
+                descripcion: document.getElementById('servicio-descripcion').value,
+                barberos: []
             };
+            
             await window.storage.guardar('servicios', servicio);
             window.utils.mostrarNotificacion('Servicio agregado', 'success');
             document.getElementById('servicio-modal').style.display = 'none';
+            
+            // ✅ REFRESCAR VISTA
+            await refreshCurrentView();
             window.router.navegar('/servicios');
         };
     }
+    
+    window.addEventListener('refresh-servicios', async () => {
+        if (window.router) window.router.navegar('/servicios');
+    });
 }
 
 // ============================================
@@ -342,6 +450,7 @@ function initInventario() {
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
+            
             const producto = {
                 id: Date.now(),
                 nombre: document.getElementById('producto-nombre').value,
@@ -353,12 +462,20 @@ function initInventario() {
                 descripcion: document.getElementById('producto-descripcion').value,
                 proveedor: document.getElementById('producto-proveedor').value
             };
+            
             await window.storage.guardar('productos', producto);
             window.utils.mostrarNotificacion('Producto agregado', 'success');
             document.getElementById('producto-modal').style.display = 'none';
+            
+            // ✅ REFRESCAR VISTA
+            await refreshCurrentView();
             window.router.navegar('/inventario');
         };
     }
+    
+    window.addEventListener('refresh-inventario', async () => {
+        if (window.router) window.router.navegar('/inventario');
+    });
 }
 
 // ============================================
@@ -367,7 +484,6 @@ function initInventario() {
 function initCaja() {
     console.log('💰 Inicializando caja...');
     
-    // Cargar selectores
     cargarSelectoresCaja();
     
     const btnNuevaVenta = document.getElementById('btn-nueva-venta');
@@ -412,6 +528,7 @@ function initCaja() {
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
+            
             const tipo = document.getElementById('venta-tipo').value;
             let itemId, itemNombre, precio;
             
@@ -448,7 +565,6 @@ function initCaja() {
             
             await window.storage.guardar('ventas', venta);
             
-            // Descontar stock si es producto
             if (tipo === 'producto') {
                 const productos = await window.storage.obtenerTodos('productos') || [];
                 const producto = productos.find(p => p.id === itemId);
@@ -460,6 +576,9 @@ function initCaja() {
             
             window.utils.mostrarNotificacion('Venta registrada', 'success');
             document.getElementById('venta-modal').style.display = 'none';
+            
+            // ✅ REFRESCAR VISTA
+            await refreshCurrentView();
             window.router.navegar('/caja');
         };
     }
@@ -470,6 +589,10 @@ function initCaja() {
             window.utils.mostrarNotificacion('Caja cerrada correctamente', 'success');
         };
     }
+    
+    window.addEventListener('refresh-caja', async () => {
+        if (window.router) window.router.navegar('/caja');
+    });
 }
 
 async function cargarSelectoresCaja() {
@@ -485,7 +608,7 @@ async function cargarSelectoresCaja() {
     const productoSelect = document.getElementById('venta-producto');
     if (productoSelect) {
         productoSelect.innerHTML = '<option value="">Seleccionar producto</option>' + 
-            productos.map(p => `<option value="${p.id}" data-precio="${p.precio}">${p.nombre} - $${p.precio}</option>`).join('');
+            productos.map(p => `<option value="${p.id}" data-precio="${p.precio}">${p.nombre} - $${p.precio} (Stock: ${p.stock})</option>`).join('');
     }
 }
 
@@ -534,7 +657,6 @@ function initReportes() {
         };
     }
     
-    // Tabs
     document.querySelectorAll('.reportes-tab').forEach(tab => {
         tab.onclick = () => {
             const tabName = tab.dataset.tab;
@@ -592,7 +714,6 @@ function initConfiguracion() {
         };
     }
     
-    // Guardar cambios
     const inputs = ['config-nombre', 'config-telefono', 'config-direccion', 'config-horario', 'config-idioma', 'config-notificaciones', 'config-sonidos'];
     inputs.forEach(id => {
         const el = document.getElementById(id);
@@ -605,17 +726,21 @@ function initConfiguracion() {
 
 function cargarConfiguracionGuardada() {
     const config = JSON.parse(localStorage.getItem('barberhub_config') || '{}');
-    document.getElementById('config-nombre').value = config.nombre || '';
-    document.getElementById('config-telefono').value = config.telefono || '';
-    document.getElementById('config-direccion').value = config.direccion || '';
-    document.getElementById('config-horario').value = config.horario || '';
-    document.getElementById('config-tema').value = config.tema || 'dark-amber';
-    document.getElementById('config-idioma').value = config.idioma || 'es';
-    if (document.getElementById('config-notificaciones')) {
-        document.getElementById('config-notificaciones').checked = config.notificaciones || false;
-    }
-    if (document.getElementById('config-sonidos')) {
-        document.getElementById('config-sonidos').checked = config.sonidos || false;
+    if (document.getElementById('config-nombre')) document.getElementById('config-nombre').value = config.nombre || '';
+    if (document.getElementById('config-telefono')) document.getElementById('config-telefono').value = config.telefono || '';
+    if (document.getElementById('config-direccion')) document.getElementById('config-direccion').value = config.direccion || '';
+    if (document.getElementById('config-horario')) document.getElementById('config-horario').value = config.horario || '';
+    if (document.getElementById('config-tema')) document.getElementById('config-tema').value = config.tema || 'dark-amber';
+    if (document.getElementById('config-idioma')) document.getElementById('config-idioma').value = config.idioma || 'es';
+    if (document.getElementById('config-notificaciones')) document.getElementById('config-notificaciones').checked = config.notificaciones || false;
+    if (document.getElementById('config-sonidos')) document.getElementById('config-sonidos').checked = config.sonidos || false;
+    
+    const licencia = JSON.parse(localStorage.getItem('barberhub_licencia') || '{}');
+    const licenseInfo = document.getElementById('license-info');
+    if (licenseInfo) {
+        licenseInfo.innerHTML = licencia.key ? 
+            `✅ Licencia: <strong>${licencia.tipo}</strong><br>Expira: ${new Date(licencia.expiracion).toLocaleDateString()}` :
+            '❌ No hay licencia activa';
     }
 }
 
@@ -642,7 +767,6 @@ function guardarConfiguracion() {
 function initPortal() {
     console.log('🚪 Inicializando portal...');
     
-    // Navegación
     document.querySelectorAll('.portal-nav-btn').forEach(btn => {
         btn.onclick = () => {
             const pagina = btn.dataset.pagina;
@@ -653,7 +777,6 @@ function initPortal() {
         };
     });
     
-    // Seleccionar servicio
     document.querySelectorAll('.servicio-card').forEach(card => {
         card.onclick = () => {
             document.querySelectorAll('.servicio-card').forEach(c => c.classList.remove('selected'));
@@ -662,7 +785,6 @@ function initPortal() {
         };
     });
     
-    // Seleccionar barbero
     document.querySelectorAll('.barbero-card-portal').forEach(card => {
         card.onclick = () => {
             document.querySelectorAll('.barbero-card-portal').forEach(c => c.classList.remove('selected'));
