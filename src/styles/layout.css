@@ -202,21 +202,21 @@
    ============================================ */
 #app-main {
     flex: 1;
-    margin-left: var(--sidebar-width-desktop);
     padding: 20px;
     transition: margin var(--transition-speed) ease;
     min-height: calc(100vh - var(--header-height));
     overflow-x: auto;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    width: 100%;
 }
+
 /* Contenedor para centrar el contenido */
 .main-container {
     width: 100%;
     max-width: var(--container-max-width, 1400px);
     margin: 0 auto;
 }
+
+/* Auth Container - Centrado perfecto (sin margen izquierdo) */
 .auth-container {
     display: flex;
     justify-content: center;
@@ -224,7 +224,9 @@
     min-height: calc(100vh - var(--header-height) - 100px);
     width: 100%;
     padding: 20px;
+    margin: 0 auto;
 }
+
 .auth-card {
     max-width: 450px;
     width: 100%;
@@ -234,6 +236,8 @@
     padding: 30px;
     box-shadow: var(--shadow-lg);
 }
+
+/* Dashboard container */
 .dashboard-container {
     width: 100%;
     max-width: var(--container-max-width, 1400px);
@@ -478,13 +482,15 @@
         position: fixed;
         top: var(--header-height);
         left: -100%;
-        width: 280px;
+        width: var(--sidebar-width-desktop);
         transition: left 0.3s ease;
         z-index: 100;
+        height: calc(100vh - var(--header-height));
     }
     
     #app-sidebar.open {
         left: 0;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
     }
     
     .sidebar-label {
@@ -508,11 +514,12 @@
     #app-main {
         margin-left: 0;
         padding: 15px;
-        margin-top: var(--header-height);
+        margin-top: 0;
+        width: 100%;
     }
     
     .header-title {
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
     
     .header-subtitle {
@@ -698,4 +705,18 @@
 .footer-note {
     font-size: 0.7rem;
     opacity: 0.6;
+}
+/* Desktop grande (sidebar visible) */
+@media (min-width: 1025px) {
+    /* En desktop, el main tiene margen izquierdo igual al ancho del sidebar */
+    #app-main {
+        margin-left: var(--sidebar-width-desktop);
+    }
+    
+    /* Cuando el sidebar está presente, el auth-container necesita ajuste */
+    .auth-container {
+        width: calc(100% - var(--sidebar-width-desktop));
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
