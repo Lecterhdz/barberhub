@@ -52,6 +52,16 @@ export const router = {
         const rutaActual = this.getCurrentRoute();
         let featureName = this.rutas[rutaActual];
         
+        // Verificar autenticación para rutas protegidas
+        const rutasProtegidas = ['/clientes', '/citas', '/barberos', '/servicios', '/inventario', '/caja', '/reportes', '/configuracion'];
+        
+        if (rutasProtegidas.includes(rutaActual)) {
+            const autenticado = window.app?.estado?.licencia;
+            if (!autenticado) {
+                this.navegar('/auth');
+                return;
+            }
+        }        
         if (!featureName) {
             // Intentar con la primera parte de la ruta
             const parts = rutaActual.split('/').filter(p => p);
