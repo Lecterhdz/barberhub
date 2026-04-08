@@ -23,6 +23,7 @@ async function init() {
     await cargarDatos();
     setupEventListeners();
     renderizarVista();
+    setupModalClose();  // ✅ AGREGAR ESTA LÍNEA
 }
 
 // Cargar todos los datos necesarios
@@ -202,7 +203,40 @@ function setupEventListeners() {
         }
     });
 }
-
+function setupModalClose() {
+    // Modal de cita
+    const modal = document.getElementById('cita-modal');
+    if (modal) {
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+        // Cerrar al hacer clic fuera
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+    
+    // Modal de ver cita
+    const verModal = document.getElementById('cita-ver-modal');
+    if (verModal) {
+        const closeBtn = verModal.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                verModal.style.display = 'none';
+            };
+        }
+        verModal.onclick = (e) => {
+            if (e.target === verModal) {
+                verModal.style.display = 'none';
+            }
+        };
+    }
+}
 // Renderizar vista según currentView
 function renderizarVista() {
     if (currentView === 'calendario') {
