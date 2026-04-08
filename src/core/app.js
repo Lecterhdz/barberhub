@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - CORE APP (COMPLETAMENTE CORREGIDO)
+// BARBERHUB - CORE APP (COMPLETAMENTE CORREGIDO Y OPTIMIZADO)
 // ─────────────────────────────────────────────────────────────────────
 
 import { router } from './router.js';
@@ -51,22 +51,31 @@ export const app = {
             Sidebar.render();
             this.renderFooter();
             
-            // ✅ INICIALIZAR THEME SWITCHER AQUÍ
-            ThemeSwitcher.init(); 
+            // Inicializar ThemeSwitcher después de que el header esté listo
+            setTimeout(() => {
+                ThemeSwitcher.init();
+            }, 100);
             
             // Configurar eventos globales
             this.configurarEventosGlobales();
             
+            // Agregar clase al body para estilos específicos
+            if (!autenticado) {
+                document.body.classList.add('auth-page');
+            } else {
+                document.body.classList.remove('auth-page');
+            }
+            
             if (autenticado) {
-                // Navegar a dashboard
                 router.navegar('/dashboard');
             } else {
-                // Navegar a login
                 router.navegar('/auth');
             }
             
             // Ocultar loader
-            this.ocultarLoader();
+            setTimeout(() => {
+                this.ocultarLoader();
+            }, 500);
             
             console.log('✅ BarberHub listo');
             
@@ -98,7 +107,11 @@ export const app = {
     ocultarLoader: function() {
         const loader = document.getElementById('app-loader');
         if (loader) {
-            loader.style.display = 'none';
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                loader.style.opacity = '1';
+            }, 300);
         }
     },
 
@@ -116,7 +129,7 @@ export const app = {
         document.body.appendChild(errorDiv);
         
         setTimeout(() => {
-            errorDiv.remove();
+            if (errorDiv) errorDiv.remove();
         }, 5000);
     },
 
@@ -132,6 +145,12 @@ export const app = {
             if (configGuardada) {
                 this.estado.configuracion = { ...this.estado.configuracion, ...configGuardada };
             }
+            
+            // Cargar tema guardado
+            const temaGuardado = localStorage.getItem('barberhub_tema');
+            if (temaGuardado) {
+                this.estado.tema = temaGuardado;
+            }
         } catch (error) {
             console.error('Error cargando estado:', error);
         }
@@ -142,6 +161,7 @@ export const app = {
         try {
             storage.localStorage.set('barberhub_estado', this.estado);
             storage.localStorage.set('barberhub_config', this.estado.configuracion);
+            localStorage.setItem('barberhub_tema', this.estado.tema);
         } catch (error) {
             console.error('Error guardando estado:', error);
         }
@@ -154,6 +174,7 @@ export const app = {
             themeLink.href = `./src/core/themes/${this.estado.tema}.css`;
         }
         document.body.setAttribute('data-theme', this.estado.tema);
+        document.documentElement.setAttribute('data-theme', this.estado.tema);
     },
 
     // Cambiar tema
@@ -165,9 +186,10 @@ export const app = {
             this.guardarEstado();
             
             // Notificar cambio
-            if (window.dispatchEvent) {
-                window.dispatchEvent(new CustomEvent('theme-changed', { detail: { tema } }));
-            }
+            window.dispatchEvent(new CustomEvent('theme-changed', { detail: { tema } }));
+            
+            // Mostrar notificación
+            this.mostrarNotificacion(`Tema cambiado a ${tema}`, 'success');
         }
     },
 
@@ -190,7 +212,7 @@ export const app = {
                     return false;
                 }
                 
-                // Verificar días restantes y mostrar advertencia
+                // Verificar días restantes
                 const diasRestantes = Math.ceil((fechaExpiracion - ahora) / (1000 * 60 * 60 * 24));
                 if (diasRestantes <= 7 && diasRestantes > 0) {
                     console.warn(`⚠️ Licencia expira en ${diasRestantes} días`);
@@ -205,7 +227,7 @@ export const app = {
         return false;
     },
 
-    // Mostrar advertencia de licencia próxima a expirar
+    // Mostrar advertencia de licencia
     mostrarAdvertenciaLicencia: function(diasRestantes) {
         const advertencia = document.createElement('div');
         advertencia.className = 'warning-banner';
@@ -220,7 +242,7 @@ export const app = {
         document.body.insertBefore(advertencia, document.body.firstChild);
         
         setTimeout(() => {
-            advertencia.remove();
+            if (advertencia) advertencia.remove();
         }, 10000);
     },
 
@@ -230,8 +252,17 @@ export const app = {
         storage.localStorage.set('barberhub_licencia', licencia);
         this.guardarEstado();
         
+        // Quitar clase auth-page
+        document.body.classList.remove('auth-page');
+        
+        // Recargar sidebar
+        Sidebar.render();
+        
         // Disparar evento
         window.dispatchEvent(new CustomEvent('license-activated', { detail: licencia }));
+        
+        // Mostrar notificación
+        this.mostrarNotificacion(`Licencia ${licencia.tipo} activada`, 'success');
     },
 
     // Cerrar sesión
@@ -241,10 +272,14 @@ export const app = {
             this.estado.licencia = null;
             storage.localStorage.remove('barberhub_licencia');
             this.guardarEstado();
-            router.navegar('/auth');
             
-            // Recargar sidebar para actualizar estado
+            // Agregar clase auth-page
+            document.body.classList.add('auth-page');
+            
+            router.navegar('/auth');
             Sidebar.render();
+            
+            this.mostrarNotificacion('Sesión cerrada correctamente', 'info');
         }
     },
 
@@ -253,8 +288,6 @@ export const app = {
         console.log('🔌 Activando feature:', featureName);
         this.estado.featureActivo = featureName;
         this.guardarEstado();
-        
-        // Disparar evento
         window.dispatchEvent(new CustomEvent('feature-changed', { detail: { feature: featureName } }));
     },
 
@@ -283,13 +316,21 @@ export const app = {
                             ${diasRestantes > 0 ? `<small>${diasRestantes} días</small>` : ''}
                         </div>
                     ` : ''}
-                    <!-- Los botones se agregarán aquí por ThemeSwitcher -->
                 </div>
             </div>
         `;
         
-        // Disparar evento para que ThemeSwitcher agregue sus botones
+        // Disparar evento para ThemeSwitcher
         window.dispatchEvent(new CustomEvent('header-ready'));
+        
+        // Evento para menú móvil
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        if (mobileBtn) {
+            mobileBtn.onclick = () => {
+                const sidebar = document.getElementById('app-sidebar');
+                if (sidebar) sidebar.classList.toggle('open');
+            };
+        }
     },
 
     // Renderizar footer
@@ -307,35 +348,28 @@ export const app = {
                     <a href="#" onclick="window.app.mostrarAyuda()">Ayuda</a>
                     <a href="#" onclick="window.app.exportarDatos()">Exportar datos</a>
                 </div>
-                <p class="footer-note">
-                    Los datos se guardan localmente. Exporta regularmente para respaldo.
-                </p>
             </div>
         `;
     },
 
     // Configurar eventos globales
     configurarEventosGlobales: function() {
-        // Teclas de acceso rápido
+        // Ctrl + S
         document.addEventListener('keydown', (e) => {
-            // Ctrl + S: Guardar
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 this.guardarEstado();
                 this.mostrarNotificacion('Datos guardados', 'success');
             }
-            
-            // Escape: Cerrar modales
             if (e.key === 'Escape') {
                 this.cerrarModales();
             }
         });
         
-        // Detectar cambios de conexión
+        // Online/Offline
         window.addEventListener('online', () => {
             this.mostrarNotificacion('Conexión restablecida', 'success');
         });
-        
         window.addEventListener('offline', () => {
             this.mostrarNotificacion('Sin conexión a internet', 'warning');
         });
@@ -347,7 +381,7 @@ export const app = {
         notification.className = `notification notification-${tipo}`;
         notification.innerHTML = `
             <div class="notification-content">
-                <span>${tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : 'ℹ️'}</span>
+                <span>${tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : tipo === 'warning' ? '⚠️' : 'ℹ️'}</span>
                 <p>${mensaje}</p>
             </div>
         `;
@@ -361,47 +395,25 @@ export const app = {
 
     // Cerrar modales
     cerrarModales: function() {
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.remove();
-        });
+        document.querySelectorAll('.modal').forEach(modal => modal.remove());
     },
 
     // Abrir configuración
     openConfiguracion: function() {
-        const config = {
-            tema: this.estado.tema,
-            notificaciones: this.estado.configuracion.notificaciones,
-            sonidos: this.estado.configuracion.sonidos,
-            idioma: this.estado.configuracion.idioma
-        };
-        
-        // Disparar evento para que el feature de configuración lo maneje
-        window.dispatchEvent(new CustomEvent('open-config', { detail: config }));
+        window.dispatchEvent(new CustomEvent('open-config', { 
+            detail: this.estado.configuracion 
+        }));
+        this.mostrarNotificacion('Configuración - Próximamente', 'info');
     },
 
     // Mostrar acerca de
     mostrarAcercaDe: function() {
-        alert(`
-BarberHub v1.0.0
-Gestión Inteligente para Barberías
-
-Desarrollado para optimizar la gestión de tu barbería.
-© 2026 Todos los derechos reservados.
-        `);
+        alert(`BarberHub v1.0.0\nGestión Inteligente para Barberías\n\nDesarrollado para optimizar la gestión de tu barbería.\n© 2026 Todos los derechos reservados.`);
     },
 
     // Mostrar ayuda
     mostrarAyuda: function() {
-        alert(`
-Ayuda rápida:
-
-• Navega usando el menú lateral
-• Los datos se guardan automáticamente
-• Exporta tus datos regularmente
-• Usa Ctrl+S para guardar manualmente
-
-Para más ayuda, contacta con soporte.
-        `);
+        alert(`Ayuda rápida:\n\n• Navega usando el menú lateral\n• Los datos se guardan automáticamente\n• Exporta tus datos regularmente\n• Usa Ctrl+S para guardar manualmente\n\nPara más ayuda, contacta con soporte.`);
     },
 
     // Exportar datos
@@ -413,18 +425,18 @@ Para más ayuda, contacta con soporte.
                 clientes: await storage.obtenerTodos('clientes') || [],
                 citas: await storage.obtenerTodos('citas') || [],
                 servicios: await storage.obtenerTodos('servicios') || [],
+                productos: await storage.obtenerTodos('productos') || [],
                 configuracion: this.estado.configuracion
             };
             
             const dataStr = JSON.stringify(datos, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = `barberhub-backup-${new Date().toISOString().slice(0,19)}.json`;
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `barberhub-backup-${new Date().toISOString().slice(0, 19)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
             
             this.mostrarNotificacion('Datos exportados correctamente', 'success');
         } catch (error) {
@@ -440,17 +452,18 @@ Para más ayuda, contacta con soporte.
             try {
                 const datos = JSON.parse(e.target.result);
                 
-                // Validar estructura
-                if (datos.clientes && Array.isArray(datos.clientes)) {
+                if (datos.clientes?.length) {
                     await storage.guardarMultiples('clientes', datos.clientes);
                 }
-                
-                if (datos.citas && Array.isArray(datos.citas)) {
+                if (datos.citas?.length) {
                     await storage.guardarMultiples('citas', datos.citas);
+                }
+                if (datos.servicios?.length) {
+                    await storage.guardarMultiples('servicios', datos.servicios);
                 }
                 
                 this.mostrarNotificacion('Datos importados correctamente', 'success');
-                location.reload();
+                setTimeout(() => location.reload(), 1500);
             } catch (error) {
                 console.error('Error importando datos:', error);
                 this.mostrarNotificacion('Error al importar datos', 'error');
@@ -462,15 +475,16 @@ Para más ayuda, contacta con soporte.
     // Obtener estadísticas
     getEstadisticas: async function() {
         try {
-            const clientes = await storage.obtenerTodos('clientes') || [];
-            const citas = await storage.obtenerTodos('citas') || [];
-            const servicios = await storage.obtenerTodos('servicios') || [];
+            const [clientes, citas, servicios] = await Promise.all([
+                storage.obtenerTodos('clientes'),
+                storage.obtenerTodos('citas'),
+                storage.obtenerTodos('servicios')
+            ]);
             
-            const citasHoy = citas.filter(cita => {
-                const fechaCita = new Date(cita.fecha);
-                const hoy = new Date();
-                return fechaCita.toDateString() === hoy.toDateString();
-            });
+            const hoy = new Date().toDateString();
+            const citasHoy = citas.filter(cita => 
+                new Date(cita.fecha).toDateString() === hoy
+            );
             
             return {
                 totalClientes: clientes.length,
@@ -491,9 +505,7 @@ window.app = app;
 
 // Iniciar cuando DOM esté listo
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        app.init();
-    });
+    document.addEventListener('DOMContentLoaded', () => app.init());
 } else {
     app.init();
 }
