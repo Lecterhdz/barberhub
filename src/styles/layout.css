@@ -215,7 +215,32 @@
     max-width: var(--container-max-width, 1400px);
     margin: 0 auto;
 }
+/* Fondo base que cambia con el tema */
+body,
+#app,
+.app-layout,
+.auth-wrapper {
+    background-color: var(--bg-primary);
+    transition: background-color var(--transition-normal);
+}
 
+/* Asegurar que el main también herede el fondo */
+#app-main {
+    background-color: var(--bg-primary);
+}
+
+/* Auth wrapper para página de login */
+.auth-wrapper {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
 /* Auth Container - Centrado perfecto (sin margen izquierdo) */
 .auth-container {
     display: flex;
