@@ -256,8 +256,9 @@ export const app = {
         storage.localStorage.set('barberhub_licencia', licencia);
         this.guardarEstado();
         
-        // Forzar actualización del header
-        this.renderHeader();
+        // ✅ FORZAR ACTUALIZACIÓN COMPLETA DE LA UI
+        this.renderHeader();  // Actualiza el badge de licencia
+        Sidebar.render();     // Actualiza el sidebar
         
         // Disparar evento
         window.dispatchEvent(new CustomEvent('license-activated', { detail: licencia }));
