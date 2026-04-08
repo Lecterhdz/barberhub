@@ -1,31 +1,56 @@
 // src/core/router.js
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (Completo y Optimizado)
+// BARBERHUB - ROUTER (Navegación Unificada Portal + Admin)
 // ─────────────────────────────────────────────────────────────────────
 
+console.log('🔄 Router v2.0');
+
 export const router = {
+    // ============================================
+    // RUTAS UNIFICADAS
+    // ============================================
+    
     rutas: {
-        '/': 'dashboard',
-        '/dashboard': 'dashboard',
-        '/auth': 'auth',
-        '/portal': 'portal',
-        '/clientes': 'clientes',
-        '/citas': 'citas',
-        '/barberos': 'barberos',
-        '/servicios': 'servicios',
-        '/inventario': 'inventario',
-        '/caja': 'caja',
-        '/reportes': 'reportes',
-        '/configuracion': 'configuracion'
+        // Portal (público - sin autenticación)
+        '/portal/agendar': { view: 'portal/agendar', title: 'Agendar Cita', publica: true },
+        '/portal/mis-citas': { view: 'portal/mis-citas', title: 'Mis Citas', publica: true },
+        '/portal/info': { view: 'portal/info', title: 'Información', publica: true },
+        
+        // Admin (privado - requiere autenticación)
+        '/admin/dashboard': { view: 'admin/dashboard', title: 'Dashboard', publica: false },
+        '/admin/clientes': { view: 'admin/clientes', title: 'Clientes', publica: false },
+        '/admin/barberos': { view: 'admin/barberos', title: 'Barberos', publica: false },
+        '/admin/citas': { view: 'admin/citas', title: 'Citas', publica: false },
+        '/admin/servicios': { view: 'admin/servicios', title: 'Servicios', publica: false },
+        '/admin/inventario': { view: 'admin/inventario', title: 'Inventario', publica: false },
+        '/admin/caja': { view: 'admin/caja', title: 'Caja', publica: false },
+        '/admin/reportes': { view: 'admin/reportes', title: 'Reportes', publica: false },
+        '/admin/configuracion': { view: 'admin/configuracion', title: 'Configuración', publica: false },
+        
+        // Redirecciones (backward compatibility)
+        '/': '/portal/agendar',
+        '/dashboard': '/admin/dashboard',
+        '/clientes': '/admin/clientes',
+        '/citas': '/admin/citas',
+        '/barberos': '/admin/barberos',
+        '/servicios': '/admin/servicios',
+        '/inventario': '/admin/inventario',
+        '/caja': '/admin/caja',
+        '/reportes': '/admin/reportes',
+        '/configuracion': '/admin/configuracion',
+        '/portal': '/portal/agendar',
+        '/auth': '/portal/agendar'
     },
-
-    // Control de carga
-    cargandoFeature: false,
-    ultimoFeature: '',
-    featureActual: '',
-
-    // Detectar base path para GitHub Pages
-    getBasePath: function() {
+    
+    // Control de navegación
+    navegando: false,
+    rutaActual: '/portal/agendar',
+    
+    // ============================================
+    // DETECCIÓN DE BASE PATH
+    // ============================================
+    
+    getBasePath() {
         const pathname = window.location.pathname;
         if (pathname.includes('/barberhub/')) {
             return '/barberhub';
@@ -36,284 +61,344 @@ export const router = {
         }
         return '';
     },
-
-    // Obtener ruta actual del hash
-    getCurrentRoute: function() {
+    
+    // ============================================
+    // OBTENER RUTA ACTUAL
+    // ============================================
+    
+    getCurrentRoute() {
         let hash = window.location.hash;
         hash = hash.substring(1);
-        if (!hash || hash === '') return '/';
+        
+        if (!hash || hash === '') {
+            return '/portal/agendar';
+        }
+        
+        // Limpiar query params
         const queryIndex = hash.indexOf('?');
-        if (queryIndex !== -1) hash = hash.substring(0, queryIndex);
+        if (queryIndex !== -1) {
+            hash = hash.substring(0, queryIndex);
+        }
+        
+        // Redirecciones
+        if (this.rutas[hash] && typeof this.rutas[hash] === 'string') {
+            return this.rutas[hash];
+        }
+        
         return hash;
     },
-
-    // Navegar a una ruta
-    navegar: function(ruta, agregarHistorial = true) {
-        const rutaActual = this.getCurrentRoute();
+    
+    // ============================================
+    // VERIFICAR ACCESO
+    // ============================================
+    
+    tieneAcceso(ruta) {
+        const routeConfig = this.rutas[ruta];
+        if (!routeConfig || typeof routeConfig === 'string') {
+            // Si es una redirección, resolver la ruta real
+            const resolved = this.resolverRuta(ruta);
+            return this.tieneAcceso(resolved);
+        }
         
-        // No navegar si es la misma ruta
-        if (rutaActual === ruta) {
-            console.log('⏳ Misma ruta, ignorando navegación');
+        // Si es pública, siempre acceso
+        if (routeConfig.publica) return true;
+        
+        // Si es privada, requiere autenticación
+        return window.app?.estado?.autenticado === true;
+    },
+    
+    resolverRuta(ruta) {
+        const resolved = this.rutas[ruta];
+        if (typeof resolved === 'string') {
+            return this.resolverRuta(resolved);
+        }
+        return ruta;
+    },
+    
+    // ============================================
+    // NAVEGACIÓN
+    // ============================================
+    
+    navegar(ruta, agregarHistorial = true) {
+        // Normalizar ruta
+        let rutaDestino = ruta;
+        
+        // Verificar si es una redirección
+        if (this.rutas[ruta] && typeof this.rutas[ruta] === 'string') {
+            rutaDestino = this.rutas[ruta];
+        }
+        
+        // Verificar si es la misma ruta
+        if (this.rutaActual === rutaDestino && agregarHistorial) {
+            console.log('⏳ Misma ruta, ignorando');
             return;
         }
         
-        console.log('🚀 Navegando de:', rutaActual, 'a:', ruta);
-        
-        if (agregarHistorial) {
-            window.location.hash = ruta;
-        } else {
-            window.location.replace(`#${ruta}`);
+        // Verificar acceso
+        if (!this.tieneAcceso(rutaDestino)) {
+            console.log('🔒 Acceso denegado, redirigiendo a portal');
+            rutaDestino = '/portal/agendar';
         }
+        
+        console.log('🚀 Navegando a:', rutaDestino);
+        
+        // Actualizar UI del sidebar si es admin
+        if (rutaDestino.startsWith('/admin/') && window.app) {
+            window.app.estado.vista = 'admin';
+            window.app.estado.modulo = rutaDestino.split('/')[2];
+            window.app.renderizarSidebar();
+        } else if (window.app) {
+            window.app.estado.vista = 'portal';
+            window.app.estado.modulo = rutaDestino.split('/')[2];
+        }
+        
+        // Actualizar hash
+        if (agregarHistorial) {
+            window.location.hash = rutaDestino;
+        } else {
+            window.location.replace(`#${rutaDestino}`);
+        }
+        
         this.manejarRuta();
     },
-
-    // Manejar la ruta actual
-    manejarRuta: async function() {
-        // Evitar cargas simultáneas
-        if (this.cargandoFeature) {
-            console.log('⏳ Ya cargando un feature, ignorando...');
+    
+    // ============================================
+    // MANEJAR RUTA (CARGA DE VISTAS)
+    // ============================================
+    
+    async manejarRuta() {
+        if (this.navegando) {
+            console.log('⏳ Ya navegando, ignorando...');
             return;
         }
         
-        const rutaActual = this.getCurrentRoute();
-        let featureName = this.rutas[rutaActual];
+        let ruta = this.getCurrentRoute();
         
-        if (!featureName) {
-            const parts = rutaActual.split('/').filter(p => p);
-            if (parts.length > 0) {
-                featureName = this.rutas[`/${parts[0]}`];
-            }
-            if (!featureName) {
-                featureName = 'dashboard';
-            }
+        // Resolver redirecciones
+        ruta = this.resolverRuta(ruta);
+        
+        // Verificar acceso
+        if (!this.tieneAcceso(ruta)) {
+            console.log('🔒 Sin acceso a', ruta);
+            ruta = '/portal/agendar';
+            window.location.hash = ruta;
         }
         
-        // No cargar el mismo feature si ya estamos en él
-        if (this.featureActual === featureName) {
-            console.log('⏳ Ya en el feature:', featureName, '- ignorando recarga');
+        const routeConfig = this.rutas[ruta];
+        if (!routeConfig) {
+            console.error('Ruta no encontrada:', ruta);
+            this.mostrarError404();
             return;
         }
         
-        console.log('📍 Navegando a:', rutaActual, 'Feature:', featureName);
+        this.rutaActual = ruta;
+        this.navegando = true;
         
-        this.cargandoFeature = true;
+        // Actualizar título de la página
+        document.title = `BarberHub - ${routeConfig.title}`;
         
         try {
-            await this.cargarFeature(featureName);
-            this.featureActual = featureName;
-            this.ultimoFeature = featureName;
-            this.actualizarSidebarActivo(rutaActual);
+            await this.cargarVista(routeConfig.view);
         } catch (error) {
-            console.error('Error cargando feature:', error);
-            this.mostrarError(featureName, error);
+            console.error('Error cargando vista:', error);
+            this.mostrarError(error);
         } finally {
-            this.cargandoFeature = false;
+            this.navegando = false;
         }
     },
-
-    // Cargar feature completo (CSS + HTML + JS)
-    cargarFeature: async function(featureName) {
-        console.log(`📦 Cargando feature: ${featureName}`);
+    
+    // ============================================
+    // CARGA DE VISTAS
+    // ============================================
+    
+    async cargarVista(viewPath) {
+        console.log(`📄 Cargando vista: ${viewPath}`);
+        
+        const container = document.getElementById('app-main');
+        if (!container) {
+            throw new Error('Contenedor app-main no encontrado');
+        }
+        
+        // Mostrar loader
+        this.mostrarLoader(container);
+        
+        // Cargar HTML
+        const html = await this.cargarHTML(viewPath);
+        if (html) {
+            container.innerHTML = html;
+        }
+        
+        // Cargar CSS
+        await this.cargarCSS(viewPath);
+        
+        // Cargar y ejecutar JS
+        await this.cargarJS(viewPath);
+        
+        // Ocultar loader
+        this.ocultarLoader(container);
+        
+        // Disparar evento de vista cargada
+        window.dispatchEvent(new CustomEvent('view-loaded', {
+            detail: { view: viewPath, ruta: this.rutaActual }
+        }));
+        
+        console.log(`✅ Vista ${viewPath} cargada`);
+    },
+    
+    async cargarHTML(viewPath) {
+        const basePath = this.getBasePath();
+        const htmlPath = `${basePath}/src/views/${viewPath}.html`;
         
         try {
-            await this.cargarCSS(featureName);
-            await this.cargarHTML(featureName);
-            await this.cargarJS(featureName);
-            
-            // Disparar evento de que el feature está listo
-            window.dispatchEvent(new CustomEvent('feature-loaded', { 
-                detail: { feature: featureName } 
-            }));
-            
-            console.log(`✅ Feature ${featureName} cargado correctamente`);
+            const response = await fetch(htmlPath);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return await response.text();
         } catch (error) {
-            console.error(`❌ Error cargando feature ${featureName}:`, error);
-            throw error;
+            console.error(`Error cargando HTML: ${htmlPath}`, error);
+            return `<div class="error-container">
+                        <h2>⚠️ Error</h2>
+                        <p>No se pudo cargar la vista: ${viewPath}</p>
+                        <button onclick="location.reload()">Recargar</button>
+                    </div>`;
         }
     },
-
-    // Cargar CSS del feature
-    cargarCSS: function(featureName) {
+    
+    async cargarCSS(viewPath) {
+        const basePath = this.getBasePath();
+        const cssPath = `${basePath}/src/views/${viewPath}.css`;
+        
         return new Promise((resolve) => {
-            const basePath = this.getBasePath();
-            const cssPath = `${basePath}/src/features/${featureName}/${featureName}.css`;
-            const featureCss = document.getElementById('feature-css');
+            const linkId = `css-${viewPath.replace(/\//g, '-')}`;
+            let link = document.getElementById(linkId);
             
-            if (featureCss) {
-                featureCss.href = cssPath;
-                featureCss.onload = () => {
-                    console.log(`✅ CSS ${featureName} cargado`);
-                    resolve();
-                };
-                featureCss.onerror = () => {
-                    console.warn(`⚠️ CSS no encontrado: ${cssPath}`);
-                    resolve();
-                };
-            } else {
-                resolve();
+            if (link) {
+                link.remove();
             }
             
-            // Timeout por si tarda demasiado
-            setTimeout(resolve, 1000);
+            link = document.createElement('link');
+            link.id = linkId;
+            link.rel = 'stylesheet';
+            link.href = cssPath;
+            link.onload = () => resolve();
+            link.onerror = () => {
+                console.warn(`⚠️ CSS no encontrado: ${cssPath}`);
+                resolve();
+            };
+            document.head.appendChild(link);
+            
+            setTimeout(resolve, 500);
         });
     },
-
-    // Cargar HTML del feature
-    cargarHTML: function(featureName) {
-        return new Promise(async (resolve, reject) => {
-            const container = document.getElementById('app-main');
-            if (!container) {
-                reject(new Error('Contenedor app-main no encontrado'));
-                return;
-            }
-            
-            const basePath = this.getBasePath();
-            const htmlPath = `${basePath}/src/features/${featureName}/${featureName}.html`;
-            
-            try {
-                const response = await fetch(htmlPath);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${htmlPath}`);
-                }
-                const html = await response.text();
-                container.innerHTML = html;
-                
-                // Disparar evento de que el HTML está listo
-                window.dispatchEvent(new CustomEvent('feature-html-loaded', { 
-                    detail: { feature: featureName } 
-                }));
-                
-                console.log(`✅ HTML ${featureName} cargado`);
-                resolve();
-            } catch (error) {
-                console.error(`Error cargando HTML: ${htmlPath}`, error);
-                container.innerHTML = `
-                    <div class="error-container">
-                        <div class="error-icon">⚠️</div>
-                        <h2>Error al cargar la página</h2>
-                        <p>No se pudo cargar ${featureName}</p>
-                        <p class="error-details">${error.message}</p>
-                        <button class="btn btn-primary" onclick="location.reload()">
-                            Recargar página
-                        </button>
-                    </div>
-                `;
-                reject(error);
-            }
-        });
-    },
-
-    // Cargar JS del feature
-    cargarJS: function(featureName) {
+    
+    async cargarJS(viewPath) {
+        const basePath = this.getBasePath();
+        const jsPath = `${basePath}/src/views/${viewPath}.js`;
+        
         return new Promise((resolve) => {
-            // Remover script anterior
-            const oldScript = document.getElementById('feature-script');
-            if (oldScript) {
-                oldScript.remove();
+            const scriptId = `js-${viewPath.replace(/\//g, '-')}`;
+            let script = document.getElementById(scriptId);
+            
+            if (script) {
+                script.remove();
             }
             
-            const basePath = this.getBasePath();
-            const scriptPath = `${basePath}/src/features/${featureName}/${featureName}.js`;
-            const script = document.createElement('script');
-            script.id = 'feature-script';
-            script.src = scriptPath;
+            script = document.createElement('script');
+            script.id = scriptId;
+            script.src = jsPath;
             script.type = 'module';
             
             script.onload = () => {
-                console.log(`✅ JS ${featureName} cargado`);
-                
-                // Intentar llamar a la función init del feature
-                setTimeout(() => {
-                    const initName = `init${featureName.charAt(0).toUpperCase() + featureName.slice(1)}`;
-                    if (window[initName]) {
-                        window[initName]();
-                    } else if (window.initClientes && featureName === 'clientes') {
-                        window.initClientes();
-                    } else if (window.initBarberos && featureName === 'barberos') {
-                        window.initBarberos();
-                    } else if (window.initCitas && featureName === 'citas') {
-                        window.initCitas();
-                    } else if (window.initServicios && featureName === 'servicios') {
-                        window.initServicios();
-                    } else if (window.initInventario && featureName === 'inventario') {
-                        window.initInventario();
-                    } else if (window.initCaja && featureName === 'caja') {
-                        window.initCaja();
-                    }
-                }, 50);
-                
+                console.log(`✅ JS cargado: ${viewPath}`);
                 resolve();
             };
-            
             script.onerror = () => {
-                console.warn(`⚠️ JS no encontrado: ${scriptPath}`);
+                console.warn(`⚠️ JS no encontrado: ${jsPath}`);
                 resolve();
             };
             
             document.body.appendChild(script);
-            
-            // Timeout por si tarda demasiado
-            setTimeout(resolve, 2000);
+            setTimeout(resolve, 1000);
         });
     },
-
-    // Actualizar link activo en sidebar
-    actualizarSidebarActivo: function(rutaActual) {
-        const links = document.querySelectorAll('.sidebar-link');
-        links.forEach(link => {
-            const linkPath = link.getAttribute('data-path');
-            if (linkPath === rutaActual) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
+    
+    // ============================================
+    // LOADER
+    // ============================================
+    
+    mostrarLoader(container) {
+        const loader = document.createElement('div');
+        loader.id = 'view-loader';
+        loader.className = 'view-loader';
+        loader.innerHTML = `
+            <div class="loader-spinner"></div>
+            <p>Cargando...</p>
+        `;
+        container.appendChild(loader);
     },
-
-    // Mostrar error en el contenedor
-    mostrarError: function(featureName, error) {
+    
+    ocultarLoader(container) {
+        const loader = document.getElementById('view-loader');
+        if (loader) loader.remove();
+    },
+    
+    // ============================================
+    // ERRORES
+    // ============================================
+    
+    mostrarError404() {
+        const container = document.getElementById('app-main');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="error-container">
+                <div class="error-icon">🔍</div>
+                <h2>Página no encontrada</h2>
+                <p>La ruta que buscas no existe</p>
+                <button class="btn btn-primary" onclick="window.router.navegar('/portal/agendar')">
+                    Ir al inicio
+                </button>
+            </div>
+        `;
+    },
+    
+    mostrarError(error) {
         const container = document.getElementById('app-main');
         if (!container) return;
         
         container.innerHTML = `
             <div class="error-container">
                 <div class="error-icon">❌</div>
-                <h2>Error de navegación</h2>
-                <p>No se pudo cargar ${featureName}</p>
-                <p class="error-details">${error.message}</p>
-                <div class="error-actions">
-                    <button class="btn btn-primary" onclick="location.reload()">
-                        Recargar
-                    </button>
-                    <button class="btn btn-secondary" onclick="window.router.navegar('/dashboard')">
-                        Ir al Dashboard
-                    </button>
-                </div>
+                <h2>Error al cargar</h2>
+                <p>${error.message || 'Error desconocido'}</p>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    Recargar
+                </button>
             </div>
         `;
     }
 };
 
-// ✅ Prevenir múltiples listeners - Limpiar listeners existentes
+// ============================================
+// EVENTOS GLOBALES
+// ============================================
+
+// Limpiar listeners anteriores
 if (window._hashChangeHandler) {
     window.removeEventListener('hashchange', window._hashChangeHandler);
     window.removeEventListener('popstate', window._popStateHandler);
 }
 
 // Crear nuevos handlers
-window._hashChangeHandler = () => {
-    router.manejarRuta();
-};
-
-window._popStateHandler = () => {
-    router.manejarRuta();
-};
+window._hashChangeHandler = () => router.manejarRuta();
+window._popStateHandler = () => router.manejarRuta();
 
 // Registrar listeners
 window.addEventListener('hashchange', window._hashChangeHandler);
 window.addEventListener('popstate', window._popStateHandler);
 
-// Exportar para uso global
+// Exportar
 window.router = router;
 
-console.log('🔄 Router inicializado');
+console.log('🔄 Router v2.0 inicializado');
