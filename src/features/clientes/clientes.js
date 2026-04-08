@@ -9,16 +9,43 @@ let currentFilter = 'todos';
 let currentSearch = '';
 let editingId = null;
 
-// Inicializar
+// ✅ Control de inicialización única
+let inicializado = false;
+let inicializando = false;
+
+// Inicializar - SOLO UNA VEZ
 async function init() {
-    console.log('👥 Inicializando...');
-    await cargarClientes();
-    setupEventListeners();
-    setupModalClose();
+    // ✅ Evitar múltiples ejecuciones simultáneas
+    if (inicializando) {
+        console.log('⏳ Clientes ya inicializando, ignorando...');
+        return;
+    }
+    
+    // ✅ Evitar reinicializaciones después de ya estar inicializado
+    if (inicializado) {
+        console.log('✅ Clientes ya inicializado, solo actualizando tabla...');
+        await cargarClientes(false); // Solo recargar datos, no eventos
+        renderizarTabla();
+        return;
+    }
+    
+    inicializando = true;
+    console.log('👥 Inicializando clientes (PRIMERA VEZ)...');
+    
+    try {
+        await cargarClientes(true);
+        setupEventListeners();
+        setupModalClose();
+        inicializado = true;
+    } catch (error) {
+        console.error('Error en inicialización:', error);
+    } finally {
+        inicializando = false;
+    }
 }
 
 // Cargar clientes desde storage
-async function cargarClientes() {
+async function cargarClientes(primeravez = false) {
     try {
         const stored = await window.storage?.obtenerTodos('clientes');
         console.log('Clientes cargados:', stored?.length || 0);
@@ -30,7 +57,6 @@ async function cargarClientes() {
             await guardarClientes();
         }
         
-        // ✅ SIEMPRE RENDERIZAR
         renderizarTabla();
         
     } catch (error) {
@@ -84,13 +110,13 @@ function formatearFecha(fecha) {
     return new Date(fecha).toLocaleDateString('es-ES');
 }
 
-// ✅ RENDERIZAR TABLA - SIEMPRE EJECUTA
+// Renderizar tabla
 function renderizarTabla() {
     console.log('🎨 renderizarTabla() - Clientes:', clientes.length);
     
     const tbody = document.getElementById('clientes-table-body');
     if (!tbody) {
-        console.error('❌ tbody no encontrado');
+        console.log('⏳ Tabla no disponible aún');
         return;
     }
     
@@ -112,14 +138,18 @@ function renderizarTabla() {
                 <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="width: 40px; height: 40px; border-radius: 50%; background: #ff6b35; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${c.nombre.charAt(0)}</div>
-                        <div><strong>${c.nombre}</strong><br><small>${c.telefono}</small></div>
+                        <div><strong>${escapeHtml(c.nombre)}</strong><br><small>${c.telefono}</small></div>
                     </div>
                 </td>
-                <td>${c.email || 'No registrado'}</td>
+                <td>${escapeHtml(c.email || 'No registrado')}</td>
                 <td style="text-align: center;">${c.visitas || 0}</td>
                 <td>${formatearFecha(c.ultimaVisita)}</td>
                 <td style="color: #ff6b35; font-weight: bold;">$${(c.gastoTotal || 0).toLocaleString()}</td>
-                <td><span style="padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: ${c.estado === 'activo' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}; color: ${c.estado === 'activo' ? '#4caf50' : '#f44336'};">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
+                <td>
+                    <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: ${c.estado === 'activo' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}; color: ${c.estado === 'activo' ? '#4caf50' : '#f44336'};">
+                        ${c.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
                 <td>
                     <button class="btn-icon-sm" onclick="window.verCliente(${c.id})">👁️</button>
                     <button class="btn-icon-sm" onclick="window.editarCliente(${c.id})">✏️</button>
@@ -136,6 +166,14 @@ function renderizarTabla() {
     document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
     
     console.log('✅ Tabla renderizada con', paginated.length, 'clientes');
+}
+
+// Helper para escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ============ FUNCIONES GLOBALES ============
@@ -195,7 +233,6 @@ async function guardarCliente(e) {
     await guardarClientes();
     renderizarTabla();
     document.getElementById('cliente-modal').style.display = 'none';
-    alert('Cliente agregado');
 }
 
 function cerrarModal() {
@@ -207,8 +244,23 @@ function setupModalClose() {
     const modal = document.getElementById('cliente-modal');
     if (modal) {
         const closeBtn = modal.querySelector('.modal-close');
-        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
-        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+        if (closeBtn) {
+            closeBtn.onclick = () => modal.style.display = 'none';
+        }
+        modal.onclick = (e) => { 
+            if (e.target === modal) modal.style.display = 'none'; 
+        };
+    }
+    
+    const verModal = document.getElementById('cliente-ver-modal');
+    if (verModal) {
+        const closeBtn = verModal.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => verModal.style.display = 'none';
+        }
+        verModal.onclick = (e) => { 
+            if (e.target === verModal) verModal.style.display = 'none'; 
+        };
     }
 }
 
@@ -243,7 +295,10 @@ function setupEventListeners() {
     const prevBtn = document.getElementById('prev-page');
     if (prevBtn) {
         prevBtn.onclick = () => {
-            if (currentPage > 1) { currentPage--; renderizarTabla(); }
+            if (currentPage > 1) { 
+                currentPage--; 
+                renderizarTabla(); 
+            }
         };
     }
     
@@ -251,47 +306,25 @@ function setupEventListeners() {
     if (nextBtn) {
         nextBtn.onclick = () => {
             const total = Math.ceil(filtrarClientes().length / itemsPerPage);
-            if (currentPage < total) { currentPage++; renderizarTabla(); }
+            if (currentPage < total) { 
+                currentPage++; 
+                renderizarTabla(); 
+            }
         };
     }
 }
 
-// ✅ Exponer función de renderizado para que otros módulos la llamen
+// ✅ Exponer funciones globales
 window.renderizarTablaClientes = renderizarTabla;
+window.iniciarClientes = init;
 
-// ✅ Función de inicialización que se puede llamar múltiples veces
-async function iniciar() {
-    console.log('👥 Iniciando clientes...');
-    await cargarClientes();
-    setupEventListeners();
-    setupModalClose();
-}
-
-// ✅ Exponer globalmente
-window.iniciarClientes = iniciar;
-window.renderizarTablaClientes = renderizarTabla;
-
-// ✅ Inicializar automáticamente cuando el DOM esté listo
+// ✅ Inicialización única
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciar);
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(init, 50);
+    });
 } else {
-    // Si el DOM ya está cargado, esperar un poco
-    setTimeout(iniciar, 100);
+    setTimeout(init, 50);
 }
 
-// ✅ También escuchar cuando el feature se carga (para cuando se navega de vuelta)
-window.addEventListener('feature-loaded', (e) => {
-    if (e.detail.feature === 'clientes') {
-        console.log('🔄 Feature clientes recargado');
-        iniciar();
-    }
-});
-
-export { iniciar as init };
-
-window.addEventListener('feature-html-loaded', (e) => {
-    if (e.detail.feature === 'clientes') {
-        console.log('🔄 HTML de clientes cargado, inicializando...');
-        iniciar();
-    }
-});
+export { init };
