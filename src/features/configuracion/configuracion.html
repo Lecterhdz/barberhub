@@ -1,3 +1,4 @@
+<!-- src/features/configuracion/configuracion.html -->
 <div class="config-container">
     <div class="config-header">
         <h2>⚙️ Configuración</h2>
@@ -5,11 +6,10 @@
     </div>
     
     <div class="config-sections">
-        <!-- Perfil -->
         <div class="config-card">
             <h3>👤 Perfil de la Barbería</h3>
             <div class="form-group">
-                <label>Nombre de la barbería</label>
+                <label>Nombre</label>
                 <input type="text" id="config-nombre" class="form-control" placeholder="Mi Barbería">
             </div>
             <div class="form-group">
@@ -21,12 +21,11 @@
                 <textarea id="config-direccion" rows="2" class="form-control"></textarea>
             </div>
             <div class="form-group">
-                <label>Horario de atención</label>
-                <input type="text" id="config-horario" class="form-control" placeholder="Lun-Vie 9am-6pm, Sáb 9am-2pm">
+                <label>Horario</label>
+                <input type="text" id="config-horario" class="form-control" placeholder="Lun-Vie 9am-6pm">
             </div>
         </div>
         
-        <!-- Preferencias -->
         <div class="config-card">
             <h3>🎨 Preferencias</h3>
             <div class="form-group">
@@ -37,36 +36,17 @@
                     <option value="light-clean">☀️ Claro Limpio</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Idioma</label>
-                <select id="config-idioma" class="form-control">
-                    <option value="es">Español</option>
-                    <option value="en">English</option>
-                </select>
-            </div>
             <div class="form-check">
-                <label>
-                    <input type="checkbox" id="config-notificaciones"> 
-                    Activar notificaciones
-                </label>
-            </div>
-            <div class="form-check">
-                <label>
-                    <input type="checkbox" id="config-sonidos"> 
-                    Activar sonidos
-                </label>
+                <label><input type="checkbox" id="config-notificaciones"> Activar notificaciones</label>
             </div>
         </div>
         
-        <!-- Datos -->
         <div class="config-card">
             <h3>💾 Datos</h3>
             <button class="btn btn-secondary" id="btn-exportar-datos">📤 Exportar datos</button>
-            <button class="btn btn-secondary" id="btn-importar-datos">📥 Importar datos</button>
-            <button class="btn btn-danger" id="btn-resetear-datos" style="margin-top: 10px;">⚠️ Resetear todos los datos</button>
+            <button class="btn btn-danger" id="btn-resetear-datos" style="margin-top:10px;">⚠️ Resetear datos</button>
         </div>
         
-        <!-- Licencia -->
         <div class="config-card">
             <h3>🔑 Licencia</h3>
             <div class="license-info" id="license-info"></div>
