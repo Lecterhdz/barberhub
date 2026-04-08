@@ -12,6 +12,14 @@
     --border-color: #2a2a2a;
 }
 
+/* Asegurar que el fondo del body y app cambien */
+[data-theme="dark-neon"] body,
+[data-theme="dark-neon"] #app,
+[data-theme="dark-neon"] .app-layout,
+[data-theme="dark-neon"] .auth-wrapper {
+    background-color: var(--bg-primary);
+}
+
 [data-theme="dark-neon"] .header-title,
 [data-theme="dark-neon"] .sidebar-header h3 {
     background: linear-gradient(135deg, #00ff88, #00ffff);
