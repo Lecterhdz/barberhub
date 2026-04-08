@@ -1,5 +1,3 @@
-// src/components/ThemeSwitcher.js (versión mejorada)
-
 export const ThemeSwitcher = {
     temas: [
         { id: 'dark-amber', nombre: 'Ámbar', icono: '🌙', color: '#ff6b35' },
@@ -18,99 +16,106 @@ export const ThemeSwitcher = {
         }
         
         this.aplicarTema(this.temaActual);
+        
+        // Esperar a que el header esté listo
         this.agregarBotonesAlHeader();
+        
+        // Escuchar evento de header ready
+        window.addEventListener('header-ready', () => {
+            this.agregarBotonesAlHeader();
+        });
     },
     
     agregarBotonesAlHeader: function() {
-        // Esperar a que el header esté listo
-        const checkHeader = setInterval(() => {
-            const headerActions = document.querySelector('.header-actions');
-            if (headerActions && !document.querySelector('.theme-buttons-container')) {
-                clearInterval(checkHeader);
-                this.crearGrupoBotones(headerActions);
-            }
-        }, 100);
+        const headerActions = document.querySelector('.header-actions');
+        if (!headerActions) {
+            setTimeout(() => this.agregarBotonesAlHeader(), 100);
+            return;
+        }
         
-        setTimeout(() => clearInterval(checkHeader), 5000);
-    },
-    
-    crearGrupoBotones: function(headerActions) {
+        // Limpiar botones anteriores si existen
+        const existingContainer = document.querySelector('.theme-buttons-container');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
+        
         // Crear contenedor de botones de tema
         const container = document.createElement('div');
         container.className = 'theme-buttons-container';
-        container.style.cssText = `
-            display: flex;
-            gap: 8px;
-            margin-right: 10px;
-        `;
         
-        // Crear botones individuales para cada tema
+        // Crear botones de tema
         this.temas.forEach(tema => {
             const btn = document.createElement('button');
             btn.className = `theme-btn ${this.temaActual === tema.id ? 'active' : ''}`;
             btn.setAttribute('data-theme', tema.id);
             btn.title = tema.nombre;
             btn.innerHTML = tema.icono;
-            btn.style.cssText = `
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                border: 2px solid ${this.temaActual === tema.id ? tema.color : 'transparent'};
-                background: var(--bg-tertiary);
-                cursor: pointer;
-                font-size: 1.2rem;
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
-            
-            btn.onmouseenter = () => {
-                btn.style.transform = 'scale(1.1)';
-                btn.style.borderColor = tema.color;
-            };
-            btn.onmouseleave = () => {
-                btn.style.transform = 'scale(1)';
-                if (this.temaActual !== tema.id) {
-                    btn.style.borderColor = 'transparent';
-                }
-            };
-            
             btn.onclick = () => {
                 this.cambiarTema(tema.id);
                 this.actualizarBotonActivo(tema.id);
             };
-            
             container.appendChild(btn);
         });
         
-        // Agregar contenedor al principio de header-actions
-        headerActions.insertBefore(container, headerActions.firstChild);
+        // Buscar y preservar los botones existentes
+        const licenseBadge = headerActions.querySelector('.license-badge');
+        const existingButtons = [];
         
-        // Mover los botones existentes si los hay
-        const existingConfigBtn = document.querySelector('.btn-icon');
-        const existingLogoutBtn = document.querySelector('.btn-logout');
+        // Guardar botones existentes que no sean del theme
+        headerActions.querySelectorAll('.btn-icon, .btn-logout, .config-btn').forEach(btn => {
+            existingButtons.push(btn);
+        });
         
-        if (existingConfigBtn) {
-            headerActions.appendChild(existingConfigBtn);
+        // Limpiar header-actions pero mantener la licencia
+        while (headerActions.firstChild) {
+            headerActions.removeChild(headerActions.firstChild);
         }
-        if (existingLogoutBtn) {
-            headerActions.appendChild(existingLogoutBtn);
+        
+        // Agregar en orden correcto: Theme buttons -> License -> Config -> Logout
+        headerActions.appendChild(container);
+        
+        if (licenseBadge) {
+            headerActions.appendChild(licenseBadge);
         }
         
-        console.log('✅ Botones de tema agregados');
+        // Agregar botón de configuración si no existe
+        let configBtn = document.querySelector('.config-btn');
+        if (!configBtn) {
+            configBtn = document.createElement('button');
+            configBtn.className = 'btn-icon config-btn';
+            configBtn.innerHTML = '⚙️';
+            configBtn.title = 'Configuración';
+            configBtn.onclick = () => {
+                if (window.app && window.app.openConfiguracion) {
+                    window.app.openConfiguracion();
+                }
+            };
+        }
+        headerActions.appendChild(configBtn);
+        
+        // Agregar botón de logout
+        let logoutBtn = document.querySelector('.btn-logout');
+        if (!logoutBtn) {
+            logoutBtn = document.createElement('button');
+            logoutBtn.className = 'btn-logout';
+            logoutBtn.innerHTML = '🚪 Salir';
+            logoutBtn.onclick = () => {
+                if (window.app && window.app.logout) {
+                    window.app.logout();
+                }
+            };
+        }
+        headerActions.appendChild(logoutBtn);
+        
+        console.log('✅ Botones de tema agregados correctamente');
     },
     
     actualizarBotonActivo: function(themeId) {
-        const tema = this.temas.find(t => t.id === themeId);
         const btns = document.querySelectorAll('.theme-btn');
-        
         btns.forEach(btn => {
             if (btn.getAttribute('data-theme') === themeId) {
-                btn.style.borderColor = tema.color;
                 btn.classList.add('active');
             } else {
-                btn.style.borderColor = 'transparent';
                 btn.classList.remove('active');
             }
         });
@@ -131,8 +136,6 @@ export const ThemeSwitcher = {
         }
         
         console.log(`🎨 Tema cambiado a: ${tema.nombre}`);
-        
-        this.mostrarNotificacion(`${tema.icono} Tema: ${tema.nombre}`, 'success');
     },
     
     aplicarTema: function(themeId) {
@@ -148,36 +151,6 @@ export const ThemeSwitcher = {
         }
         
         themeLink.href = `./src/core/themes/${themeId}.css`;
-    },
-    
-    mostrarNotificacion: function(mensaje, tipo) {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${tipo}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <span>🎨</span>
-                <p>${mensaje}</p>
-            </div>
-        `;
-        notification.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            padding: 12px 20px;
-            border-radius: 10px;
-            z-index: 10000;
-            animation: slideInRight 0.3s ease;
-            box-shadow: var(--shadow-md);
-            border-left: 4px solid var(--color-primary);
-        `;
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 2000);
     }
 };
 
