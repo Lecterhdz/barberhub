@@ -125,35 +125,22 @@ export const router = {
     cargarHTML: function(featureName) {
         return new Promise(async (resolve, reject) => {
             const container = document.getElementById('app-main');
-            if (!container) {
-                reject(new Error('Contenedor app-main no encontrado'));
-                return;
-            }
+            if (!container) return reject('No container');
             
             const basePath = this.getBasePath();
             const htmlPath = `${basePath}/src/features/${featureName}/${featureName}.html`;
             
             try {
                 const response = await fetch(htmlPath);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${htmlPath}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const html = await response.text();
                 container.innerHTML = html;
+                
+                // ✅ ESPERAR A QUE EL DOM SE ACTUALICE
+                await new Promise(r => setTimeout(r, 50));
+                
                 resolve();
             } catch (error) {
-                console.error(`Error cargando HTML: ${htmlPath}`, error);
-                container.innerHTML = `
-                    <div class="error-container">
-                        <div class="error-icon">⚠️</div>
-                        <h2>Error al cargar la página</h2>
-                        <p>No se pudo cargar ${featureName}</p>
-                        <p class="error-details">${error.message}</p>
-                        <button class="btn btn-primary" onclick="location.reload()">
-                            Recargar página
-                        </button>
-                    </div>
-                `;
                 reject(error);
             }
         });
