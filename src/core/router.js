@@ -1,7 +1,5 @@
 // src/core/router.js
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (Completo y Funcional)
-// ─────────────────────────────────────────────────────────────────────
 
 export const router = {
     rutas: {
@@ -19,7 +17,10 @@ export const router = {
         '/configuracion': 'configuracion'
     },
 
-    // Detectar base path para GitHub Pages
+    // ✅ Agregar bandera para evitar cargas duplicadas
+    cargandoFeature: false,
+    ultimoFeature: '',
+
     getBasePath: function() {
         const pathname = window.location.pathname;
         if (pathname.includes('/barberhub/')) {
@@ -32,25 +33,22 @@ export const router = {
         return '';
     },
 
-    // Obtener ruta actual del hash
     getCurrentRoute: function() {
         let hash = window.location.hash;
         hash = hash.substring(1);
-        
-        if (!hash || hash === '') {
-            return '/';
-        }
-        
+        if (!hash || hash === '') return '/';
         const queryIndex = hash.indexOf('?');
-        if (queryIndex !== -1) {
-            hash = hash.substring(0, queryIndex);
-        }
-        
+        if (queryIndex !== -1) hash = hash.substring(0, queryIndex);
         return hash;
     },
 
-    // Navegar a una ruta
     navegar: function(ruta, agregarHistorial = true) {
+        const rutaActual = this.getCurrentRoute();
+        // ✅ No navegar si es la misma ruta
+        if (rutaActual === ruta) {
+            console.log('⏳ Misma ruta, ignorando');
+            return;
+        }
         if (agregarHistorial) {
             window.location.hash = ruta;
         } else {
@@ -59,8 +57,13 @@ export const router = {
         this.manejarRuta();
     },
 
-    // Manejar la ruta actual
     manejarRuta: async function() {
+        // ✅ Evitar cargas duplicadas
+        if (this.cargandoFeature) {
+            console.log('⏳ Ya cargando un feature, ignorando...');
+            return;
+        }
+        
         const rutaActual = this.getCurrentRoute();
         let featureName = this.rutas[rutaActual];
         
@@ -74,20 +77,29 @@ export const router = {
             }
         }
         
+        // ✅ No cargar el mismo feature dos veces seguidas
+        if (this.ultimoFeature === featureName) {
+            console.log('⏳ Mismo feature, ignorando');
+            return;
+        }
+        
         console.log('📍 Navegando a:', rutaActual, 'Feature:', featureName);
         
+        this.cargandoFeature = true;
+        this.ultimoFeature = featureName;
+        
         await this.cargarFeature(featureName);
+        
+        this.cargandoFeature = false;
         this.actualizarSidebarActivo(rutaActual);
     },
 
-    // Cargar feature (CSS + HTML + JS)
     cargarFeature: async function(featureName) {
         try {
             await this.cargarCSS(featureName);
             await this.cargarHTML(featureName);
             await this.cargarJS(featureName);
             
-            // Disparar evento de feature cargado
             window.dispatchEvent(new CustomEvent('feature-loaded', { 
                 detail: { feature: featureName } 
             }));
@@ -96,10 +108,10 @@ export const router = {
         } catch (error) {
             console.error(`❌ Error cargando feature ${featureName}:`, error);
             this.mostrarError(featureName, error);
+            this.cargandoFeature = false;
         }
     },
 
-    // Cargar CSS del feature
     cargarCSS: function(featureName) {
         return new Promise((resolve) => {
             const basePath = this.getBasePath();
@@ -116,12 +128,10 @@ export const router = {
             } else {
                 resolve();
             }
-            
             setTimeout(resolve, 500);
         });
     },
 
-    // Cargar HTML del feature
     cargarHTML: function(featureName) {
         return new Promise(async (resolve, reject) => {
             const container = document.getElementById('app-main');
@@ -135,10 +145,7 @@ export const router = {
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const html = await response.text();
                 container.innerHTML = html;
-                
-                // ✅ ESPERAR A QUE EL DOM SE ACTUALICE
                 await new Promise(r => setTimeout(r, 50));
-                
                 resolve();
             } catch (error) {
                 reject(error);
@@ -146,7 +153,6 @@ export const router = {
         });
     },
 
-    // Cargar JS del feature
     cargarJS: function(featureName) {
         return new Promise((resolve) => {
             const oldScript = document.getElementById('feature-script');
@@ -175,7 +181,6 @@ export const router = {
         });
     },
 
-    // Actualizar link activo en sidebar
     actualizarSidebarActivo: function(rutaActual) {
         const links = document.querySelectorAll('.sidebar-link');
         links.forEach(link => {
@@ -188,7 +193,6 @@ export const router = {
         });
     },
 
-    // Mostrar error
     mostrarError: function(featureName, error) {
         const container = document.getElementById('app-main');
         if (!container) return;
@@ -200,27 +204,30 @@ export const router = {
                 <p>No se pudo cargar ${featureName}</p>
                 <p class="error-details">${error.message}</p>
                 <div class="error-actions">
-                    <button class="btn btn-primary" onclick="location.reload()">
-                        Recargar
-                    </button>
-                    <button class="btn btn-secondary" onclick="window.router.navegar('/dashboard')">
-                        Ir al Dashboard
-                    </button>
+                    <button class="btn btn-primary" onclick="location.reload()">Recargar</button>
+                    <button class="btn btn-secondary" onclick="window.router.navegar('/dashboard')">Ir al Dashboard</button>
                 </div>
             </div>
         `;
     }
 };
 
-// Escuchar cambios en el hash
-window.addEventListener('hashchange', () => {
-    router.manejarRuta();
-});
+// ✅ Prevenir múltiples listeners
+let hashChangeHandler = null;
+let popStateHandler = null;
 
-// Escuchar popstate para retroceso/avance
-window.addEventListener('popstate', () => {
-    router.manejarRuta();
-});
+if (!hashChangeHandler) {
+    hashChangeHandler = () => {
+        router.manejarRuta();
+    };
+    window.addEventListener('hashchange', hashChangeHandler);
+}
 
-// Exportar para uso global
+if (!popStateHandler) {
+    popStateHandler = () => {
+        router.manejarRuta();
+    };
+    window.addEventListener('popstate', popStateHandler);
+}
+
 window.router = router;
