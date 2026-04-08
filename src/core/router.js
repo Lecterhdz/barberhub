@@ -1,5 +1,6 @@
+// src/core/router.js
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - ROUTER (Hash-based para GitHub Pages)
+// BARBERHUB - ROUTER (Completo y Funcional)
 // ─────────────────────────────────────────────────────────────────────
 
 export const router = {
@@ -10,25 +11,36 @@ export const router = {
         '/portal': 'portal',
         '/clientes': 'clientes',
         '/citas': 'citas',
-        '/barberos': 'barberos',        // ← Agregar esta línea
+        '/barberos': 'barberos',
         '/servicios': 'servicios',
         '/inventario': 'inventario',
         '/caja': 'caja',
         '/reportes': 'reportes',
-        '/configuracion': 'configuracion',
-        '/config': 'configuracion'
+        '/configuracion': 'configuracion'
     },
-    
+
+    // Detectar base path para GitHub Pages
+    getBasePath: function() {
+        const pathname = window.location.pathname;
+        if (pathname.includes('/barberhub/')) {
+            return '/barberhub';
+        }
+        const parts = pathname.split('/').filter(p => p);
+        if (parts.length > 0 && !parts[0].includes('.')) {
+            return `/${parts[0]}`;
+        }
+        return '';
+    },
+
     // Obtener ruta actual del hash
     getCurrentRoute: function() {
         let hash = window.location.hash;
-        hash = hash.substring(1); // Remover #
+        hash = hash.substring(1);
         
         if (!hash || hash === '') {
             return '/';
         }
         
-        // Remover query params
         const queryIndex = hash.indexOf('?');
         if (queryIndex !== -1) {
             hash = hash.substring(0, queryIndex);
@@ -36,7 +48,7 @@ export const router = {
         
         return hash;
     },
-    
+
     // Navegar a una ruta
     navegar: function(ruta, agregarHistorial = true) {
         if (agregarHistorial) {
@@ -46,24 +58,13 @@ export const router = {
         }
         this.manejarRuta();
     },
-    
+
     // Manejar la ruta actual
     manejarRuta: async function() {
         const rutaActual = this.getCurrentRoute();
         let featureName = this.rutas[rutaActual];
         
-        // Verificar autenticación para rutas protegidas
-        const rutasProtegidas = ['/clientes', '/citas', '/barberos', '/servicios', '/inventario', '/caja', '/reportes', '/configuracion'];
-        
-   //     if (rutasProtegidas.includes(rutaActual)) {
-   //         const autenticado = window.app?.estado?.licencia;
-   //         if (!autenticado) {
-   //             this.navegar('/auth');
-  //              return;
-   //         }
-  //      }        
         if (!featureName) {
-            // Intentar con la primera parte de la ruta
             const parts = rutaActual.split('/').filter(p => p);
             if (parts.length > 0) {
                 featureName = this.rutas[`/${parts[0]}`];
@@ -75,42 +76,34 @@ export const router = {
         
         console.log('📍 Navegando a:', rutaActual, 'Feature:', featureName);
         
-        // Cargar el feature
         await this.cargarFeature(featureName);
-        
-        // Actualizar sidebar activo
         this.actualizarSidebarActivo(rutaActual);
     },
-    
+
     // Cargar feature (CSS + HTML + JS)
     cargarFeature: async function(featureName) {
         try {
-            // Cargar CSS
             await this.cargarCSS(featureName);
-            
-            // Cargar HTML
             await this.cargarHTML(featureName);
-            
-            // Cargar JS
             await this.cargarJS(featureName);
             
-            // Notificar que el feature está listo
-            window.dispatchEvent(new CustomEvent('feature-loaded', {
-                detail: { feature: featureName }
+            // Disparar evento de feature cargado
+            window.dispatchEvent(new CustomEvent('feature-loaded', { 
+                detail: { feature: featureName } 
             }));
             
             console.log(`✅ Feature ${featureName} cargado correctamente`);
-            
         } catch (error) {
             console.error(`❌ Error cargando feature ${featureName}:`, error);
             this.mostrarError(featureName, error);
         }
     },
-    
+
     // Cargar CSS del feature
     cargarCSS: function(featureName) {
         return new Promise((resolve) => {
-            const cssPath = `./src/features/${featureName}/${featureName}.css`;
+            const basePath = this.getBasePath();
+            const cssPath = `${basePath}/src/features/${featureName}/${featureName}.css`;
             const featureCss = document.getElementById('feature-css');
             
             if (featureCss) {
@@ -124,11 +117,10 @@ export const router = {
                 resolve();
             }
             
-            // Timeout por si tarda demasiado
-            setTimeout(resolve, 1000);
+            setTimeout(resolve, 500);
         });
     },
-    
+
     // Cargar HTML del feature
     cargarHTML: function(featureName) {
         return new Promise(async (resolve, reject) => {
@@ -138,12 +130,13 @@ export const router = {
                 return;
             }
             
-            const htmlPath = `./src/features/${featureName}/${featureName}.html`;
+            const basePath = this.getBasePath();
+            const htmlPath = `${basePath}/src/features/${featureName}/${featureName}.html`;
             
             try {
                 const response = await fetch(htmlPath);
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${htmlPath}`);
                 }
                 const html = await response.text();
                 container.innerHTML = html;
@@ -165,59 +158,36 @@ export const router = {
             }
         });
     },
-    
+
     // Cargar JS del feature
     cargarJS: function(featureName) {
         return new Promise((resolve) => {
-            // Remover script anterior
             const oldScript = document.getElementById('feature-script');
             if (oldScript) {
                 oldScript.remove();
             }
             
-            const scriptPath = `./src/features/${featureName}/${featureName}.js`;
+            const basePath = this.getBasePath();
+            const scriptPath = `${basePath}/src/features/${featureName}/${featureName}.js`;
             const script = document.createElement('script');
             script.id = 'feature-script';
             script.src = scriptPath;
             script.type = 'module';
             
-            script.onload = () => resolve();
+            script.onload = () => {
+                console.log(`✅ JS ${featureName} cargado`);
+                resolve();
+            };
             script.onerror = () => {
                 console.warn(`⚠️ JS no encontrado: ${scriptPath}`);
                 resolve();
             };
             
             document.body.appendChild(script);
-            
-            // Timeout por si tarda demasiado
-            setTimeout(resolve, 2000);
+            setTimeout(resolve, 1000);
         });
     },
-    renderizarVista: async function(featureName) {
-        const container = document.getElementById('app-main');
-        if (!container) return;
-        
-        const htmlPath = `./src/features/${featureName}/${featureName}.html`;
-        
-        try {
-            const response = await fetch(htmlPath);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const html = await response.text();
-            container.innerHTML = html;
-            
-            await this.cargarJavaScript(featureName);
-            
-            // ✅ DISPARAR EVENTO DE FEATURE CARGADO
-            window.dispatchEvent(new CustomEvent('feature-loaded', { 
-                detail: { feature: featureName } 
-            }));
-            
-            console.log(`✅ Vista ${featureName} cargada correctamente`);
-        } catch (error) {
-            console.error('❌ Error cargando vista:', error);
-            container.innerHTML = `<div class="error-container"><h2>Error</h2><p>${error.message}</p></div>`;
-        }
-    },    
+
     // Actualizar link activo en sidebar
     actualizarSidebarActivo: function(rutaActual) {
         const links = document.querySelectorAll('.sidebar-link');
@@ -230,7 +200,7 @@ export const router = {
             }
         });
     },
-    
+
     // Mostrar error
     mostrarError: function(featureName, error) {
         const container = document.getElementById('app-main');
