@@ -1,0 +1,259 @@
+/* src/features/inventario/inventario.css */
+
+.inventario-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.inventario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.inventario-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.inventario-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+/* Alertas de stock */
+.alertas-stock {
+    background: rgba(255, 152, 0, 0.1);
+    border-left: 4px solid #ff9800;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+
+.alertas-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.alertas-header span {
+    font-size: 1.3rem;
+}
+
+.alertas-header h4 {
+    margin: 0;
+    color: #ff9800;
+}
+
+.lista-alertas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.alerta-item {
+    background: var(--bg-tertiary);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alerta-item .stock-bajo {
+    color: #ff9800;
+    font-weight: 600;
+}
+
+/* Filtros */
+.inventario-filtros {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    position: relative;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    opacity: 0.6;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 12px 10px 35px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.filtros-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.filtro-select {
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+/* Tabla */
+.inventario-table-container {
+    overflow-x: auto;
+    border-radius: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.inventario-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.inventario-table thead {
+    background: var(--bg-tertiary);
+}
+
+.inventario-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.inventario-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.inventario-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.inventario-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+/* Badges de stock */
+.stock-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.stock-normal {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.stock-bajo {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+}
+
+.stock-agotado {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+/* Ganancia */
+.ganancia-positiva {
+    color: #4caf50;
+    font-weight: 600;
+}
+
+.ganancia-negativa {
+    color: #f44336;
+    font-weight: 600;
+}
+
+/* Acciones */
+.acciones-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.btn-icon-sm:hover {
+    transform: scale(1.05);
+}
+
+.btn-stock:hover {
+    background: rgba(33, 150, 243, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .inventario-container {
+        padding: 15px;
+    }
+    
+    .inventario-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .inventario-filtros {
+        flex-direction: column;
+    }
+    
+    .search-box {
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .filtros-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .inventario-table th:nth-child(4),
+    .inventario-table td:nth-child(4),
+    .inventario-table th:nth-child(5),
+    .inventario-table td:nth-child(5) {
+        display: none;
+    }
+}
