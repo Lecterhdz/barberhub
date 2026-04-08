@@ -55,7 +55,6 @@ function setupModalClose(modalId) {
     };
 }
 
-// Función para refrescar la vista actual
 async function refreshCurrentView() {
     const currentPath = window.location.hash.substring(1);
     let feature = 'dashboard';
@@ -71,22 +70,50 @@ async function refreshCurrentView() {
     // Recargar datos
     await loadStore();
     
-    // ✅ DISPARAR EVENTO PARA ACTUALIZAR LA VISTA SIN RECARGAR
-    window.dispatchEvent(new CustomEvent(`refresh-${feature}`, {}));
-    
     // ✅ LLAMAR DIRECTAMENTE A LA FUNCIÓN DE RENDERIZADO DEL FEATURE
-    if (feature === 'clientes' && window.renderizarTablaClientes) {
-        window.renderizarTablaClientes();
-    } else if (feature === 'barberos' && window.renderizarGridBarberos) {
-        window.renderizarGridBarberos();
-    } else if (feature === 'citas' && window.renderizarListaCitas) {
-        window.renderizarListaCitas();
-    } else if (feature === 'servicios' && window.renderizarGridServicios) {
-        window.renderizarGridServicios();
-    } else if (feature === 'inventario' && window.renderizarTablaInventario) {
-        window.renderizarTablaInventario();
-    } else if (feature === 'caja' && window.renderizarTablaCaja) {
-        window.renderizarTablaCaja();
+    switch(feature) {
+        case 'clientes':
+            if (typeof window.renderizarTablaClientes === 'function') {
+                window.renderizarTablaClientes();
+            } else {
+                window.dispatchEvent(new CustomEvent('refresh-clientes', {}));
+            }
+            break;
+        case 'barberos':
+            if (typeof window.renderizarGridBarberos === 'function') {
+                window.renderizarGridBarberos();
+            } else {
+                window.dispatchEvent(new CustomEvent('refresh-barberos', {}));
+            }
+            break;
+        case 'citas':
+            if (typeof window.renderizarListaCitas === 'function') {
+                window.renderizarListaCitas();
+            } else {
+                window.dispatchEvent(new CustomEvent('refresh-citas', {}));
+            }
+            break;
+        case 'servicios':
+            if (typeof window.renderizarGridServicios === 'function') {
+                window.renderizarGridServicios();
+            } else {
+                window.dispatchEvent(new CustomEvent('refresh-servicios', {}));
+            }
+            break;
+        case 'inventario':
+            if (typeof window.renderizarTablaInventario === 'function') {
+                window.renderizarTablaInventario();
+            } else {
+                window.dispatchEvent(new CustomEvent('refresh-inventario', {}));
+            }
+            break;
+        case 'caja':
+            if (typeof window.renderizarTablaCaja === 'function') {
+                window.renderizarTablaCaja();
+            } else {
+                window.dispatchEvent(new CustomEvent('refresh-caja', {}));
+            }
+            break;
     }
 }
 
@@ -199,20 +226,30 @@ function initClientes() {
             window.utils.mostrarNotificacion('Cliente agregado', 'success');
             document.getElementById('cliente-modal').style.display = 'none';
             
-            // ✅ REFRESCAR VISTA
-            await refreshCurrentView();
+            // ✅ ACTUALIZAR STORE LOCAL
+            await loadStore();
             
-            // Recargar la página de clientes
-            if (window.router) {
-                window.router.navegar('/clientes');
+            // ✅ LLAMAR DIRECTAMENTE A LA FUNCIÓN DE RENDERIZADO
+            if (typeof window.renderizarTablaClientes === 'function') {
+                window.renderizarTablaClientes();
+            } else {
+                // Si no está expuesta, recargar los datos y renderizar
+                const clientesActualizados = await window.storage.obtenerTodos('clientes');
+                if (window.clientesData) {
+                    window.clientesData = clientesActualizados;
+                }
+                // Disparar evento para que clientes.js se actualice
+                window.dispatchEvent(new CustomEvent('refresh-clientes', {}));
             }
         };
     }
     
     // Escuchar refresh
     window.addEventListener('refresh-clientes', async () => {
-        if (window.router) {
-            window.router.navegar('/clientes');
+        console.log('🔄 Refrescando clientes...');
+        await loadStore();
+        if (typeof window.renderizarTablaClientes === 'function') {
+            window.renderizarTablaClientes();
         }
     });
 }
