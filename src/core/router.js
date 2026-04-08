@@ -193,7 +193,31 @@ export const router = {
             setTimeout(resolve, 2000);
         });
     },
-    
+    renderizarVista: async function(featureName) {
+        const container = document.getElementById('app-main');
+        if (!container) return;
+        
+        const htmlPath = `./src/features/${featureName}/${featureName}.html`;
+        
+        try {
+            const response = await fetch(htmlPath);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const html = await response.text();
+            container.innerHTML = html;
+            
+            await this.cargarJavaScript(featureName);
+            
+            // ✅ DISPARAR EVENTO DE FEATURE CARGADO
+            window.dispatchEvent(new CustomEvent('feature-loaded', { 
+                detail: { feature: featureName } 
+            }));
+            
+            console.log(`✅ Vista ${featureName} cargada correctamente`);
+        } catch (error) {
+            console.error('❌ Error cargando vista:', error);
+            container.innerHTML = `<div class="error-container"><h2>Error</h2><p>${error.message}</p></div>`;
+        }
+    },    
     // Actualizar link activo en sidebar
     actualizarSidebarActivo: function(rutaActual) {
         const links = document.querySelectorAll('.sidebar-link');
