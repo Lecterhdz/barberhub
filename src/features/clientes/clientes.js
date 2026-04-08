@@ -9,46 +9,30 @@ let currentFilter = 'todos';
 let currentSearch = '';
 let editingId = null;
 
-// ✅ Control de inicialización única
-let inicializado = false;
-let inicializando = false;
+// ✅ Bandera para saber si ya se cargaron los datos
+let datosCargados = false;
 
-// Inicializar - SOLO UNA VEZ
+// Inicializar
 async function init() {
-    // ✅ Evitar múltiples ejecuciones simultáneas
-    if (inicializando) {
-        console.log('⏳ Clientes ya inicializando, ignorando...');
-        return;
+    console.log('👥 init() - datosCargados:', datosCargados);
+    
+    // ✅ Solo cargar datos si es la primera vez
+    if (!datosCargados) {
+        await cargarClientes();
+        datosCargados = true;
     }
     
-    // ✅ Evitar reinicializaciones después de ya estar inicializado
-    if (inicializado) {
-        console.log('✅ Clientes ya inicializado, solo actualizando tabla...');
-        await cargarClientes(false); // Solo recargar datos, no eventos
-        renderizarTabla();
-        return;
-    }
-    
-    inicializando = true;
-    console.log('👥 Inicializando clientes (PRIMERA VEZ)...');
-    
-    try {
-        await cargarClientes(true);
-        setupEventListeners();
-        setupModalClose();
-        inicializado = true;
-    } catch (error) {
-        console.error('Error en inicialización:', error);
-    } finally {
-        inicializando = false;
-    }
+    // ✅ Siempre renderizar y configurar eventos
+    renderizarTabla();
+    setupEventListeners();
+    setupModalClose();
 }
 
-// Cargar clientes desde storage
-async function cargarClientes(primeravez = false) {
+// Cargar clientes desde storage (solo una vez)
+async function cargarClientes() {
     try {
         const stored = await window.storage?.obtenerTodos('clientes');
-        console.log('Clientes cargados:', stored?.length || 0);
+        console.log('Clientes cargados desde storage:', stored?.length || 0);
         
         if (stored && stored.length > 0) {
             clientes = stored;
@@ -56,13 +40,9 @@ async function cargarClientes(primeravez = false) {
             clientes = getClientesEjemplo();
             await guardarClientes();
         }
-        
-        renderizarTabla();
-        
     } catch (error) {
         console.error('Error:', error);
         clientes = getClientesEjemplo();
-        renderizarTabla();
     }
 }
 
@@ -110,13 +90,13 @@ function formatearFecha(fecha) {
     return new Date(fecha).toLocaleDateString('es-ES');
 }
 
-// Renderizar tabla
 function renderizarTabla() {
     console.log('🎨 renderizarTabla() - Clientes:', clientes.length);
     
     const tbody = document.getElementById('clientes-table-body');
     if (!tbody) {
-        console.log('⏳ Tabla no disponible aún');
+        console.log('⏳ Tabla no disponible, reintentando...');
+        setTimeout(() => renderizarTabla(), 50);
         return;
     }
     
@@ -154,8 +134,8 @@ function renderizarTabla() {
                     <button class="btn-icon-sm" onclick="window.verCliente(${c.id})">👁️</button>
                     <button class="btn-icon-sm" onclick="window.editarCliente(${c.id})">✏️</button>
                     <button class="btn-icon-sm" onclick="window.eliminarCliente(${c.id})">🗑️</button>
-                </td>
-            </tr>
+                 </td>
+             </tr>
         `;
     }
     
@@ -168,7 +148,6 @@ function renderizarTabla() {
     console.log('✅ Tabla renderizada con', paginated.length, 'clientes');
 }
 
-// Helper para escapar HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -244,23 +223,8 @@ function setupModalClose() {
     const modal = document.getElementById('cliente-modal');
     if (modal) {
         const closeBtn = modal.querySelector('.modal-close');
-        if (closeBtn) {
-            closeBtn.onclick = () => modal.style.display = 'none';
-        }
-        modal.onclick = (e) => { 
-            if (e.target === modal) modal.style.display = 'none'; 
-        };
-    }
-    
-    const verModal = document.getElementById('cliente-ver-modal');
-    if (verModal) {
-        const closeBtn = verModal.querySelector('.modal-close');
-        if (closeBtn) {
-            closeBtn.onclick = () => verModal.style.display = 'none';
-        }
-        verModal.onclick = (e) => { 
-            if (e.target === verModal) verModal.style.display = 'none'; 
-        };
+        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     }
 }
 
@@ -295,10 +259,7 @@ function setupEventListeners() {
     const prevBtn = document.getElementById('prev-page');
     if (prevBtn) {
         prevBtn.onclick = () => {
-            if (currentPage > 1) { 
-                currentPage--; 
-                renderizarTabla(); 
-            }
+            if (currentPage > 1) { currentPage--; renderizarTabla(); }
         };
     }
     
@@ -306,23 +267,18 @@ function setupEventListeners() {
     if (nextBtn) {
         nextBtn.onclick = () => {
             const total = Math.ceil(filtrarClientes().length / itemsPerPage);
-            if (currentPage < total) { 
-                currentPage++; 
-                renderizarTabla(); 
-            }
+            if (currentPage < total) { currentPage++; renderizarTabla(); }
         };
     }
 }
 
-// ✅ Exponer funciones globales
+// ✅ Exponer funciones
 window.renderizarTablaClientes = renderizarTabla;
-window.iniciarClientes = init;
+window.initClientes = init;
 
-// ✅ Inicialización única
+// ✅ Inicialización
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(init, 50);
-    });
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 50));
 } else {
     setTimeout(init, 50);
 }
