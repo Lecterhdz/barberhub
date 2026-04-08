@@ -66,6 +66,8 @@ export const app = {
             } else {
                 document.body.classList.remove('auth-page');
             }
+             // ✅ INICIALIZAR EVENTOS GLOBALES
+            initGlobalEvents();    
             
             if (autenticado) {
                 router.navegar('/dashboard');
@@ -77,9 +79,6 @@ export const app = {
             setTimeout(() => {
                 this.ocultarLoader();
             }, 500);
-            
-            // ✅ INICIALIZAR EVENTOS GLOBALES
-            initGlobalEvents();   
             
             console.log('✅ BarberHub listo');
             
