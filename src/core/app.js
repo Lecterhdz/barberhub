@@ -7,6 +7,7 @@ import { storage } from './storage.js';
 import { utils } from './utils.js';
 import { Sidebar } from '../components/Sidebar.js';
 import { ThemeSwitcher } from '../components/ThemeSwitcher.js';
+import { initGlobalEvents } from './events.js';
 
 console.log('🏗️ Core App cargado');
 
@@ -76,6 +77,9 @@ export const app = {
             setTimeout(() => {
                 this.ocultarLoader();
             }, 500);
+            
+            // ✅ INICIALIZAR EVENTOS GLOBALES
+            initGlobalEvents();   
             
             console.log('✅ BarberHub listo');
             
@@ -272,6 +276,8 @@ export const app = {
             // Agregar clase auth-page
             document.body.classList.add('auth-page');
             
+            // ✅ FORZAR ACTUALIZACIÓN DEL HEADER (limpiar licencia)
+            this.renderHeader();            
             router.navegar('/auth');
             Sidebar.render();
             
