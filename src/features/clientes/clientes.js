@@ -1,0 +1,346 @@
+// src/features/clientes/clientes.js
+
+console.log('👥 Clientes feature cargado');
+
+let clientes = [];
+let currentPage = 1;
+let itemsPerPage = 10;
+let currentFilter = 'todos';
+let currentSearch = '';
+let editingId = null;
+
+// Inicializar
+async function init() {
+    console.log('👥 Inicializando gestión de clientes...');
+    await cargarClientes();
+    setupEventListeners();
+}
+
+// Cargar clientes desde storage
+async function cargarClientes() {
+    try {
+        const stored = await window.storage?.obtenerTodos('clientes');
+        if (stored && stored.length > 0) {
+            clientes = stored;
+        } else {
+            // Datos de ejemplo
+            clientes = getClientesEjemplo();
+            await guardarClientes();
+        }
+        renderizarTabla();
+    } catch (error) {
+        console.error('Error cargando clientes:', error);
+        clientes = getClientesEjemplo();
+        renderizarTabla();
+    }
+}
+
+// Guardar clientes
+async function guardarClientes() {
+    try {
+        for (const cliente of clientes) {
+            await window.storage?.guardar('clientes', cliente);
+        }
+    } catch (error) {
+        console.error('Error guardando clientes:', error);
+    }
+}
+
+// Datos de ejemplo
+function getClientesEjemplo() {
+    return [
+        { id: 1, nombre: 'Carlos López', telefono: '555-1234', email: 'carlos@email.com', direccion: 'Calle 123', visitas: 12, ultimaVisita: '2024-01-15', gastoTotal: 4200, estado: 'activo', notas: 'Cliente frecuente', nacimiento: '1985-05-10' },
+        { id: 2, nombre: 'Miguel Ángel', telefono: '555-5678', email: 'miguel@email.com', direccion: 'Av. Principal 456', visitas: 8, ultimaVisita: '2024-01-10', gastoTotal: 2800, estado: 'activo', notas: '', nacimiento: '1990-08-22' },
+        { id: 3, nombre: 'Juan Pérez', telefono: '555-9012', email: 'juan@email.com', direccion: 'Boulevard 789', visitas: 5, ultimaVisita: '2024-01-05', gastoTotal: 1750, estado: 'activo', notas: 'Prefiere cortes clásicos', nacimiento: '1982-03-15' },
+        { id: 4, nombre: 'Roberto Gómez', telefono: '555-3456', email: 'roberto@email.com', direccion: 'Callejón 101', visitas: 3, ultimaVisita: '2023-12-20', gastoTotal: 1050, estado: 'inactivo', notas: '', nacimiento: '1995-11-30' },
+        { id: 5, nombre: 'Ana Martínez', telefono: '555-7890', email: 'ana@email.com', direccion: 'Pasaje 202', visitas: 15, ultimaVisita: '2024-01-18', gastoTotal: 5250, estado: 'activo', notas: 'Cliente VIP', nacimiento: '1988-07-08' }
+    ];
+}
+
+// Filtrar clientes
+function filtrarClientes() {
+    let filtered = [...clientes];
+    
+    if (currentFilter !== 'todos') {
+        filtered = filtered.filter(c => c.estado === currentFilter);
+    }
+    
+    if (currentSearch) {
+        const searchLower = currentSearch.toLowerCase();
+        filtered = filtered.filter(c => 
+            c.nombre.toLowerCase().includes(searchLower) ||
+            c.telefono.includes(searchLower) ||
+            (c.email && c.email.toLowerCase().includes(searchLower))
+        );
+    }
+    
+    return filtered;
+}
+
+// Renderizar tabla
+function renderizarTabla() {
+    const tbody = document.getElementById('clientes-table-body');
+    if (!tbody) return;
+    
+    const filtered = filtrarClientes();
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const paginated = filtered.slice(start, start + itemsPerPage);
+    
+    if (paginated.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="loading-cell">No hay clientes registrados</td></tr>`;
+        document.getElementById('page-info').textContent = `Página 1 de 1`;
+        return;
+    }
+    
+    tbody.innerHTML = paginated.map(cliente => `
+        <tr>
+            <td>
+                <div class="cliente-info">
+                    <div class="cliente-avatar">${cliente.nombre.charAt(0)}</div>
+                    <div>
+                        <div class="cliente-nombre">${cliente.nombre}</div>
+                        <div class="cliente-telefono">${cliente.telefono}</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="cliente-contacto">
+                    <span>📧 ${cliente.email || 'No registrado'}</span>
+                </div>
+            </td>
+            <td>${cliente.visitas || 0}</td>
+            <td>${cliente.ultimaVisita ? formatearFecha(cliente.ultimaVisita) : 'N/A'}</td>
+            <td>$${(cliente.gastoTotal || 0).toLocaleString()}</td>
+            <td>
+                <span class="badge-${cliente.estado || 'activo'}">
+                    ${cliente.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                </span>
+            </td>
+            <td>
+                <div class="acciones-btns">
+                    <button class="btn-icon-sm btn-ver" onclick="verCliente(${cliente.id})" title="Ver">👁️</button>
+                    <button class="btn-icon-sm btn-editar" onclick="editarCliente(${cliente.id})" title="Editar">✏️</button>
+                    <button class="btn-icon-sm btn-eliminar" onclick="eliminarCliente(${cliente.id})" title="Eliminar">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    document.getElementById('page-info').textContent = `Página ${currentPage} de ${totalPages || 1}`;
+    document.getElementById('prev-page').disabled = currentPage === 1;
+    document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
+}
+
+// Formatear fecha
+function formatearFecha(fecha) {
+    if (!fecha) return 'N/A';
+    const d = new Date(fecha);
+    return d.toLocaleDateString('es-ES');
+}
+
+// Ver cliente
+window.verCliente = async function(id) {
+    const cliente = clientes.find(c => c.id === id);
+    if (!cliente) return;
+    
+    const modal = document.getElementById('cliente-ver-modal');
+    const detalle = document.getElementById('cliente-detalle');
+    
+    detalle.innerHTML = `
+        <div class="cliente-detalle-header">
+            <div class="cliente-avatar-large">${cliente.nombre.charAt(0)}</div>
+            <div>
+                <h3>${cliente.nombre}</h3>
+                <p class="cliente-desde">Cliente desde: ${formatearFecha(cliente.fechaRegistro || new Date())}</p>
+            </div>
+        </div>
+        
+        <div class="cliente-info-grid">
+            <div class="info-item">
+                <label>📞 Teléfono</label>
+                <p>${cliente.telefono}</p>
+            </div>
+            <div class="info-item">
+                <label>✉️ Email</label>
+                <p>${cliente.email || 'No registrado'}</p>
+            </div>
+            <div class="info-item">
+                <label>🎂 Nacimiento</label>
+                <p>${cliente.nacimiento ? formatearFecha(cliente.nacimiento) : 'No registrado'}</p>
+            </div>
+            <div class="info-item">
+                <label>📍 Dirección</label>
+                <p>${cliente.direccion || 'No registrada'}</p>
+            </div>
+            <div class="info-item">
+                <label>✂️ Visitas</label>
+                <p>${cliente.visitas || 0}</p>
+            </div>
+            <div class="info-item">
+                <label>💰 Gasto total</label>
+                <p>$${(cliente.gastoTotal || 0).toLocaleString()}</p>
+            </div>
+        </div>
+        
+        <div class="cliente-historial">
+            <h4>📋 Historial de Servicios</h4>
+            <div id="historial-lista">
+                <div class="loading-spinner">Cargando historial...</div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+    cargarHistorialCliente(id);
+};
+
+// Editar cliente
+window.editarCliente = function(id) {
+    const cliente = clientes.find(c => c.id === id);
+    if (!cliente) return;
+    
+    editingId = id;
+    document.getElementById('modal-title').textContent = 'Editar Cliente';
+    document.getElementById('cliente-nombre').value = cliente.nombre;
+    document.getElementById('cliente-telefono').value = cliente.telefono;
+    document.getElementById('cliente-email').value = cliente.email || '';
+    document.getElementById('cliente-nacimiento').value = cliente.nacimiento || '';
+    document.getElementById('cliente-direccion').value = cliente.direccion || '';
+    document.getElementById('cliente-notas').value = cliente.notas || '';
+    document.getElementById('cliente-estado').value = cliente.estado || 'activo';
+    
+    document.getElementById('cliente-modal').style.display = 'flex';
+};
+
+// Eliminar cliente
+window.eliminarCliente = async function(id) {
+    const confirmar = await window.utils?.confirmar('¿Eliminar este cliente?');
+    if (confirmar) {
+        clientes = clientes.filter(c => c.id !== id);
+        await guardarClientes();
+        renderizarTabla();
+        window.utils?.mostrarNotificacion('Cliente eliminado', 'success');
+    }
+};
+
+// Nuevo cliente
+function nuevoCliente() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'Nuevo Cliente';
+    document.getElementById('cliente-form').reset();
+    document.getElementById('cliente-estado').value = 'activo';
+    document.getElementById('cliente-modal').style.display = 'flex';
+}
+
+// Guardar cliente
+async function guardarCliente(event) {
+    event.preventDefault();
+    
+    const clienteData = {
+        nombre: document.getElementById('cliente-nombre').value,
+        telefono: document.getElementById('cliente-telefono').value,
+        email: document.getElementById('cliente-email').value,
+        nacimiento: document.getElementById('cliente-nacimiento').value,
+        direccion: document.getElementById('cliente-direccion').value,
+        notas: document.getElementById('cliente-notas').value,
+        estado: document.getElementById('cliente-estado').value,
+        visitas: 0,
+        gastoTotal: 0,
+        ultimaVisita: null
+    };
+    
+    if (editingId) {
+        const index = clientes.findIndex(c => c.id === editingId);
+        if (index !== -1) {
+            clientes[index] = { ...clientes[index], ...clienteData };
+        }
+        window.utils?.mostrarNotificacion('Cliente actualizado', 'success');
+    } else {
+        clienteData.id = Date.now();
+        clienteData.fechaRegistro = new Date().toISOString();
+        clientes.push(clienteData);
+        window.utils?.mostrarNotificacion('Cliente agregado', 'success');
+    }
+    
+    await guardarClientes();
+    renderizarTabla();
+    cerrarModal();
+}
+
+// Cargar historial del cliente
+async function cargarHistorialCliente(clienteId) {
+    const container = document.getElementById('historial-lista');
+    if (!container) return;
+    
+    try {
+        const citas = await window.storage?.obtenerPorIndice('citas', 'clienteId', clienteId) || [];
+        
+        if (citas.length === 0) {
+            container.innerHTML = '<div class="loading-spinner">No hay servicios registrados</div>';
+            return;
+        }
+        
+        container.innerHTML = citas.map(cita => `
+            <div class="historial-item">
+                <div class="historial-fecha">${formatearFecha(cita.fecha)}</div>
+                <div class="historial-servicio">${cita.servicio || 'Corte'}</div>
+                <div class="historial-monto">$${(cita.monto || 350).toLocaleString()}</div>
+            </div>
+        `).join('');
+    } catch (error) {
+        container.innerHTML = '<div class="loading-spinner">Error al cargar historial</div>';
+    }
+}
+
+// Cerrar modal
+function cerrarModal() {
+    document.getElementById('cliente-modal').style.display = 'none';
+    document.getElementById('cliente-ver-modal').style.display = 'none';
+}
+
+// Configurar eventos
+function setupEventListeners() {
+    document.getElementById('btn-nuevo-cliente')?.addEventListener('click', nuevoCliente);
+    document.getElementById('cancelar-modal')?.addEventListener('click', cerrarModal);
+    document.getElementById('cliente-form')?.addEventListener('submit', guardarCliente);
+    document.getElementById('search-cliente')?.addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        currentPage = 1;
+        renderizarTabla();
+    });
+    document.getElementById('filtro-estado')?.addEventListener('change', (e) => {
+        currentFilter = e.target.value;
+        currentPage = 1;
+        renderizarTabla();
+    });
+    document.getElementById('prev-page')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderizarTabla();
+        }
+    });
+    document.getElementById('next-page')?.addEventListener('click', () => {
+        const totalPages = Math.ceil(filtrarClientes().length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderizarTabla();
+        }
+    });
+    
+    // Cerrar modales con tecla ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            cerrarModal();
+        }
+    });
+}
+
+// Inicializar
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+export { init, cargarClientes };
