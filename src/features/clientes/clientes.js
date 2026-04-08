@@ -13,8 +13,12 @@ let editingId = null;
 async function init() {
     console.log('👥 Inicializando...');
     await cargarClientes();
-    setupEventListeners();
-    setupModalClose();
+    
+    // ✅ ESPERAR A QUE EL DOM ESTÉ LISTO
+    setTimeout(() => {
+        setupEventListeners();
+        setupModalClose();
+    }, 100);
 }
 
 // Cargar clientes desde storage
@@ -30,8 +34,8 @@ async function cargarClientes() {
             await guardarClientes();
         }
         
-        // ✅ FORZAR RENDERIZADO INMEDIATO
-        setTimeout(() => renderizarTabla(), 10);
+        // ✅ RENDERIZAR DIRECTAMENTE
+        renderizarTabla();
         
     } catch (error) {
         console.error('Error:', error);
@@ -90,7 +94,9 @@ function renderizarTabla() {
     
     const tbody = document.getElementById('clientes-table-body');
     if (!tbody) {
-        console.error('❌ tbody no encontrado');
+        console.error('❌ tbody no encontrado - esperando DOM...');
+        // Intentar de nuevo después de un momento
+        setTimeout(() => renderizarTabla(), 50);
         return;
     }
     
@@ -109,30 +115,29 @@ function renderizarTabla() {
         <tr>
             <td>
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${c.nombre.charAt(0)}</div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #ff6b35; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${c.nombre.charAt(0)}</div>
                     <div><strong>${c.nombre}</strong><br><small>${c.telefono}</small></div>
                 </div>
             </td>
             <td>${c.email || 'No registrado'}</td>
             <td style="text-align: center;">${c.visitas || 0}</td>
             <td>${formatearFecha(c.ultimaVisita)}</td>
-            <td style="color: var(--color-primary); font-weight: bold;">$${(c.gastoTotal || 0).toLocaleString()}</td>
-            <td><span class="badge-${c.estado}">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
+            <td style="color: #ff6b35; font-weight: bold;">$${(c.gastoTotal || 0).toLocaleString()}</td>
+            <td><span style="padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: ${c.estado === 'activo' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}; color: ${c.estado === 'activo' ? '#4caf50' : '#f44336'};">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
             <td>
-                <button class="btn-icon-sm" onclick="verCliente(${c.id})">👁️</button>
-                <button class="btn-icon-sm" onclick="editarCliente(${c.id})">✏️</button>
-                <button class="btn-icon-sm" onclick="eliminarCliente(${c.id})">🗑️</button>
+                <button class="btn-icon-sm" onclick="window.verCliente(${c.id})">👁️</button>
+                <button class="btn-icon-sm" onclick="window.editarCliente(${c.id})">✏️</button>
+                <button class="btn-icon-sm" onclick="window.eliminarCliente(${c.id})">🗑️</button>
             </td>
-        </table>
+        </tr>
     `).join('');
     
     document.getElementById('page-info').textContent = `Página ${currentPage} de ${totalPages || 1}`;
     document.getElementById('prev-page').disabled = currentPage === 1;
     document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
+    
+    console.log('✅ Tabla renderizada con', paginated.length, 'clientes');
 }
-
-window.renderizarTablaClientes = renderizarTabla;
-window.clientesData = () => clientes;
 
 // ============ FUNCIONES GLOBALES ============
 window.verCliente = function(id) {
@@ -156,7 +161,7 @@ window.editarCliente = function(id) {
 };
 
 window.eliminarCliente = async function(id) {
-    if (confirm('¿Eliminar?')) {
+    if (confirm('¿Eliminar este cliente?')) {
         clientes = clientes.filter(c => c.id !== id);
         await guardarClientes();
         renderizarTabla();
@@ -175,6 +180,7 @@ async function guardarCliente(e) {
     e.preventDefault();
     
     const data = {
+        id: Date.now(),
         nombre: document.getElementById('cliente-nombre').value,
         telefono: document.getElementById('cliente-telefono').value,
         email: document.getElementById('cliente-email').value,
@@ -186,22 +192,11 @@ async function guardarCliente(e) {
         fechaRegistro: new Date().toISOString()
     };
     
-    if (editingId) {
-        const index = clientes.findIndex(c => c.id === editingId);
-        if (index !== -1) {
-            data.id = editingId;
-            data.visitas = clientes[index].visitas;
-            data.gastoTotal = clientes[index].gastoTotal;
-            clientes[index] = data;
-        }
-    } else {
-        data.id = Date.now();
-        clientes.push(data);
-    }
-    
+    clientes.push(data);
     await guardarClientes();
-    renderizarTabla();  // ✅ Actualizar sin recargar
+    renderizarTabla();
     document.getElementById('cliente-modal').style.display = 'none';
+    alert('Cliente agregado');
 }
 
 function cerrarModal() {
@@ -212,33 +207,58 @@ function cerrarModal() {
 function setupModalClose() {
     const modal = document.getElementById('cliente-modal');
     if (modal) {
-        modal.querySelector('.modal-close').onclick = () => modal.style.display = 'none';
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
         modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     }
 }
 
 function setupEventListeners() {
-    document.getElementById('btn-nuevo-cliente').onclick = nuevoCliente;
-    document.getElementById('cancelar-modal').onclick = cerrarModal;
-    document.getElementById('cliente-form').onsubmit = guardarCliente;
-    document.getElementById('search-cliente').oninput = (e) => {
-        currentSearch = e.target.value;
-        currentPage = 1;
-        renderizarTabla();
-    };
-    document.getElementById('filtro-estado').onchange = (e) => {
-        currentFilter = e.target.value;
-        currentPage = 1;
-        renderizarTabla();
-    };
-    document.getElementById('prev-page').onclick = () => {
-        if (currentPage > 1) { currentPage--; renderizarTabla(); }
-    };
-    document.getElementById('next-page').onclick = () => {
-        const total = Math.ceil(filtrarClientes().length / itemsPerPage);
-        if (currentPage < total) { currentPage++; renderizarTabla(); }
-    };
+    const btnNuevo = document.getElementById('btn-nuevo-cliente');
+    if (btnNuevo) btnNuevo.onclick = nuevoCliente;
+    
+    const btnCancelar = document.getElementById('cancelar-modal');
+    if (btnCancelar) btnCancelar.onclick = cerrarModal;
+    
+    const form = document.getElementById('cliente-form');
+    if (form) form.onsubmit = guardarCliente;
+    
+    const searchInput = document.getElementById('search-cliente');
+    if (searchInput) {
+        searchInput.oninput = (e) => {
+            currentSearch = e.target.value;
+            currentPage = 1;
+            renderizarTabla();
+        };
+    }
+    
+    const filtroEstado = document.getElementById('filtro-estado');
+    if (filtroEstado) {
+        filtroEstado.onchange = (e) => {
+            currentFilter = e.target.value;
+            currentPage = 1;
+            renderizarTabla();
+        };
+    }
+    
+    const prevBtn = document.getElementById('prev-page');
+    if (prevBtn) {
+        prevBtn.onclick = () => {
+            if (currentPage > 1) { currentPage--; renderizarTabla(); }
+        };
+    }
+    
+    const nextBtn = document.getElementById('next-page');
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            const total = Math.ceil(filtrarClientes().length / itemsPerPage);
+            if (currentPage < total) { currentPage++; renderizarTabla(); }
+        };
+    }
 }
+
+// Exponer funciones globalmente
+window.renderizarTablaClientes = renderizarTabla;
 
 // Inicializar
 if (document.readyState === 'loading') {
