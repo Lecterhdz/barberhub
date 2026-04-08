@@ -15,6 +15,7 @@ async function init() {
     await cargarClientes();
     setupEventListeners();
     setupModalClose();
+    renderizarTabla();
 }
 
 // Cargar clientes desde storage
@@ -24,15 +25,12 @@ async function cargarClientes() {
         if (stored && stored.length > 0) {
             clientes = stored;
         } else {
-            // Datos de ejemplo
             clientes = getClientesEjemplo();
             await guardarClientes();
         }
-        renderizarTabla();
     } catch (error) {
         console.error('Error cargando clientes:', error);
         clientes = getClientesEjemplo();
-        renderizarTabla();
     }
 }
 
@@ -105,19 +103,11 @@ function renderizarTabla() {
                     </div>
                 </div>
             </td>
-            <td>
-                <div class="cliente-contacto">
-                    <span>📧 ${cliente.email || 'No registrado'}</span>
-                </div>
-            </td>
+            <td>${cliente.email || 'No registrado'}</td>
             <td>${cliente.visitas || 0}</td>
             <td>${cliente.ultimaVisita ? formatearFecha(cliente.ultimaVisita) : 'N/A'}</td>
             <td>$${(cliente.gastoTotal || 0).toLocaleString()}</td>
-            <td>
-                <span class="badge-${cliente.estado || 'activo'}">
-                    ${cliente.estado === 'activo' ? 'Activo' : 'Inactivo'}
-                </span>
-            </td>
+            <td><span class="badge-${cliente.estado || 'activo'}">${cliente.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
             <td>
                 <div class="acciones-btns">
                     <button class="btn-icon-sm btn-ver" onclick="verCliente(${cliente.id})" title="Ver">👁️</button>
@@ -141,7 +131,7 @@ function formatearFecha(fecha) {
 }
 
 // Ver cliente
-window.verCliente = async function(id) {
+window.verCliente = function(id) {
     const cliente = clientes.find(c => c.id === id);
     if (!cliente) return;
     
@@ -149,51 +139,25 @@ window.verCliente = async function(id) {
     const detalle = document.getElementById('cliente-detalle');
     
     detalle.innerHTML = `
-        <div class="cliente-detalle-header">
-            <div class="cliente-avatar-large">${cliente.nombre.charAt(0)}</div>
-            <div>
-                <h3>${cliente.nombre}</h3>
-                <p class="cliente-desde">Cliente desde: ${formatearFecha(cliente.fechaRegistro || new Date())}</p>
-            </div>
+        <div class="cliente-detalle-header" style="text-align: center; margin-bottom: 20px;">
+            <div class="cliente-avatar" style="width: 80px; height: 80px; font-size: 2.5rem; margin: 0 auto 10px;">${cliente.nombre.charAt(0)}</div>
+            <h3>${cliente.nombre}</h3>
+            <p class="cliente-desde">Cliente desde: ${formatearFecha(cliente.fechaRegistro || new Date())}</p>
         </div>
         
-        <div class="cliente-info-grid">
-            <div class="info-item">
-                <label>📞 Teléfono</label>
-                <p>${cliente.telefono}</p>
-            </div>
-            <div class="info-item">
-                <label>✉️ Email</label>
-                <p>${cliente.email || 'No registrado'}</p>
-            </div>
-            <div class="info-item">
-                <label>🎂 Nacimiento</label>
-                <p>${cliente.nacimiento ? formatearFecha(cliente.nacimiento) : 'No registrado'}</p>
-            </div>
-            <div class="info-item">
-                <label>📍 Dirección</label>
-                <p>${cliente.direccion || 'No registrada'}</p>
-            </div>
-            <div class="info-item">
-                <label>✂️ Visitas</label>
-                <p>${cliente.visitas || 0}</p>
-            </div>
-            <div class="info-item">
-                <label>💰 Gasto total</label>
-                <p>$${(cliente.gastoTotal || 0).toLocaleString()}</p>
-            </div>
+        <div class="cliente-info-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div class="info-item"><label>📞 Teléfono</label><p>${cliente.telefono}</p></div>
+            <div class="info-item"><label>✉️ Email</label><p>${cliente.email || 'No registrado'}</p></div>
+            <div class="info-item"><label>🎂 Nacimiento</label><p>${cliente.nacimiento ? formatearFecha(cliente.nacimiento) : 'No registrado'}</p></div>
+            <div class="info-item"><label>📍 Dirección</label><p>${cliente.direccion || 'No registrada'}</p></div>
+            <div class="info-item"><label>✂️ Visitas</label><p>${cliente.visitas || 0}</p></div>
+            <div class="info-item"><label>💰 Gasto total</label><p>$${(cliente.gastoTotal || 0).toLocaleString()}</p></div>
         </div>
         
-        <div class="cliente-historial">
-            <h4>📋 Historial de Servicios</h4>
-            <div id="historial-lista">
-                <div class="loading-spinner">Cargando historial...</div>
-            </div>
-        </div>
+        ${cliente.notas ? `<div class="cliente-historial"><h4>📝 Notas</h4><p>${cliente.notas}</p></div>` : ''}
     `;
     
     modal.style.display = 'flex';
-    cargarHistorialCliente(id);
 };
 
 // Editar cliente
@@ -254,6 +218,9 @@ async function guardarCliente(event) {
     if (editingId) {
         const index = clientes.findIndex(c => c.id === editingId);
         if (index !== -1) {
+            clienteData.id = editingId;
+            clienteData.visitas = clientes[index].visitas || 0;
+            clienteData.gastoTotal = clientes[index].gastoTotal || 0;
             clientes[index] = { ...clientes[index], ...clienteData };
         }
         window.utils?.mostrarNotificacion('Cliente actualizado', 'success');
@@ -269,51 +236,37 @@ async function guardarCliente(event) {
     cerrarModal();
 }
 
-// Cargar historial del cliente
-async function cargarHistorialCliente(clienteId) {
-    const container = document.getElementById('historial-lista');
-    if (!container) return;
-    
-    try {
-        const citas = await window.storage?.obtenerPorIndice('citas', 'clienteId', clienteId) || [];
-        
-        if (citas.length === 0) {
-            container.innerHTML = '<div class="loading-spinner">No hay servicios registrados</div>';
-            return;
-        }
-        
-        container.innerHTML = citas.map(cita => `
-            <div class="historial-item">
-                <div class="historial-fecha">${formatearFecha(cita.fecha)}</div>
-                <div class="historial-servicio">${cita.servicio || 'Corte'}</div>
-                <div class="historial-monto">$${(cita.monto || 350).toLocaleString()}</div>
-            </div>
-        `).join('');
-    } catch (error) {
-        container.innerHTML = '<div class="loading-spinner">Error al cargar historial</div>';
-    }
-}
-
 // Cerrar modal
 function cerrarModal() {
     document.getElementById('cliente-modal').style.display = 'none';
     document.getElementById('cliente-ver-modal').style.display = 'none';
 }
 
+// Configurar cierre de modales con X
 function setupModalClose() {
     const modal = document.getElementById('cliente-modal');
     if (modal) {
         const closeBtn = modal.querySelector('.modal-close');
-        if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
-        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+        if (closeBtn) {
+            closeBtn.onclick = () => modal.style.display = 'none';
+        }
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        };
     }
+    
     const verModal = document.getElementById('cliente-ver-modal');
     if (verModal) {
         const closeBtn = verModal.querySelector('.modal-close');
-        if (closeBtn) closeBtn.onclick = () => verModal.style.display = 'none';
-        verModal.onclick = (e) => { if (e.target === verModal) verModal.style.display = 'none'; };
+        if (closeBtn) {
+            closeBtn.onclick = () => verModal.style.display = 'none';
+        }
+        verModal.onclick = (e) => {
+            if (e.target === verModal) verModal.style.display = 'none';
+        };
     }
 }
+
 // Configurar eventos
 function setupEventListeners() {
     document.getElementById('btn-nuevo-cliente')?.addEventListener('click', nuevoCliente);
@@ -343,7 +296,7 @@ function setupEventListeners() {
         }
     });
     
-    // Cerrar modales con tecla ESC
+    // Cerrar modales con ESC
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             cerrarModal();
