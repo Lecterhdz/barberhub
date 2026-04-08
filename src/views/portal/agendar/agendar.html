@@ -1,0 +1,148 @@
+<!-- src/views/portal/agendar/agendar.html -->
+<div class="agendar-container">
+    <!-- Header de la sección -->
+    <div class="agendar-header">
+        <h2>📅 Agendar Cita</h2>
+        <p>Selecciona el servicio, barbero y horario que prefieras</p>
+    </div>
+
+    <!-- Indicador de pasos -->
+    <div class="pasos-indicador">
+        <div class="paso active" data-paso="1">
+            <div class="paso-numero">1</div>
+            <div class="paso-label">Servicio</div>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso" data-paso="2">
+            <div class="paso-numero">2</div>
+            <div class="paso-label">Barbero</div>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso" data-paso="3">
+            <div class="paso-numero">3</div>
+            <div class="paso-label">Fecha y Hora</div>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso" data-paso="4">
+            <div class="paso-numero">4</div>
+            <div class="paso-label">Tus Datos</div>
+        </div>
+    </div>
+
+    <!-- Paso 1: Servicios -->
+    <div id="paso-1" class="paso-contenido active">
+        <div class="servicios-grid" id="servicios-grid">
+            <div class="loading-spinner">Cargando servicios...</div>
+        </div>
+    </div>
+
+    <!-- Paso 2: Barberos -->
+    <div id="paso-2" class="paso-contenido" style="display: none;">
+        <div class="barberos-grid" id="barberos-grid">
+            <div class="loading-spinner">Cargando barberos...</div>
+        </div>
+    </div>
+
+    <!-- Paso 3: Fecha y Hora -->
+    <div id="paso-3" class="paso-contenido" style="display: none;">
+        <div class="fecha-hora-container">
+            <div class="fechas-section">
+                <h3>📅 Selecciona una fecha</h3>
+                <div class="fechas-grid" id="fechas-grid">
+                    <div class="loading-spinner">Cargando fechas...</div>
+                </div>
+            </div>
+            <div class="horas-section">
+                <h3>⏰ Selecciona una hora</h3>
+                <div class="horas-grid" id="horas-grid">
+                    <div class="loading-spinner">Selecciona una fecha primero</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paso 4: Datos del Cliente -->
+    <div id="paso-4" class="paso-contenido" style="display: none;">
+        <div class="datos-cliente-card">
+            <h3>📝 Completa tus datos</h3>
+            <form id="cliente-form" class="datos-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="cliente-nombre" required class="form-control" placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono *</label>
+                        <input type="tel" id="cliente-telefono" required class="form-control" placeholder="Ej: 555-1234">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email (opcional)</label>
+                        <input type="email" id="cliente-email" class="form-control" placeholder="ejemplo@correo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>¿Cómo te enteraste?</label>
+                        <select id="cliente-origen" class="form-control">
+                            <option value="">Seleccionar</option>
+                            <option value="google">Google</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="recomendacion">Recomendación</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notas adicionales</label>
+                    <textarea id="cita-notas" rows="2" class="form-control" placeholder="Alguna preferencia o comentario..."></textarea>
+                </div>
+                <div class="resumen-cita" id="resumen-cita">
+                    <h4>📋 Resumen de tu cita</h4>
+                    <div class="resumen-item">
+                        <span>Servicio:</span>
+                        <strong id="resumen-servicio">-</strong>
+                    </div>
+                    <div class="resumen-item">
+                        <span>Barbero:</span>
+                        <strong id="resumen-barbero">-</strong>
+                    </div>
+                    <div class="resumen-item">
+                        <span>Fecha y hora:</span>
+                        <strong id="resumen-fecha">-</strong>
+                    </div>
+                    <div class="resumen-item">
+                        <span>Total:</span>
+                        <strong id="resumen-total">$0</strong>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">✅ Confirmar Cita</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Botones de navegación -->
+    <div class="paso-botones">
+        <button id="btn-anterior" class="btn btn-secondary" style="display: none;">◀ Anterior</button>
+        <button id="btn-siguiente" class="btn btn-primary">Siguiente ▶</button>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="confirmacion-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>✅ ¡Cita Agendada!</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="confirmacion-icono">🎉</div>
+            <p>Tu cita ha sido agendada exitosamente.</p>
+            <div class="confirmacion-detalle" id="confirmacion-detalle"></div>
+            <p class="confirmacion-mensaje">Te esperamos, ¡no faltes!</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id="cerrar-modal-btn">Aceptar</button>
+        </div>
+    </div>
+</div>
