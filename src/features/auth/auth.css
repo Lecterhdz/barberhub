@@ -65,8 +65,8 @@
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #ddd;
     font-weight: 500;
+    color: var(--text-primary);
 }
 
 .form-group input {
@@ -84,6 +84,16 @@
     outline: none;
     border-color: #ff6b35;
     box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+}
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
 }
 
 .btn {
@@ -125,18 +135,19 @@
 
 .license-codes code {
     display: block;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 10px;
-    margin: 10px 0;
+    background: var(--bg-tertiary);
+    padding: 8px 12px;
+    margin: 8px 0;
     border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.85rem;
+    font-family: monospace;
+    font-size: 0.8rem;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    color: var(--color-primary);
 }
 
 .license-codes code:hover {
-    background: rgba(255, 107, 53, 0.2);
+    background: var(--bg-hover);
     transform: translateX(5px);
 }
 
@@ -145,9 +156,24 @@
     margin-top: -5px;
     margin-bottom: 15px;
     font-size: 0.75rem;
-    color: #888;
+    color: var(--text-light);;
 }
-
+.alert {
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    animation: slideIn 0.3s ease;
+}
+.alert-error {
+    background: rgba(244, 67, 54, 0.1);
+    border: 1px solid #f44336;
+    color: #f44336;
+}
+.alert-success {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid #4caf50;
+    color: #4caf50;
+}
 .auth-footer {
     text-align: center;
     margin-top: 30px;
