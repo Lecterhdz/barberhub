@@ -1,227 +1,707 @@
-// src/core/events.js - Configuración central de eventos
+// src/core/events.js
+// ─────────────────────────────────────────────────────────────────────
 
-export function initGlobalEvents() {
+console.log('🎯 Sistema de eventos centralizado');
+
+// Store para los datos globales
+let store = {
+    clientes: [],
+    barberos: [],
+    citas: [],
+    servicios: [],
+    productos: [],
+    ventas: []
+};
+
+// Cargar datos desde storage
+async function loadStore() {
+    if (window.storage) {
+        store.clientes = await window.storage.obtenerTodos('clientes') || [];
+        store.barberos = await window.storage.obtenerTodos('barberos') || [];
+        store.citas = await window.storage.obtenerTodos('citas') || [];
+        store.servicios = await window.storage.obtenerTodos('servicios') || [];
+        store.productos = await window.storage.obtenerTodos('productos') || [];
+        store.ventas = await window.storage.obtenerTodos('ventas') || [];
+    }
+}
+
+// Inicializar eventos globales
+export async function initGlobalEvents() {
     console.log('🔌 Inicializando eventos globales...');
+    await loadStore();
     
-    // Escuchar cuando se carga un feature
-    window.addEventListener('feature-loaded', (e) => {
+    window.addEventListener('feature-loaded', async (e) => {
         const feature = e.detail.feature;
-        console.log(`📦 Feature cargado: ${feature}, inicializando eventos...`);
-        
-        // Inicializar eventos según el feature
-        switch(feature) {
-            case 'clientes':
-                initClientesEvents();
-                break;
-            case 'barberos':
-                initBarberosEvents();
-                break;
-            case 'citas':
-                initCitasEvents();
-                break;
-            case 'servicios':
-                initServiciosEvents();
-                break;
-            case 'inventario':
-                initInventarioEvents();
-                break;
-            case 'caja':
-                initCajaEvents();
-                break;
-            case 'reportes':
-                initReportesEvents();
-                break;
-            case 'portal':
-                initPortalEvents();
-                break;
+        console.log(`📦 Feature cargado: ${feature}`);
+        await loadStore();
+        initFeatureEvents(feature);
+    });
+}
+
+// Inicializar eventos según el feature
+async function initFeatureEvents(feature) {
+    switch(feature) {
+        case 'clientes':
+            initClientes();
+            break;
+        case 'barberos':
+            initBarberos();
+            break;
+        case 'citas':
+            initCitas();
+            break;
+        case 'servicios':
+            initServicios();
+            break;
+        case 'inventario':
+            initInventario();
+            break;
+        case 'caja':
+            initCaja();
+            break;
+        case 'reportes':
+            initReportes();
+            break;
+        case 'configuracion':
+            initConfiguracion();
+            break;
+        case 'portal':
+            initPortal();
+            break;
+    }
+}
+
+// ============================================
+// CLIENTES
+// ============================================
+function initClientes() {
+    console.log('👥 Inicializando clientes...');
+    
+    // Botón nuevo cliente
+    const btnNuevo = document.getElementById('btn-nuevo-cliente');
+    if (btnNuevo) {
+        btnNuevo.onclick = () => {
+            document.getElementById('modal-title').textContent = 'Nuevo Cliente';
+            document.getElementById('cliente-form').reset();
+            document.getElementById('cliente-estado').value = 'activo';
+            document.getElementById('cliente-modal').style.display = 'flex';
+        };
+    }
+    
+    // Botón cancelar
+    const btnCancelar = document.getElementById('cancelar-modal');
+    if (btnCancelar) {
+        btnCancelar.onclick = () => {
+            document.getElementById('cliente-modal').style.display = 'none';
+        };
+    }
+    
+    // Formulario
+    const form = document.getElementById('cliente-form');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const cliente = {
+                id: Date.now(),
+                nombre: document.getElementById('cliente-nombre').value,
+                telefono: document.getElementById('cliente-telefono').value,
+                email: document.getElementById('cliente-email').value,
+                direccion: document.getElementById('cliente-direccion').value,
+                estado: document.getElementById('cliente-estado').value,
+                visitas: 0,
+                gastoTotal: 0
+            };
+            await window.storage.guardar('clientes', cliente);
+            window.utils.mostrarNotificacion('Cliente agregado', 'success');
+            document.getElementById('cliente-modal').style.display = 'none';
+            window.router.navegar('/clientes');
+        };
+    }
+    
+    // Cerrar modales con ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.getElementById('cliente-modal').style.display = 'none';
+            document.getElementById('cliente-ver-modal').style.display = 'none';
         }
     });
 }
 
-// ============ CLIENTES ============
-function initClientesEvents() {
-    const btnNuevo = document.getElementById('btn-nuevo-cliente');
-    if (btnNuevo && !btnNuevo.hasListener) {
-        btnNuevo.addEventListener('click', () => {
-            console.log('Nuevo cliente clickeado');
-            abrirModalCliente();
-        });
-        btnNuevo.hasListener = true;
-    }
-}
-
-function abrirModalCliente() {
-    const modal = document.getElementById('cliente-modal');
-    if (modal) {
-        document.getElementById('modal-title').textContent = 'Nuevo Cliente';
-        document.getElementById('cliente-form').reset();
-        document.getElementById('cliente-estado').value = 'activo';
-        modal.style.display = 'flex';
-    } else {
-        console.error('Modal cliente no encontrado');
-    }
-}
-
-// ============ BARBEROS ============
-function initBarberosEvents() {
+// ============================================
+// BARBEROS
+// ============================================
+function initBarberos() {
+    console.log('✂️ Inicializando barberos...');
+    
     const btnNuevo = document.getElementById('btn-nuevo-barbero');
-    if (btnNuevo && !btnNuevo.hasListener) {
-        btnNuevo.addEventListener('click', () => {
-            console.log('Nuevo barbero clickeado');
-            abrirModalBarbero();
-        });
-        btnNuevo.hasListener = true;
+    if (btnNuevo) {
+        btnNuevo.onclick = () => {
+            document.getElementById('modal-title').textContent = 'Nuevo Barbero';
+            document.getElementById('barbero-form').reset();
+            document.getElementById('barbero-comision').value = '40';
+            document.getElementById('barbero-estado').value = 'activo';
+            document.getElementById('barbero-modal').style.display = 'flex';
+        };
+    }
+    
+    const btnCancelar = document.getElementById('cancelar-modal');
+    if (btnCancelar) {
+        btnCancelar.onclick = () => {
+            document.getElementById('barbero-modal').style.display = 'none';
+        };
+    }
+    
+    const form = document.getElementById('barbero-form');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const barbero = {
+                id: Date.now(),
+                nombre: document.getElementById('barbero-nombre').value,
+                telefono: document.getElementById('barbero-telefono').value,
+                email: document.getElementById('barbero-email').value,
+                especialidad: document.getElementById('barbero-especialidad').value,
+                comision: parseInt(document.getElementById('barbero-comision').value),
+                estado: document.getElementById('barbero-estado').value,
+                horarioInicio: document.getElementById('barbero-horario-inicio').value,
+                horarioFin: document.getElementById('barbero-horario-fin').value
+            };
+            await window.storage.guardar('barberos', barbero);
+            window.utils.mostrarNotificacion('Barbero agregado', 'success');
+            document.getElementById('barbero-modal').style.display = 'none';
+            window.router.navegar('/barberos');
+        };
     }
 }
 
-function abrirModalBarbero() {
-    const modal = document.getElementById('barbero-modal');
-    if (modal) {
-        document.getElementById('modal-title').textContent = 'Nuevo Barbero';
-        document.getElementById('barbero-form').reset();
-        document.getElementById('barbero-comision').value = '40';
-        document.getElementById('barbero-estado').value = 'activo';
-        document.getElementById('barbero-horario-inicio').value = '09:00';
-        document.getElementById('barbero-horario-fin').value = '18:00';
-        modal.style.display = 'flex';
-    }
-}
-
-// ============ CITAS ============
-function initCitasEvents() {
+// ============================================
+// CITAS
+// ============================================
+function initCitas() {
+    console.log('📅 Inicializando citas...');
+    
+    // Cargar selectores
+    cargarSelectoresCitas();
+    
     const btnNuevo = document.getElementById('btn-nueva-cita');
-    if (btnNuevo && !btnNuevo.hasListener) {
-        btnNuevo.addEventListener('click', () => {
-            console.log('Nueva cita clickeada');
-            abrirModalCita();
-        });
-        btnNuevo.hasListener = true;
+    if (btnNuevo) {
+        btnNuevo.onclick = () => {
+            document.getElementById('modal-title').textContent = 'Nueva Cita';
+            document.getElementById('cita-form').reset();
+            document.getElementById('cita-fecha').value = new Date().toISOString().split('T')[0];
+            document.getElementById('cita-estado').value = 'pendiente';
+            document.getElementById('cita-modal').style.display = 'flex';
+            cargarHorasCitas();
+        };
+    }
+    
+    const btnCancelar = document.getElementById('cancelar-modal');
+    if (btnCancelar) {
+        btnCancelar.onclick = () => {
+            document.getElementById('cita-modal').style.display = 'none';
+        };
+    }
+    
+    // Cambio de servicio actualiza precio
+    const servicioSelect = document.getElementById('cita-servicio');
+    if (servicioSelect) {
+        servicioSelect.onchange = () => {
+            const option = servicioSelect.options[servicioSelect.selectedIndex];
+            const precio = option.dataset.precio || 0;
+            document.getElementById('cita-precio').value = precio ? `$${precio}` : '';
+        };
+    }
+    
+    const form = document.getElementById('cita-form');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const servicioOption = document.getElementById('cita-servicio').options[document.getElementById('cita-servicio').selectedIndex];
+            const cita = {
+                id: Date.now(),
+                clienteId: parseInt(document.getElementById('cita-cliente').value),
+                clienteNombre: document.getElementById('cita-cliente').options[document.getElementById('cita-cliente').selectedIndex]?.text || 'Cliente',
+                barberoId: parseInt(document.getElementById('cita-barbero').value),
+                barberoNombre: document.getElementById('cita-barbero').options[document.getElementById('cita-barbero').selectedIndex]?.text || 'Barbero',
+                servicioId: parseInt(document.getElementById('cita-servicio').value),
+                servicioNombre: servicioOption?.text.split(' -')[0] || 'Servicio',
+                precio: parseInt(servicioOption?.dataset.precio) || 0,
+                fecha: document.getElementById('cita-fecha').value,
+                hora: document.getElementById('cita-hora').value,
+                estado: document.getElementById('cita-estado').value,
+                notas: document.getElementById('cita-notas').value
+            };
+            await window.storage.guardar('citas', cita);
+            window.utils.mostrarNotificacion('Cita agendada', 'success');
+            document.getElementById('cita-modal').style.display = 'none';
+            window.router.navegar('/citas');
+        };
     }
 }
 
-function abrirModalCita() {
-    const modal = document.getElementById('cita-modal');
-    if (modal) {
-        document.getElementById('modal-title').textContent = 'Nueva Cita';
-        document.getElementById('cita-form').reset();
-        document.getElementById('cita-fecha').value = new Date().toISOString().split('T')[0];
-        document.getElementById('cita-estado').value = 'pendiente';
-        modal.style.display = 'flex';
-        cargarHorasDisponibles();
+async function cargarSelectoresCitas() {
+    const clientes = await window.storage.obtenerTodos('clientes') || [];
+    const barberos = await window.storage.obtenerTodos('barberos') || [];
+    const servicios = await window.storage.obtenerTodos('servicios') || [];
+    
+    const clienteSelect = document.getElementById('cita-cliente');
+    if (clienteSelect) {
+        clienteSelect.innerHTML = '<option value="">Seleccionar cliente</option>' + 
+            clientes.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+    }
+    
+    const barberoSelect = document.getElementById('cita-barbero');
+    if (barberoSelect) {
+        barberoSelect.innerHTML = '<option value="">Seleccionar barbero</option>' + 
+            barberos.filter(b => b.estado === 'activo').map(b => `<option value="${b.id}">${b.nombre}</option>`).join('');
+    }
+    
+    const servicioSelect = document.getElementById('cita-servicio');
+    if (servicioSelect) {
+        servicioSelect.innerHTML = '<option value="">Seleccionar servicio</option>' + 
+            servicios.map(s => `<option value="${s.id}" data-precio="${s.precio}">${s.nombre} - $${s.precio}</option>`).join('');
     }
 }
 
-function cargarHorasDisponibles() {
+function cargarHorasCitas() {
     const select = document.getElementById('cita-hora');
     if (!select) return;
-    
-    const horas = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'];
+    const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
     select.innerHTML = '<option value="">Seleccionar hora</option>' + horas.map(h => `<option value="${h}">${h}</option>`).join('');
 }
 
-// ============ SERVICIOS ============
-function initServiciosEvents() {
+// ============================================
+// SERVICIOS
+// ============================================
+function initServicios() {
+    console.log('✂️ Inicializando servicios...');
+    
     const btnNuevo = document.getElementById('btn-nuevo-servicio');
-    if (btnNuevo && !btnNuevo.hasListener) {
-        btnNuevo.addEventListener('click', () => {
-            console.log('Nuevo servicio clickeado');
-            abrirModalServicio();
-        });
-        btnNuevo.hasListener = true;
+    if (btnNuevo) {
+        btnNuevo.onclick = () => {
+            document.getElementById('modal-title').textContent = 'Nuevo Servicio';
+            document.getElementById('servicio-form').reset();
+            document.getElementById('servicio-estado').value = 'activo';
+            document.getElementById('servicio-modal').style.display = 'flex';
+        };
+    }
+    
+    const btnCancelar = document.getElementById('cancelar-modal');
+    if (btnCancelar) {
+        btnCancelar.onclick = () => {
+            document.getElementById('servicio-modal').style.display = 'none';
+        };
+    }
+    
+    const form = document.getElementById('servicio-form');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const servicio = {
+                id: Date.now(),
+                nombre: document.getElementById('servicio-nombre').value,
+                categoria: document.getElementById('servicio-categoria').value,
+                precio: parseInt(document.getElementById('servicio-precio').value),
+                duracion: parseInt(document.getElementById('servicio-duracion').value),
+                estado: document.getElementById('servicio-estado').value,
+                icono: document.getElementById('servicio-icono').value,
+                descripcion: document.getElementById('servicio-descripcion').value
+            };
+            await window.storage.guardar('servicios', servicio);
+            window.utils.mostrarNotificacion('Servicio agregado', 'success');
+            document.getElementById('servicio-modal').style.display = 'none';
+            window.router.navegar('/servicios');
+        };
     }
 }
 
-function abrirModalServicio() {
-    const modal = document.getElementById('servicio-modal');
-    if (modal) {
-        document.getElementById('modal-title').textContent = 'Nuevo Servicio';
-        document.getElementById('servicio-form').reset();
-        document.getElementById('servicio-estado').value = 'activo';
-        document.getElementById('servicio-icono').value = '✂️';
-        modal.style.display = 'flex';
-    }
-}
-
-// ============ INVENTARIO ============
-function initInventarioEvents() {
+// ============================================
+// INVENTARIO
+// ============================================
+function initInventario() {
+    console.log('📦 Inicializando inventario...');
+    
     const btnNuevo = document.getElementById('btn-nuevo-producto');
-    if (btnNuevo && !btnNuevo.hasListener) {
-        btnNuevo.addEventListener('click', () => {
-            console.log('Nuevo producto clickeado');
-            abrirModalProducto();
-        });
-        btnNuevo.hasListener = true;
+    if (btnNuevo) {
+        btnNuevo.onclick = () => {
+            document.getElementById('modal-title').textContent = 'Nuevo Producto';
+            document.getElementById('producto-form').reset();
+            document.getElementById('producto-stock-minimo').value = '5';
+            document.getElementById('producto-modal').style.display = 'flex';
+        };
+    }
+    
+    const btnCancelar = document.getElementById('cancelar-modal');
+    if (btnCancelar) {
+        btnCancelar.onclick = () => {
+            document.getElementById('producto-modal').style.display = 'none';
+        };
+    }
+    
+    const form = document.getElementById('producto-form');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const producto = {
+                id: Date.now(),
+                nombre: document.getElementById('producto-nombre').value,
+                categoria: document.getElementById('producto-categoria').value,
+                precio: parseInt(document.getElementById('producto-precio').value),
+                costo: parseInt(document.getElementById('producto-costo').value),
+                stock: parseInt(document.getElementById('producto-stock').value),
+                stockMinimo: parseInt(document.getElementById('producto-stock-minimo').value),
+                descripcion: document.getElementById('producto-descripcion').value,
+                proveedor: document.getElementById('producto-proveedor').value
+            };
+            await window.storage.guardar('productos', producto);
+            window.utils.mostrarNotificacion('Producto agregado', 'success');
+            document.getElementById('producto-modal').style.display = 'none';
+            window.router.navegar('/inventario');
+        };
     }
 }
 
-function abrirModalProducto() {
-    const modal = document.getElementById('producto-modal');
-    if (modal) {
-        document.getElementById('modal-title').textContent = 'Nuevo Producto';
-        document.getElementById('producto-form').reset();
-        document.getElementById('producto-stock-minimo').value = '5';
-        modal.style.display = 'flex';
-    }
-}
-
-// ============ CAJA ============
-function initCajaEvents() {
+// ============================================
+// CAJA
+// ============================================
+function initCaja() {
+    console.log('💰 Inicializando caja...');
+    
+    // Cargar selectores
+    cargarSelectoresCaja();
+    
     const btnNuevaVenta = document.getElementById('btn-nueva-venta');
-    if (btnNuevaVenta && !btnNuevaVenta.hasListener) {
-        btnNuevaVenta.addEventListener('click', () => {
-            console.log('Nueva venta clickeada');
-            abrirModalVenta();
-        });
-        btnNuevaVenta.hasListener = true;
+    if (btnNuevaVenta) {
+        btnNuevaVenta.onclick = () => {
+            document.getElementById('venta-form').reset();
+            document.getElementById('venta-tipo').value = 'servicio';
+            document.getElementById('venta-cantidad').value = '1';
+            toggleTipoVenta();
+            document.getElementById('venta-modal').style.display = 'flex';
+        };
+    }
+    
+    const btnCancelar = document.getElementById('cancelar-modal');
+    if (btnCancelar) {
+        btnCancelar.onclick = () => {
+            document.getElementById('venta-modal').style.display = 'none';
+        };
+    }
+    
+    const tipoSelect = document.getElementById('venta-tipo');
+    if (tipoSelect) {
+        tipoSelect.onchange = toggleTipoVenta;
+    }
+    
+    const servicioSelect = document.getElementById('venta-servicio');
+    if (servicioSelect) {
+        servicioSelect.onchange = actualizarPrecioVenta;
+    }
+    
+    const productoSelect = document.getElementById('venta-producto');
+    if (productoSelect) {
+        productoSelect.onchange = actualizarPrecioVenta;
+    }
+    
+    const cantidadInput = document.getElementById('venta-cantidad');
+    if (cantidadInput) {
+        cantidadInput.oninput = actualizarPrecioVenta;
+    }
+    
+    const form = document.getElementById('venta-form');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const tipo = document.getElementById('venta-tipo').value;
+            let itemId, itemNombre, precio;
+            
+            if (tipo === 'servicio') {
+                const select = document.getElementById('venta-servicio');
+                const option = select.options[select.selectedIndex];
+                itemId = parseInt(option.value);
+                itemNombre = option.text.split(' -')[0];
+                precio = parseInt(option.dataset.precio);
+            } else {
+                const select = document.getElementById('venta-producto');
+                const option = select.options[select.selectedIndex];
+                itemId = parseInt(option.value);
+                itemNombre = option.text.split(' -')[0];
+                precio = parseInt(option.dataset.precio);
+            }
+            
+            const cantidad = parseInt(document.getElementById('venta-cantidad').value);
+            const total = precio * cantidad;
+            const metodo = document.getElementById('venta-metodo').value;
+            
+            const venta = {
+                id: Date.now(),
+                fecha: new Date().toISOString().split('T')[0],
+                tipo: tipo,
+                itemId: itemId,
+                itemNombre: itemNombre,
+                cantidad: cantidad,
+                precio: precio,
+                total: total,
+                metodo: metodo,
+                estado: 'pagado'
+            };
+            
+            await window.storage.guardar('ventas', venta);
+            
+            // Descontar stock si es producto
+            if (tipo === 'producto') {
+                const productos = await window.storage.obtenerTodos('productos') || [];
+                const producto = productos.find(p => p.id === itemId);
+                if (producto) {
+                    producto.stock -= cantidad;
+                    await window.storage.guardar('productos', producto);
+                }
+            }
+            
+            window.utils.mostrarNotificacion('Venta registrada', 'success');
+            document.getElementById('venta-modal').style.display = 'none';
+            window.router.navegar('/caja');
+        };
     }
     
     const btnCerrarCaja = document.getElementById('btn-cerrar-caja');
-    if (btnCerrarCaja && !btnCerrarCaja.hasListener) {
-        btnCerrarCaja.addEventListener('click', () => {
-            console.log('Cerrar caja clickeado');
-            abrirCierreCaja();
-        });
-        btnCerrarCaja.hasListener = true;
+    if (btnCerrarCaja) {
+        btnCerrarCaja.onclick = () => {
+            window.utils.mostrarNotificacion('Caja cerrada correctamente', 'success');
+        };
     }
 }
 
-function abrirModalVenta() {
-    const modal = document.getElementById('venta-modal');
-    if (modal) {
-        document.getElementById('venta-form').reset();
-        document.getElementById('venta-tipo').value = 'servicio';
-        document.getElementById('venta-cantidad').value = '1';
-        modal.style.display = 'flex';
+async function cargarSelectoresCaja() {
+    const servicios = await window.storage.obtenerTodos('servicios') || [];
+    const productos = await window.storage.obtenerTodos('productos') || [];
+    
+    const servicioSelect = document.getElementById('venta-servicio');
+    if (servicioSelect) {
+        servicioSelect.innerHTML = '<option value="">Seleccionar servicio</option>' + 
+            servicios.map(s => `<option value="${s.id}" data-precio="${s.precio}">${s.nombre} - $${s.precio}</option>`).join('');
+    }
+    
+    const productoSelect = document.getElementById('venta-producto');
+    if (productoSelect) {
+        productoSelect.innerHTML = '<option value="">Seleccionar producto</option>' + 
+            productos.map(p => `<option value="${p.id}" data-precio="${p.precio}">${p.nombre} - $${p.precio}</option>`).join('');
     }
 }
 
-function abrirCierreCaja() {
-    const modal = document.getElementById('cerrar-caja-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
+function toggleTipoVenta() {
+    const tipo = document.getElementById('venta-tipo').value;
+    document.getElementById('servicio-group').style.display = tipo === 'servicio' ? 'block' : 'none';
+    document.getElementById('producto-group').style.display = tipo === 'producto' ? 'block' : 'none';
 }
 
-// ============ REPORTES ============
-function initReportesEvents() {
+function actualizarPrecioVenta() {
+    const tipo = document.getElementById('venta-tipo').value;
+    let precio = 0;
+    
+    if (tipo === 'servicio') {
+        const select = document.getElementById('venta-servicio');
+        const option = select.options[select.selectedIndex];
+        precio = parseInt(option.dataset.precio) || 0;
+    } else {
+        const select = document.getElementById('venta-producto');
+        const option = select.options[select.selectedIndex];
+        precio = parseInt(option.dataset.precio) || 0;
+    }
+    
+    const cantidad = parseInt(document.getElementById('venta-cantidad').value) || 1;
+    const total = precio * cantidad;
+    document.getElementById('venta-precio').value = total ? `$${total.toLocaleString()}` : '';
+}
+
+// ============================================
+// REPORTES
+// ============================================
+function initReportes() {
+    console.log('📈 Inicializando reportes...');
+    
     const btnPDF = document.getElementById('btn-exportar-pdf');
-    if (btnPDF && !btnPDF.hasListener) {
-        btnPDF.addEventListener('click', () => {
-            alert('📄 Exportando a PDF... (Función en desarrollo)');
-        });
-        btnPDF.hasListener = true;
+    if (btnPDF) {
+        btnPDF.onclick = () => {
+            window.utils.mostrarNotificacion('Exportando PDF... (Próximamente)', 'info');
+        };
     }
     
     const btnExcel = document.getElementById('btn-exportar-excel');
-    if (btnExcel && !btnExcel.hasListener) {
-        btnExcel.addEventListener('click', () => {
-            alert('📊 Exportando a Excel... (Función en desarrollo)');
-        });
-        btnExcel.hasListener = true;
+    if (btnExcel) {
+        btnExcel.onclick = () => {
+            window.utils.mostrarNotificacion('Exportando Excel... (Próximamente)', 'info');
+        };
+    }
+    
+    // Tabs
+    document.querySelectorAll('.reportes-tab').forEach(tab => {
+        tab.onclick = () => {
+            const tabName = tab.dataset.tab;
+            document.querySelectorAll('.reportes-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.reporte-panel').forEach(p => p.style.display = 'none');
+            document.getElementById(`panel-${tabName}`).style.display = 'block';
+        };
+    });
+}
+
+// ============================================
+// CONFIGURACIÓN
+// ============================================
+function initConfiguracion() {
+    console.log('⚙️ Inicializando configuración...');
+    
+    cargarConfiguracionGuardada();
+    
+    const temaSelect = document.getElementById('config-tema');
+    if (temaSelect) {
+        temaSelect.onchange = (e) => {
+            if (window.app) window.app.cambiarTema(e.target.value);
+        };
+    }
+    
+    const btnExportar = document.getElementById('btn-exportar-datos');
+    if (btnExportar) {
+        btnExportar.onclick = () => {
+            if (window.app) window.app.exportarDatos();
+        };
+    }
+    
+    const btnResetear = document.getElementById('btn-resetear-datos');
+    if (btnResetear) {
+        btnResetear.onclick = async () => {
+            if (confirm('¿Resetear todos los datos? Esta acción no se puede deshacer.')) {
+                localStorage.clear();
+                const dbs = await indexedDB.databases();
+                for (const db of dbs) {
+                    if (db.name === 'BarberHubDB') {
+                        indexedDB.deleteDatabase(db.name);
+                    }
+                }
+                alert('Datos eliminados. La página se recargará.');
+                location.reload();
+            }
+        };
+    }
+    
+    const btnCambiarLicencia = document.getElementById('btn-cambiar-licencia');
+    if (btnCambiarLicencia) {
+        btnCambiarLicencia.onclick = () => {
+            if (window.app) window.app.logout();
+        };
+    }
+    
+    // Guardar cambios
+    const inputs = ['config-nombre', 'config-telefono', 'config-direccion', 'config-horario', 'config-idioma', 'config-notificaciones', 'config-sonidos'];
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.onchange = guardarConfiguracion;
+            el.oninput = guardarConfiguracion;
+        }
+    });
+}
+
+function cargarConfiguracionGuardada() {
+    const config = JSON.parse(localStorage.getItem('barberhub_config') || '{}');
+    document.getElementById('config-nombre').value = config.nombre || '';
+    document.getElementById('config-telefono').value = config.telefono || '';
+    document.getElementById('config-direccion').value = config.direccion || '';
+    document.getElementById('config-horario').value = config.horario || '';
+    document.getElementById('config-tema').value = config.tema || 'dark-amber';
+    document.getElementById('config-idioma').value = config.idioma || 'es';
+    if (document.getElementById('config-notificaciones')) {
+        document.getElementById('config-notificaciones').checked = config.notificaciones || false;
+    }
+    if (document.getElementById('config-sonidos')) {
+        document.getElementById('config-sonidos').checked = config.sonidos || false;
     }
 }
 
-// ============ PORTAL ============
-function initPortalEvents() {
-    console.log('Portal events initialized');
+function guardarConfiguracion() {
+    const config = {
+        nombre: document.getElementById('config-nombre')?.value || '',
+        telefono: document.getElementById('config-telefono')?.value || '',
+        direccion: document.getElementById('config-direccion')?.value || '',
+        horario: document.getElementById('config-horario')?.value || '',
+        tema: document.getElementById('config-tema')?.value || 'dark-amber',
+        idioma: document.getElementById('config-idioma')?.value || 'es',
+        notificaciones: document.getElementById('config-notificaciones')?.checked || false,
+        sonidos: document.getElementById('config-sonidos')?.checked || false
+    };
+    localStorage.setItem('barberhub_config', JSON.stringify(config));
+    if (window.app && window.app.estado) {
+        window.app.estado.configuracion = config;
+    }
+}
+
+// ============================================
+// PORTAL
+// ============================================
+function initPortal() {
+    console.log('🚪 Inicializando portal...');
+    
+    // Navegación
+    document.querySelectorAll('.portal-nav-btn').forEach(btn => {
+        btn.onclick = () => {
+            const pagina = btn.dataset.pagina;
+            document.querySelectorAll('.portal-nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.portal-pagina').forEach(p => p.style.display = 'none');
+            document.getElementById(`pagina-${pagina}`).style.display = 'block';
+        };
+    });
+    
+    // Seleccionar servicio
+    document.querySelectorAll('.servicio-card').forEach(card => {
+        card.onclick = () => {
+            document.querySelectorAll('.servicio-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            document.getElementById('paso-barbero').style.display = 'block';
+        };
+    });
+    
+    // Seleccionar barbero
+    document.querySelectorAll('.barbero-card-portal').forEach(card => {
+        card.onclick = () => {
+            document.querySelectorAll('.barbero-card-portal').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            document.getElementById('paso-fecha').style.display = 'block';
+            cargarFechasPortal();
+        };
+    });
+}
+
+function cargarFechasPortal() {
+    const fechasGrid = document.getElementById('fechas-grid');
+    if (!fechasGrid) return;
+    
+    const fechas = [];
+    const hoy = new Date();
+    for (let i = 0; i < 7; i++) {
+        const fecha = new Date(hoy);
+        fecha.setDate(hoy.getDate() + i);
+        fechas.push(fecha);
+    }
+    
+    fechasGrid.innerHTML = fechas.map(fecha => `
+        <div class="fecha-card" data-fecha="${fecha.toISOString().split('T')[0]}">
+            <div class="fecha-dia">${fecha.getDate()}</div>
+            <div class="fecha-nombre">${getNombreDia(fecha.getDay())}</div>
+        </div>
+    `).join('');
+    
+    document.querySelectorAll('.fecha-card').forEach(card => {
+        card.onclick = () => {
+            document.querySelectorAll('.fecha-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            document.getElementById('paso-cliente').style.display = 'block';
+        };
+    });
+}
+
+function getNombreDia(dia) {
+    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return dias[dia];
 }
