@@ -278,3 +278,9 @@ if (document.readyState === 'loading') {
 }
 
 export { init };
+window.addEventListener('dom-ready', (e) => {
+    if (e.detail.feature === 'clientes') {
+        console.log('🔄 DOM listo, re-renderizando clientes');
+        renderizarTabla();
+    }
+});
