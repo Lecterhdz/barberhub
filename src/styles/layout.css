@@ -569,7 +569,11 @@ body, #app {
         margin-left: 0;
         padding: 15px;
     }
-    
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }    
     .header-title {
         font-size: 1rem;
     }
@@ -581,20 +585,89 @@ body, #app {
     .header-content {
         padding: 0 15px;
     }
-    
+     .theme-dropdown {
+        position: static;
+    }   
     .theme-dropdown-label {
         display: none;
     }
     
     .theme-dropdown-btn {
-        padding: 8px 10px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
     }
-    
+    .theme-dropdown-btn,
+    .btn-icon,
+    .btn-logout {
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+   .theme-dropdown-btn,
+   .btn-icon,
+   .btn-logout,
+   .license-badge {
+       display: flex;
+       align-items: center;
+       justify-content: center;
+   }
+    .theme-dropdown-icon {
+        font-size: 1rem;
+    }    
     .auth-wrapper {
         min-height: calc(100vh - var(--header-height) - 50px);
         padding: 15px;
     }
+    /* Menú centrado en móvil */
+    .theme-dropdown-menu {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: translate(-50%, -50%) !important;
+        width: 280px;
+        max-width: 90%;
+        z-index: 10000;
+    }
+    .theme-dropdown.open .theme-dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) !important;
+    }
     
+    /* Overlay para el menú en móvil */
+    .theme-dropdown.open::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+    }
+    
+    .theme-option-desc {
+        display: none;
+    }
+    
+    .theme-option {
+        padding: 12px;
+    }   
+    .btn-logout span {
+        display: none;
+    }
+    
+    .btn-logout {
+        padding: 0 12px;
+    }
+    
+    .theme-dropdown-btn {
+        height: 38px;
+        padding: 0 10px;
+    }
     .auth-card {
         padding: 25px;
     }
