@@ -1,8 +1,12 @@
+// ─────────────────────────────────────────────────────────────────────
+// BARBERHUB - THEME SWITCHER (Menú Desplegable)
+// ─────────────────────────────────────────────────────────────────────
+
 export const ThemeSwitcher = {
     temas: [
-        { id: 'dark-amber', nombre: 'Ámbar', icono: '🌙', color: '#ff6b35' },
-        { id: 'dark-neon', nombre: 'Neón', icono: '💚', color: '#00ff88' },
-        { id: 'light-clean', nombre: 'Claro', icono: '☀️', color: '#ff9f4a' }
+        { id: 'dark-amber', nombre: 'Ámbar Oscuro', icono: '🌙', color: '#ff6b35', descripcion: 'Clásico y elegante' },
+        { id: 'dark-neon', nombre: 'Neón Oscuro', icono: '💚', color: '#00ff88', descripcion: 'Moderno y vibrante' },
+        { id: 'light-clean', nombre: 'Claro Limpio', icono: '☀️', color: '#ff9f4a', descripcion: 'Claro y profesional' }
     ],
     
     temaActual: 'dark-amber',
@@ -10,113 +14,149 @@ export const ThemeSwitcher = {
     init: function() {
         console.log('🎨 Inicializando ThemeSwitcher...');
         
+        // Cargar tema guardado
         const temaGuardado = localStorage.getItem('barberhub_tema');
-        if (temaGuardado) {
+        if (temaGuardado && this.temas.find(t => t.id === temaGuardado)) {
             this.temaActual = temaGuardado;
         }
         
         this.aplicarTema(this.temaActual);
+        this.crearBotonDropdown();
         
-        // Esperar a que el header esté listo
-        this.agregarBotonesAlHeader();
-        
-        // Escuchar evento de header ready
+        // Escuchar cuando el header esté listo
         window.addEventListener('header-ready', () => {
-            this.agregarBotonesAlHeader();
+            this.crearBotonDropdown();
         });
     },
     
-    agregarBotonesAlHeader: function() {
+    crearBotonDropdown: function() {
         const headerActions = document.querySelector('.header-actions');
         if (!headerActions) {
-            setTimeout(() => this.agregarBotonesAlHeader(), 100);
+            setTimeout(() => this.crearBotonDropdown(), 100);
             return;
         }
         
-        // Limpiar botones anteriores si existen
-        const existingContainer = document.querySelector('.theme-buttons-container');
-        if (existingContainer) {
-            existingContainer.remove();
+        // Eliminar botón anterior si existe
+        const existingBtn = document.getElementById('theme-dropdown-btn');
+        if (existingBtn) {
+            existingBtn.remove();
         }
         
-        // Crear contenedor de botones de tema
-        const container = document.createElement('div');
-        container.className = 'theme-buttons-container';
+        const temaActualObj = this.temas.find(t => t.id === this.temaActual);
         
-        // Crear botones de tema
-        this.temas.forEach(tema => {
-            const btn = document.createElement('button');
-            btn.className = `theme-btn ${this.temaActual === tema.id ? 'active' : ''}`;
-            btn.setAttribute('data-theme', tema.id);
-            btn.title = tema.nombre;
-            btn.innerHTML = tema.icono;
-            btn.onclick = () => {
-                this.cambiarTema(tema.id);
-                this.actualizarBotonActivo(tema.id);
-            };
-            container.appendChild(btn);
+        // Crear el dropdown container
+        const dropdown = document.createElement('div');
+        dropdown.className = 'theme-dropdown';
+        dropdown.id = 'theme-dropdown';
+        
+        // Crear el botón principal
+        const btn = document.createElement('button');
+        btn.id = 'theme-dropdown-btn';
+        btn.className = 'theme-dropdown-btn';
+        btn.innerHTML = `
+            <span class="theme-dropdown-icon">${temaActualObj.icono}</span>
+            <span class="theme-dropdown-label">${temaActualObj.nombre}</span>
+            <span class="theme-dropdown-arrow">▼</span>
+        `;
+        
+        // Crear el menú desplegable
+        const menu = document.createElement('div');
+        menu.className = 'theme-dropdown-menu';
+        menu.innerHTML = `
+            <div class="theme-menu-header">
+                <span>🎨</span>
+                <span>Seleccionar tema</span>
+            </div>
+            <div class="theme-menu-options">
+                ${this.temas.map(tema => `
+                    <button class="theme-option ${this.temaActual === tema.id ? 'active' : ''}" 
+                            data-theme="${tema.id}">
+                        <span class="theme-option-icon">${tema.icono}</span>
+                        <div class="theme-option-info">
+                            <div class="theme-option-name">${tema.nombre}</div>
+                            <div class="theme-option-desc">${tema.descripcion}</div>
+                        </div>
+                        <div class="theme-option-color" style="background: ${tema.color}"></div>
+                        ${this.temaActual === tema.id ? '<span class="theme-option-check">✓</span>' : ''}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+        
+        dropdown.appendChild(btn);
+        dropdown.appendChild(menu);
+        
+        // Insertar después del logo pero antes de otros botones
+        const firstChild = headerActions.firstChild;
+        if (firstChild && firstChild.classList && firstChild.classList.contains('license-badge')) {
+            headerActions.insertBefore(dropdown, firstChild);
+        } else {
+            headerActions.insertBefore(dropdown, headerActions.firstChild);
+        }
+        
+        // Eventos
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains('open');
+            
+            // Cerrar otros dropdowns
+            document.querySelectorAll('.theme-dropdown.open').forEach(d => {
+                if (d !== dropdown) d.classList.remove('open');
+            });
+            
+            dropdown.classList.toggle('open');
         });
         
-        // Buscar y preservar los botones existentes
-        const licenseBadge = headerActions.querySelector('.license-badge');
-        const existingButtons = [];
-        
-        // Guardar botones existentes que no sean del theme
-        headerActions.querySelectorAll('.btn-icon, .btn-logout, .config-btn').forEach(btn => {
-            existingButtons.push(btn);
+        // Eventos para las opciones
+        menu.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const themeId = option.dataset.theme;
+                this.cambiarTema(themeId);
+                dropdown.classList.remove('open');
+                this.actualizarBoton(themeId);
+                this.actualizarMenuActivo(themeId);
+            });
         });
         
-        // Limpiar header-actions pero mantener la licencia
-        while (headerActions.firstChild) {
-            headerActions.removeChild(headerActions.firstChild);
-        }
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
         
-        // Agregar en orden correcto: Theme buttons -> License -> Config -> Logout
-        headerActions.appendChild(container);
-        
-        if (licenseBadge) {
-            headerActions.appendChild(licenseBadge);
-        }
-        
-        // Agregar botón de configuración si no existe
-        let configBtn = document.querySelector('.config-btn');
-        if (!configBtn) {
-            configBtn = document.createElement('button');
-            configBtn.className = 'btn-icon config-btn';
-            configBtn.innerHTML = '⚙️';
-            configBtn.title = 'Configuración';
-            configBtn.onclick = () => {
-                if (window.app && window.app.openConfiguracion) {
-                    window.app.openConfiguracion();
-                }
-            };
-        }
-        headerActions.appendChild(configBtn);
-        
-        // Agregar botón de logout
-        let logoutBtn = document.querySelector('.btn-logout');
-        if (!logoutBtn) {
-            logoutBtn = document.createElement('button');
-            logoutBtn.className = 'btn-logout';
-            logoutBtn.innerHTML = '🚪 Salir';
-            logoutBtn.onclick = () => {
-                if (window.app && window.app.logout) {
-                    window.app.logout();
-                }
-            };
-        }
-        headerActions.appendChild(logoutBtn);
-        
-        console.log('✅ Botones de tema agregados correctamente');
+        console.log('✅ Dropdown de temas creado');
     },
     
-    actualizarBotonActivo: function(themeId) {
-        const btns = document.querySelectorAll('.theme-btn');
-        btns.forEach(btn => {
-            if (btn.getAttribute('data-theme') === themeId) {
-                btn.classList.add('active');
+    actualizarBoton: function(themeId) {
+        const tema = this.temas.find(t => t.id === themeId);
+        const btn = document.getElementById('theme-dropdown-btn');
+        if (btn && tema) {
+            btn.innerHTML = `
+                <span class="theme-dropdown-icon">${tema.icono}</span>
+                <span class="theme-dropdown-label">${tema.nombre}</span>
+                <span class="theme-dropdown-arrow">▼</span>
+            `;
+        }
+    },
+    
+    actualizarMenuActivo: function(themeId) {
+        const options = document.querySelectorAll('.theme-option');
+        options.forEach(option => {
+            if (option.dataset.theme === themeId) {
+                option.classList.add('active');
+                // Agregar check si no existe
+                if (!option.querySelector('.theme-option-check')) {
+                    const check = document.createElement('span');
+                    check.className = 'theme-option-check';
+                    check.textContent = '✓';
+                    option.appendChild(check);
+                }
             } else {
-                btn.classList.remove('active');
+                option.classList.remove('active');
+                const check = option.querySelector('.theme-option-check');
+                if (check) check.remove();
             }
         });
     },
@@ -136,6 +176,9 @@ export const ThemeSwitcher = {
         }
         
         console.log(`🎨 Tema cambiado a: ${tema.nombre}`);
+        
+        // Mostrar notificación
+        this.mostrarNotificacion(`${tema.icono} Tema cambiado a ${tema.nombre}`);
     },
     
     aplicarTema: function(themeId) {
@@ -151,6 +194,23 @@ export const ThemeSwitcher = {
         }
         
         themeLink.href = `./src/core/themes/${themeId}.css`;
+    },
+    
+    mostrarNotificacion: function(mensaje) {
+        const notification = document.createElement('div');
+        notification.className = 'theme-notification';
+        notification.innerHTML = `
+            <div class="theme-notification-content">
+                <span>🎨</span>
+                <p>${mensaje}</p>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('fade-out');
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
     }
 };
 
