@@ -72,6 +72,7 @@
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
+    min-height: calc(100vh - 120px);
 }
 
 /* Títulos */
@@ -394,18 +395,50 @@ h2 {
     font-size: 0.75rem;
     color: var(--text-secondary);
 }
-
+/* Corrección: el menú no debe superponerse */
+@media (max-width: 1024px) {
+    .portal-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .portal-nav {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .portal-nav-btn {
+        flex: 1;
+        text-align: center;
+        min-width: 100px;
+    }
+}
 /* Responsive */
 @media (max-width: 768px) {
     .portal-header {
-        flex-direction: column;
-        text-align: center;
+        padding: 12px 15px;
     }
     
     #portal-contenido {
         padding: 20px;
     }
+    .portal-nav {
+        gap: 8px;
+    }
+    .portal-nav-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        min-width: 80px;
+    }
     
+    .portal-logo h1 {
+        font-size: 1.2rem;
+    }
+    
+    .portal-icon {
+        font-size: 1.5rem;
+    }  
     h2 {
         font-size: 1.5rem;
     }
