@@ -391,4 +391,115 @@ function cerrarCaja() {
 }
 
 function verificarDiferencia() {
-    const efectivoEsperado = parseInt(document.getElementById('cierre-efectivo').textContent.replace('$
+    const efectivoEsperado = parseInt(document.getElementById('cierre-efectivo').textContent.replace('$', '').replace(/\./g, '')) || 0;
+    const efectivoReal = parseInt(document.getElementById('cierre-efectivo-real').value) || 0;
+    const diferencia = efectivoReal - efectivoEsperado;
+    const diferenciaContainer = document.getElementById('diferencia-container');
+    const diferenciaValor = document.getElementById('diferencia-valor');
+    
+    if (efectivoReal > 0) {
+        diferenciaContainer.style.display = 'flex';
+        diferenciaValor.textContent = `${diferencia >= 0 ? '+' : ''}$${Math.abs(diferencia).toLocaleString()}`;
+        diferenciaValor.style.color = diferencia === 0 ? '#4caf50' : diferencia > 0 ? '#ff9800' : '#f44336';
+    }
+}
+
+function confirmarCierre() {
+    const efectivoReal = parseInt(document.getElementById('cierre-efectivo-real').value) || 0;
+    if (efectivoReal === 0) {
+        alert('Ingrese el monto real en caja');
+        return;
+    }
+    
+    window.utils?.mostrarNotificacion('Caja cerrada correctamente', 'success');
+    cerrarModal('cerrar-caja-modal');
+}
+
+// Configurar eventos
+function setupEventListeners() {
+    document.getElementById('btn-nueva-venta')?.addEventListener('click', nuevaVenta);
+    document.getElementById('btn-cerrar-caja')?.addEventListener('click', cerrarCaja);
+    document.getElementById('cancelar-modal')?.addEventListener('click', () => cerrarModal());
+    document.getElementById('venta-form')?.addEventListener('submit', guardarVenta);
+    document.getElementById('cerrar-ver-modal')?.addEventListener('click', () => cerrarModal('venta-ver-modal'));
+    document.getElementById('anular-venta')?.addEventListener('click', () => anularVenta(window.currentVentaId));
+    document.getElementById('cancelar-cierre')?.addEventListener('click', () => cerrarModal('cerrar-caja-modal'));
+    document.getElementById('confirmar-cierre')?.addEventListener('click', confirmarCierre);
+    document.getElementById('cierre-efectivo-real')?.addEventListener('input', verificarDiferencia);
+    
+    document.getElementById('venta-tipo')?.addEventListener('change', toggleTipoVenta);
+    document.getElementById('venta-metodo')?.addEventListener('change', toggleTipoVenta);
+    document.getElementById('venta-servicio')?.addEventListener('change', actualizarPrecio);
+    document.getElementById('venta-producto')?.addEventListener('change', actualizarPrecio);
+    document.getElementById('venta-cantidad')?.addEventListener('input', actualizarPrecio);
+    document.getElementById('venta-recibido')?.addEventListener('input', calcularCambio);
+    
+    document.querySelectorAll('.filtro-fecha-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filtro-fecha-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFiltro.fecha = btn.dataset.fecha;
+            currentPage = 1;
+            renderizarTabla();
+            actualizarResumen();
+        });
+    });
+    
+    document.getElementById('filtro-metodo')?.addEventListener('change', (e) => {
+        currentFiltro.metodo = e.target.value;
+        currentPage = 1;
+        renderizarTabla();
+    });
+    
+    document.getElementById('prev-page')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderizarTabla();
+        }
+    });
+    
+    document.getElementById('next-page')?.addEventListener('click', () => {
+        const totalPages = Math.ceil(filtrarVentas().length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderizarTabla();
+        }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            cerrarModal();
+            cerrarModal('venta-ver-modal');
+            cerrarModal('cerrar-caja-modal');
+        }
+    });
+}
+
+// Funciones auxiliares
+function formatearFecha(fecha) {
+    const d = new Date(fecha);
+    return d.toLocaleDateString('es-ES');
+}
+
+function getMetodoTexto(metodo) {
+    const metodos = {
+        'efectivo': '💵 Efectivo',
+        'tarjeta': '💳 Tarjeta',
+        'transferencia': '🏦 Transferencia'
+    };
+    return metodos[metodo] || metodo;
+}
+
+function cerrarModal(modalId = 'venta-modal') {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'none';
+}
+
+// Inicializar
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+export { init, cargarDatos };
