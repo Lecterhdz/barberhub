@@ -68,11 +68,26 @@ async function refreshCurrentView() {
     else if (currentPath.includes('caja')) feature = 'caja';
     else if (currentPath.includes('reportes')) feature = 'reportes';
     
-    // Recargar datos y re-renderizar
+    // Recargar datos
     await loadStore();
     
-    // Disparar evento para que el feature se refresque
-    window.dispatchEvent(new CustomEvent('refresh-view', { detail: { feature } }));
+    // ✅ DISPARAR EVENTO PARA ACTUALIZAR LA VISTA SIN RECARGAR
+    window.dispatchEvent(new CustomEvent(`refresh-${feature}`, {}));
+    
+    // ✅ LLAMAR DIRECTAMENTE A LA FUNCIÓN DE RENDERIZADO DEL FEATURE
+    if (feature === 'clientes' && window.renderizarTablaClientes) {
+        window.renderizarTablaClientes();
+    } else if (feature === 'barberos' && window.renderizarGridBarberos) {
+        window.renderizarGridBarberos();
+    } else if (feature === 'citas' && window.renderizarListaCitas) {
+        window.renderizarListaCitas();
+    } else if (feature === 'servicios' && window.renderizarGridServicios) {
+        window.renderizarGridServicios();
+    } else if (feature === 'inventario' && window.renderizarTablaInventario) {
+        window.renderizarTablaInventario();
+    } else if (feature === 'caja' && window.renderizarTablaCaja) {
+        window.renderizarTablaCaja();
+    }
 }
 
 // Inicializar eventos globales
@@ -184,20 +199,22 @@ function initClientes() {
             window.utils.mostrarNotificacion('Cliente agregado', 'success');
             document.getElementById('cliente-modal').style.display = 'none';
             
-            // ✅ SOLO ACTUALIZAR DATOS, NO RECARGAR
-            await loadStore();
+            // ✅ REFRESCAR VISTA
+            await refreshCurrentView();
             
-            // ✅ ACTUALIZAR LA TABLA DIRECTAMENTE
-            if (window.renderizarTablaClientes) {
-                window.renderizarTablaClientes();
-            } else {
-                // Si no existe la función global, recargar el feature
-                if (window.router) {
-                    window.router.manejarRuta();
-                }
+            // Recargar la página de clientes
+            if (window.router) {
+                window.router.navegar('/clientes');
             }
         };
     }
+    
+    // Escuchar refresh
+    window.addEventListener('refresh-clientes', async () => {
+        if (window.router) {
+            window.router.navegar('/clientes');
+        }
+    });
 }
 
 // ============================================
