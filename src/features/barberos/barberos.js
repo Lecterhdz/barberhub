@@ -15,6 +15,7 @@ async function init() {
     console.log('✂️ Inicializando gestión de barberos...');
     await cargarBarberos();
     setupEventListeners();
+    setupModalClose();  // ✅ AGREGAR ESTA LÍNEA
 }
 
 // Cargar barberos desde storage
@@ -396,7 +397,39 @@ async function guardarBarbero(event) {
     renderizarGrid();
     cerrarModal();
 }
-
+// ✅ AGREGAR: Función para cerrar modal con el botón X
+function setupModalClose() {
+    const modal = document.getElementById('barbero-modal');
+    if (modal) {
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+        // Cerrar al hacer clic fuera
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+    
+    const verModal = document.getElementById('barbero-ver-modal');
+    if (verModal) {
+        const closeBtn = verModal.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                verModal.style.display = 'none';
+            };
+        }
+        verModal.onclick = (e) => {
+            if (e.target === verModal) {
+                verModal.style.display = 'none';
+            }
+        };
+    }
+}
 // Cerrar modal
 function cerrarModal() {
     document.getElementById('barbero-modal').style.display = 'none';
