@@ -67,7 +67,7 @@ export const app = {
                 document.body.classList.remove('auth-page');
             }
              // ✅ INICIALIZAR EVENTOS GLOBALES
-            initGlobalEvents();    
+           // initGlobalEvents();    
             
             if (autenticado) {
                 router.navegar('/dashboard');
