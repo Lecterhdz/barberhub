@@ -1,0 +1,176 @@
+<!-- ─────────────────────────────────────────────────────────────────────
+     BARBERHUB - PORTAL CLIENTE (Agendar Cita)
+     ───────────────────────────────────────────────────────────────────── -->
+
+<div class="portal-container">
+    <!-- Header del Portal -->
+    <div class="portal-header">
+        <div class="portal-logo">
+            <span class="portal-icon">💈</span>
+            <h1>BarberHub</h1>
+        </div>
+        <div class="portal-nav">
+            <button class="portal-nav-btn active" data-pagina="agendar">📅 Agendar Cita</button>
+            <button class="portal-nav-btn" data-pagina="mis-citas">📋 Mis Citas</button>
+            <button class="portal-nav-btn" data-pagina="mi-perfil">👤 Mi Perfil</button>
+        </div>
+    </div>
+
+    <!-- Contenido Dinámico -->
+    <div id="portal-contenido">
+        <!-- Página Agendar Cita -->
+        <div id="pagina-agendar" class="portal-pagina">
+            <div class="agendar-container">
+                <h2>Agendar una Cita</h2>
+                <p class="subtitulo">Selecciona el servicio, barbero y horario que prefieras</p>
+
+                <!-- Paso 1: Seleccionar Servicio -->
+                <div class="paso-card">
+                    <div class="paso-header">
+                        <span class="paso-numero">1</span>
+                        <h3>Selecciona un servicio</h3>
+                    </div>
+                    <div class="servicios-grid" id="servicios-grid">
+                        <div class="loading-spinner">Cargando servicios...</div>
+                    </div>
+                </div>
+
+                <!-- Paso 2: Seleccionar Barbero -->
+                <div class="paso-card" id="paso-barbero" style="display: none;">
+                    <div class="paso-header">
+                        <span class="paso-numero">2</span>
+                        <h3>Selecciona un barbero</h3>
+                    </div>
+                    <div class="barberos-grid" id="barberos-grid">
+                        <div class="loading-spinner">Cargando barberos...</div>
+                    </div>
+                </div>
+
+                <!-- Paso 3: Seleccionar Fecha y Hora -->
+                <div class="paso-card" id="paso-fecha" style="display: none;">
+                    <div class="paso-header">
+                        <span class="paso-numero">3</span>
+                        <h3>Selecciona fecha y hora</h3>
+                    </div>
+                    <div class="fecha-hora-container">
+                        <div class="fechas-grid" id="fechas-grid">
+                            <!-- Fechas disponibles -->
+                        </div>
+                        <div class="horas-grid" id="horas-grid">
+                            <!-- Horas disponibles -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 4: Datos del Cliente -->
+                <div class="paso-card" id="paso-cliente" style="display: none;">
+                    <div class="paso-header">
+                        <span class="paso-numero">4</span>
+                        <h3>Tus datos</h3>
+                    </div>
+                    <form id="cliente-form-agendar">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre completo *</label>
+                                <input type="text" id="cliente-nombre-agendar" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono *</label>
+                                <input type="tel" id="cliente-telefono-agendar" required class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="cliente-email-agendar" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Notas adicionales</label>
+                            <textarea id="cita-notas-agendar" rows="2" class="form-control" placeholder="Alguna preferencia o comentario..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">✅ Confirmar Cita</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Página Mis Citas -->
+        <div id="pagina-mis-citas" class="portal-pagina" style="display: none;">
+            <div class="mis-citas-container">
+                <h2>📋 Mis Citas</h2>
+                <p class="subtitulo">Consulta y administra tus citas agendadas</p>
+                
+                <div class="citas-tabs">
+                    <button class="citas-tab active" data-tab="proximas">Próximas</button>
+                    <button class="citas-tab" data-tab="historial">Historial</button>
+                </div>
+                
+                <div id="citas-proximas" class="citas-lista">
+                    <div class="loading-spinner">Cargando citas...</div>
+                </div>
+                
+                <div id="citas-historial" class="citas-lista" style="display: none;">
+                    <div class="loading-spinner">Cargando historial...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Página Mi Perfil -->
+        <div id="pagina-mi-perfil" class="portal-pagina" style="display: none;">
+            <div class="perfil-container">
+                <h2>👤 Mi Perfil</h2>
+                <p class="subtitulo">Administra tus datos personales</p>
+                
+                <div class="perfil-card">
+                    <div class="perfil-avatar">
+                        <div class="avatar-placeholder" id="avatar-placeholder">👤</div>
+                    </div>
+                    <form id="perfil-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre completo</label>
+                                <input type="text" id="perfil-nombre" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input type="tel" id="perfil-telefono" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="perfil-email" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <button type="button" id="editar-perfil-btn" class="btn btn-secondary">✏️ Editar Perfil</button>
+                        <button type="submit" id="guardar-perfil-btn" class="btn btn-primary" style="display: none;">💾 Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="portal-footer">
+        <p>© 2026 BarberHub - Gestión Inteligente para Barberías</p>
+    </div>
+</div>
+
+<!-- Modal Cancelar Cita -->
+<div id="cancelar-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>Cancelar Cita</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>¿Estás seguro de que deseas cancelar esta cita?</p>
+            <p class="text-secondary" style="font-size: 0.85rem;">Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelar-cerrar">No, volver</button>
+            <button class="btn btn-danger" id="confirmar-cancelar">Sí, cancelar cita</button>
+        </div>
+    </div>
+</div>
