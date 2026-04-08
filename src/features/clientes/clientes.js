@@ -288,3 +288,10 @@ window.addEventListener('feature-loaded', (e) => {
 });
 
 export { iniciar as init };
+
+window.addEventListener('feature-html-loaded', (e) => {
+    if (e.detail.feature === 'clientes') {
+        console.log('🔄 HTML de clientes cargado, inicializando...');
+        iniciar();
+    }
+});
