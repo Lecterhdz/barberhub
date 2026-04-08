@@ -283,12 +283,13 @@ export const app = {
                             ${diasRestantes > 0 ? `<small>${diasRestantes} días</small>` : ''}
                         </div>
                     ` : ''}
-                    <!-- Los botones se agregarán aquí dinámicamente -->
+                    <!-- Los botones se agregarán aquí por ThemeSwitcher -->
                 </div>
             </div>
         `;
         
-        // Los botones se agregarán después por ThemeSwitcher
+        // Disparar evento para que ThemeSwitcher agregue sus botones
+        window.dispatchEvent(new CustomEvent('header-ready'));
     },
 
     // Renderizar footer
