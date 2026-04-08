@@ -9,6 +9,7 @@ let currentFilter = 'todos';
 let currentSearch = '';
 let editingId = null;
 let renderizadoInicial = false;
+let primeraVez = true;
 
 // Inicializar
 async function init() {
@@ -90,6 +91,12 @@ function formatearFecha(fecha) {
 
 // RENDERIZAR TABLA
 function renderizarTabla() {
+    if (!primeraVez) {
+        console.log('⏳ Ya renderizado, ignorando');
+        return;
+    }
+    primeraVez = false;
+    
     console.log('🎨 renderizarTabla() - Clientes:', clientes.length);
     
     const tbody = document.getElementById('clientes-table-body');
