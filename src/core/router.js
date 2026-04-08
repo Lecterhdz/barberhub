@@ -145,6 +145,8 @@ export const router = {
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const html = await response.text();
                 container.innerHTML = html;
+                // ✅ Disparar evento de que el DOM está listo
+                window.dispatchEvent(new CustomEvent('dom-ready', { detail: { feature: featureName } }));
                 await new Promise(r => setTimeout(r, 50));
                 resolve();
             } catch (error) {
