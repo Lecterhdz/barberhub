@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - AUTH FEATURE (LOGIN)
+// BARBERHUB - AUTH FEATURE (LOGIN) - CORREGIDO
 // ─────────────────────────────────────────────────────────────────────
 
 console.log('🔐 Auth feature cargado');
@@ -15,7 +15,7 @@ const LICENCIAS_VALIDAS = {
     'BARBERHUB-BASICO-2026': {
         tipo: 'BASICO',
         dias: 365,
-        max_citas: null, // ilimitado
+        max_citas: null,
         features: ['dashboard', 'clientes', 'cortes', 'inventario']
     },
     'BARBERHUB-PRO-2026': {
@@ -41,7 +41,6 @@ function validarLicencia(licenseKey) {
         return { valido: false, error: '❌ Licencia inválida. Verifica el código ingresado.' };
     }
     
-    // Calcular fecha de expiración
     const expiracion = new Date();
     expiracion.setDate(expiracion.getDate() + licencia.dias);
     
@@ -57,35 +56,29 @@ function validarLicencia(licenseKey) {
     };
 }
 
-// Función para mostrar mensajes de error/éxito
+// Función para mostrar mensajes
 function mostrarMensaje(tipo, mensaje) {
     const errorDiv = document.getElementById('auth-error');
     const successDiv = document.getElementById('auth-success');
     
-    // Ocultar ambos
     if (errorDiv) errorDiv.style.display = 'none';
     if (successDiv) successDiv.style.display = 'none';
     
-    if (tipo === 'error') {
-        if (errorDiv) {
-            errorDiv.textContent = mensaje;
-            errorDiv.style.display = 'block';
-        }
-    } else if (tipo === 'success') {
-        if (successDiv) {
-            successDiv.textContent = mensaje;
-            successDiv.style.display = 'block';
-        }
+    if (tipo === 'error' && errorDiv) {
+        errorDiv.textContent = mensaje;
+        errorDiv.style.display = 'block';
+    } else if (tipo === 'success' && successDiv) {
+        successDiv.textContent = mensaje;
+        successDiv.style.display = 'block';
     }
     
-    // Auto-ocultar después de 3 segundos
     setTimeout(() => {
         if (errorDiv) errorDiv.style.display = 'none';
         if (successDiv) successDiv.style.display = 'none';
     }, 3000);
 }
 
-// Función para procesar el login
+// Procesar login
 async function procesarLogin(event) {
     event.preventDefault();
     
@@ -97,7 +90,6 @@ async function procesarLogin(event) {
         return;
     }
     
-    // Validar licencia
     const resultado = validarLicencia(licenseKey);
     
     if (!resultado.valido) {
@@ -105,18 +97,16 @@ async function procesarLogin(event) {
         return;
     }
     
-    // Guardar licencia
     try {
         if (window.app && window.app.setLicencia) {
             window.app.setLicencia(resultado.licencia);
             mostrarMensaje('success', `✅ Licencia ${resultado.licencia.tipo} activada correctamente. Redirigiendo...`);
             
-            // Redirigir al dashboard después de 1 segundo
             setTimeout(() => {
                 if (window.router && window.router.navegar) {
                     window.router.navegar('/dashboard');
                 } else {
-                    window.location.href = '/dashboard';
+                    window.location.hash = '/dashboard';
                 }
             }, 1000);
         } else {
@@ -129,7 +119,7 @@ async function procesarLogin(event) {
     }
 }
 
-// Función para verificar si ya hay una sesión activa
+// Verificar sesión activa
 async function verificarSesionActiva() {
     if (window.app && window.app.estado && window.app.estado.licencia) {
         const licencia = window.app.estado.licencia;
@@ -137,7 +127,6 @@ async function verificarSesionActiva() {
         const ahora = new Date();
         
         if (expiracion > ahora) {
-            // Sesión válida, redirigir al dashboard
             console.log('Sesión activa encontrada, redirigiendo...');
             setTimeout(() => {
                 if (window.router && window.router.navegar) {
@@ -145,9 +134,7 @@ async function verificarSesionActiva() {
                 }
             }, 500);
         } else if (expiracion <= ahora) {
-            // Licencia expirada
             mostrarMensaje('error', '⚠️ Tu licencia ha expirado. Contacta a soporte.');
-            // Limpiar licencia expirada
             if (window.app && window.app.logout) {
                 window.app.logout();
             }
@@ -155,14 +142,12 @@ async function verificarSesionActiva() {
     }
 }
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+// Inicializar
+function init() {
     console.log('🔐 Inicializando Auth feature...');
     
-    // Verificar si ya hay sesión activa
     verificarSesionActiva();
     
-    // Configurar el formulario
     const form = document.getElementById('auth-form');
     if (form) {
         form.addEventListener('submit', procesarLogin);
@@ -170,91 +155,28 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('⚠️ Formulario auth no encontrado');
     }
     
-    // Agregar estilos dinámicos si es necesario
-    const style = document.createElement('style');
-    style.textContent = `
-        .license-codes {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        .license-codes code {
-            display: block;
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-family: monospace;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .license-codes code:hover {
-            background: rgba(255,107,53,0.2);
-            transform: translateX(5px);
-        }
-        .license-codes small {
-            display: block;
-            margin-top: -5px;
-            margin-bottom: 10px;
-            font-size: 11px;
-            opacity: 0.7;
-        }
-        .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            animation: slideIn 0.3s ease;
-        }
-        .alert-error {
-            background: rgba(244,67,54,0.2);
-            border: 1px solid #f44336;
-            color: #ff8a80;
-        }
-        .alert-success {
-            background: rgba(76,175,80,0.2);
-            border: 1px solid #4caf50;
-            color: #81c784;
-        }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .btn-full {
-            width: 100%;
-            margin-top: 20px;
-        }
-        .auth-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .auth-card {
-            max-width: 450px;
-            width: 100%;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Hacer que los códigos de licencia sean clickeables
-    document.querySelectorAll('.license-codes code').forEach(code => {
-        code.addEventListener('click', () => {
+    // Hacer clickeables los items de licencia
+    document.querySelectorAll('.license-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const code = item.querySelector('code');
             const licenseInput = document.getElementById('license-key');
-            if (licenseInput) {
+            if (code && licenseInput) {
                 licenseInput.value = code.textContent.trim();
-                // Opcional: auto-submit
-                // form?.dispatchEvent(new Event('submit'));
+                // Auto-enviar formulario
+                setTimeout(() => {
+                    if (form) form.dispatchEvent(new Event('submit'));
+                }, 100);
             }
         });
     });
-});
+}
 
-// Exportar funciones para uso externo si es necesario
-export { validarLicencia, procesarLogin };
+// Ejecutar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+// Exportar
+export { validarLicencia, procesarLogin, init };
