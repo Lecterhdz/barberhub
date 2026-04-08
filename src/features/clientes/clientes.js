@@ -30,7 +30,6 @@ async function cargarClientes() {
             await guardarClientes();
         }
         
-        // ✅ IMPORTANTE: Renderizar después de cargar
         renderizarTabla();
         
     } catch (error) {
@@ -83,14 +82,13 @@ function filtrarClientes() {
     return filtered;
 }
 
-// Formatear fecha
 function formatearFecha(fecha) {
     if (!fecha) return 'N/A';
     const d = new Date(fecha);
     return d.toLocaleDateString('es-ES');
 }
 
-// ✅ RENDERIZAR TABLA - VERSIÓN CORREGIDA
+// ✅ RENDERIZAR TABLA
 function renderizarTabla() {
     console.log('🔄 renderizarTabla ejecutándose');
     
@@ -101,15 +99,13 @@ function renderizarTabla() {
     }
     
     const filtered = filtrarClientes();
-    console.log('Clientes filtrados:', filtered.length);
-    
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
     const start = (currentPage - 1) * itemsPerPage;
     const paginated = filtered.slice(start, start + itemsPerPage);
     
     if (paginated.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="loading-cell">No hay clientes registrados</td></tr>`;
-        document.getElementById('page-info').textContent = `Página 1 de 1`;
+        document.getElementById('page-info').textContent = 'Página 1 de 1';
         return;
     }
     
@@ -142,18 +138,15 @@ function renderizarTabla() {
     document.getElementById('page-info').textContent = `Página ${currentPage} de ${totalPages || 1}`;
     document.getElementById('prev-page').disabled = currentPage === 1;
     document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
-    
-    console.log('✅ Tabla renderizada con', paginated.length, 'clientes');
 }
 
-// Ver cliente
+// Funciones globales (necesarias para onclick)
 window.verCliente = function(id) {
     const cliente = clientes.find(c => c.id === id);
     if (!cliente) return;
     alert(`Cliente: ${cliente.nombre}\nTeléfono: ${cliente.telefono}\nEmail: ${cliente.email || 'No registrado'}\nVisitas: ${cliente.visitas || 0}\nGasto total: $${(cliente.gastoTotal || 0).toLocaleString()}`);
 };
 
-// Editar cliente
 window.editarCliente = function(id) {
     const cliente = clientes.find(c => c.id === id);
     if (!cliente) return;
@@ -170,7 +163,6 @@ window.editarCliente = function(id) {
     document.getElementById('cliente-modal').style.display = 'flex';
 };
 
-// Eliminar cliente
 window.eliminarCliente = async function(id) {
     if (confirm('¿Eliminar este cliente?')) {
         clientes = clientes.filter(c => c.id !== id);
@@ -180,7 +172,6 @@ window.eliminarCliente = async function(id) {
     }
 };
 
-// Nuevo cliente
 function nuevoCliente() {
     editingId = null;
     document.getElementById('modal-title').textContent = 'Nuevo Cliente';
@@ -189,7 +180,6 @@ function nuevoCliente() {
     document.getElementById('cliente-modal').style.display = 'flex';
 }
 
-// Guardar cliente
 async function guardarCliente(event) {
     event.preventDefault();
     
@@ -262,6 +252,9 @@ function setupEventListeners() {
     });
 }
 
+// ✅ EXPONER renderizarTabla GLOBALMENTE
+window.renderizarTabla = renderizarTabla;
+
 // Inicializar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -269,4 +262,4 @@ if (document.readyState === 'loading') {
     init();
 }
 
-export { init, cargarClientes };
+export { init, cargarClientes, renderizarTabla };
