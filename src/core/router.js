@@ -11,7 +11,6 @@ export const router = {
         '/clientes': 'clientes',
         '/citas': 'citas',
         '/barberos': 'barberos',        // ← Agregar esta línea
-        '/cortes': 'servicios',
         '/servicios': 'servicios',
         '/inventario': 'inventario',
         '/caja': 'caja',
