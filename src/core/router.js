@@ -7,8 +7,10 @@ export const router = {
         '/': 'dashboard',
         '/dashboard': 'dashboard',
         '/auth': 'auth',
+        '/portal': 'portal',
         '/clientes': 'clientes',
         '/citas': 'citas',
+        '/barberos': 'barberos',        // ← Agregar esta línea
         '/cortes': 'servicios',
         '/servicios': 'servicios',
         '/inventario': 'inventario',
