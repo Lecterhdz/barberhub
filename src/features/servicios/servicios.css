@@ -1,0 +1,319 @@
+/* src/features/servicios/servicios.css */
+
+.servicios-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.servicios-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.servicios-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.servicios-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+/* Filtros */
+.servicios-filtros {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    position: relative;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    opacity: 0.6;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 12px 10px 35px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.filtros-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.filtro-select {
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+/* Grid de Servicios */
+.servicios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+/* Tarjeta de Servicio */
+.servicio-card {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.servicio-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+}
+
+.servicio-card-header {
+    position: relative;
+    padding: 25px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+}
+
+.servicio-icono {
+    font-size: 3.5rem;
+    margin-bottom: 10px;
+}
+
+.servicio-nombre-card {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.servicio-categoria {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(255, 107, 53, 0.2);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: var(--color-primary);
+}
+
+.servicio-estado-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.estado-activo {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.estado-inactivo {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+.servicio-card-body {
+    padding: 20px;
+}
+
+.servicio-info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.servicio-info-item span:first-child {
+    font-size: 1.1rem;
+    min-width: 30px;
+}
+
+.servicio-precio {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.servicio-duracion {
+    color: var(--text-secondary);
+}
+
+.servicio-descripcion {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.servicio-card-footer {
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.btn-card {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-card:hover {
+    transform: translateY(-2px);
+}
+
+.btn-card-ver:hover {
+    background: rgba(33, 150, 243, 0.2);
+    color: #2196f3;
+}
+
+.btn-card-editar:hover {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+}
+
+.btn-card-eliminar:hover {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+/* Barberos checkbox group */
+.barberos-checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+}
+
+.barbero-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.barbero-checkbox:hover {
+    background: var(--bg-hover);
+}
+
+.barbero-checkbox input {
+    cursor: pointer;
+}
+
+/* Modal detalles */
+.info-row {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-row label {
+    width: 120px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.info-row span {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .servicios-container {
+        padding: 15px;
+    }
+    
+    .servicios-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .servicios-filtros {
+        flex-direction: column;
+    }
+    
+    .search-box {
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .filtros-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .servicios-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-row {
+        flex-direction: column;
+    }
+    
+    .info-row label {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
