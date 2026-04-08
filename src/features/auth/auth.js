@@ -100,15 +100,24 @@ async function procesarLogin(event) {
     try {
         if (window.app && window.app.setLicencia) {
             window.app.setLicencia(resultado.licencia);
-            mostrarMensaje('success', `✅ Licencia ${resultado.licencia.tipo} activada correctamente. Redirigiendo...`);
             
+            // ✅ CORRECCIÓN: Redirigir inmediatamente sin esperar
+            // Limpiar el formulario y ocultar mensajes
+            document.getElementById('auth-form').reset();
+            document.getElementById('auth-error').style.display = 'none';
+            document.getElementById('auth-success').style.display = 'none';
+            
+            // Mostrar mensaje rápido y redirigir
+            mostrarMensaje('success', `✅ Bienvenido ${resultado.licencia.tipo}!`);
+            
+            // Redirigir inmediatamente al dashboard
             setTimeout(() => {
                 if (window.router && window.router.navegar) {
                     window.router.navegar('/dashboard');
                 } else {
                     window.location.hash = '/dashboard';
                 }
-            }, 1000);
+            }, 500);
         } else {
             console.error('❌ App no disponible');
             mostrarMensaje('error', 'Error interno. Recarga la página.');
