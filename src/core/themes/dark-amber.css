@@ -1,56 +1,29 @@
-/* Tema Claro Clean - BarberHub */
+/* Tema Oscuro Ámbar - BarberHub */
 
-[data-theme="light-clean"] {
-    --theme-gradient: linear-gradient(135deg, #ff6b35, #ff9f4a);
-    --theme-glow: 0 0 20px rgba(255, 107, 53, 0.2);
-    --theme-card-bg: #ffffff;
+[data-theme="dark-amber"] {
+    --color-primary: #ff6b35;
+    --color-primary-light: #ff9f4a;
+    --color-primary-dark: #e55a2b;
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3d3d3d;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --border-color: #404040;
 }
 
-[data-theme="light-clean"] .stat-card {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    box-shadow: var(--shadow-sm);
+[data-theme="dark-amber"] .header-title,
+[data-theme="dark-amber"] .sidebar-header h3 {
+    background: linear-gradient(135deg, #ff6b35, #ff9f4a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
-[data-theme="light-clean"] .stat-card:hover {
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-md);
+[data-theme="dark-amber"] .sidebar-link.active {
+    color: #ff6b35;
 }
 
-[data-theme="light-clean"] .card {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-}
-
-[data-theme="light-clean"] .sidebar-link:hover {
-    background: #f0f2f5;
-}
-
-[data-theme="light-clean"] .sidebar-link.active {
-    background: var(--theme-gradient);
-    color: white;
-}
-
-[data-theme="light-clean"] .btn-primary {
-    background: var(--theme-gradient);
-}
-
-[data-theme="light-clean"] .license-badge {
-    background: rgba(76, 175, 80, 0.1);
-    color: #4caf50;
-}
-
-[data-theme="light-clean"] .btn-logout {
-    background: rgba(244, 67, 54, 0.1);
-    color: #f44336;
-}
-
-[data-theme="light-clean"] .form-control {
-    background: #f5f7fa;
-    border: 1px solid #e0e0e0;
-    color: #333;
-}
-
-[data-theme="light-clean"] .form-control:focus {
-    border-color: var(--color-primary);
+[data-theme="dark-amber"] .btn-primary {
+    background: linear-gradient(135deg, #ff6b35, #ff9f4a);
 }
