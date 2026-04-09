@@ -2,7 +2,7 @@
 
 console.log('📅 Portal - Agendar Cita');
 
-// Estado local de la vista
+// Estado local
 let estado = {
     paso: 1,
     servicioSeleccionado: null,
@@ -10,8 +10,7 @@ let estado = {
     fechaSeleccionada: null,
     horaSeleccionada: null,
     servicios: [],
-    barberos: [],
-    fechasDisponibles: []
+    barberos: []
 };
 
 // ============================================
@@ -33,19 +32,18 @@ async function cargarDatos() {
         estado.barberos = window.app.estado.cache.barberos || [];
     }
     
-    // Si no hay datos, cargar de storage
+    // Si no hay datos, esperar un momento y reintentar
     if (estado.servicios.length === 0) {
-        estado.servicios = await window.storage?.obtenerTodos('servicios') || [];
-    }
-    if (estado.barberos.length === 0) {
-        estado.barberos = await window.storage?.obtenerTodos('barberos') || [];
+        console.log('⏳ Esperando datos...');
+        setTimeout(() => cargarDatos(), 500);
+        return;
     }
     
     console.log(`📦 Datos cargados: ${estado.servicios.length} servicios, ${estado.barberos.length} barberos`);
 }
 
 // ============================================
-// RENDERIZADO
+// RENDERIZADO DE PASOS
 // ============================================
 
 function renderizarServicios() {
@@ -53,20 +51,19 @@ function renderizarServicios() {
     if (!grid) return;
     
     if (estado.servicios.length === 0) {
-        grid.innerHTML = '<div class="loading-spinner">No hay servicios disponibles</div>';
+        grid.innerHTML = '<div class="loading-spinner">Cargando servicios...</div>';
         return;
     }
     
     grid.innerHTML = estado.servicios.map(servicio => `
         <div class="servicio-card" data-id="${servicio.id}">
             <div class="servicio-icono">${servicio.icono || '✂️'}</div>
-            <div class="servicio-nombre">${servicio.nombre}</div>
+            <div class="servicio-nombre">${escapeHtml(servicio.nombre)}</div>
             <div class="servicio-precio">$${servicio.precio.toLocaleString()}</div>
             <div class="servicio-duracion">⏱️ ${servicio.duracion} min</div>
         </div>
     `).join('');
     
-    // Agregar event listeners
     document.querySelectorAll('.servicio-card').forEach(card => {
         card.addEventListener('click', () => seleccionarServicio(parseInt(card.dataset.id)));
     });
@@ -86,7 +83,7 @@ function renderizarBarberos() {
     grid.innerHTML = barberosActivos.map(barbero => `
         <div class="barbero-card" data-id="${barbero.id}">
             <div class="barbero-avatar">${barbero.nombre.charAt(0)}</div>
-            <div class="barbero-nombre">${barbero.nombre}</div>
+            <div class="barbero-nombre">${escapeHtml(barbero.nombre)}</div>
             <div class="barbero-especialidad">${barbero.especialidad}</div>
         </div>
     `).join('');
@@ -100,7 +97,6 @@ function renderizarFechas() {
     const grid = document.getElementById('fechas-grid');
     if (!grid) return;
     
-    // Generar próximos 14 días
     const fechas = [];
     const hoy = new Date();
     
@@ -128,16 +124,13 @@ function renderizarHoras() {
     
     const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
     
-    // Obtener citas ocupadas (simulado - luego con datos reales)
-    const citasOcupadas = [];
-    
     grid.innerHTML = horas.map(hora => `
-        <div class="hora-card ${citasOcupadas.includes(hora) ? 'disabled' : ''}" data-hora="${hora}">
+        <div class="hora-card" data-hora="${hora}">
             ${hora}
         </div>
     `).join('');
     
-    document.querySelectorAll('.hora-card:not(.disabled)').forEach(card => {
+    document.querySelectorAll('.hora-card').forEach(card => {
         card.addEventListener('click', () => seleccionarHora(card.dataset.hora));
     });
 }
@@ -161,12 +154,10 @@ function actualizarResumen() {
 function seleccionarServicio(id) {
     estado.servicioSeleccionado = id;
     
-    // Marcar como seleccionado
     document.querySelectorAll('.servicio-card').forEach(card => {
         card.classList.toggle('selected', parseInt(card.dataset.id) === id);
     });
     
-    // Avanzar al paso 2
     avanzarPaso();
 }
 
@@ -228,17 +219,14 @@ function retrocederPaso() {
 }
 
 function cambiarPaso() {
-    // Ocultar todos los pasos
     for (let i = 1; i <= 4; i++) {
         const pasoDiv = document.getElementById(`paso-${i}`);
         if (pasoDiv) pasoDiv.style.display = 'none';
     }
     
-    // Mostrar paso actual
     const pasoActual = document.getElementById(`paso-${estado.paso}`);
     if (pasoActual) pasoActual.style.display = 'block';
     
-    // Actualizar indicador de pasos
     document.querySelectorAll('.paso').forEach((paso, index) => {
         const pasoNum = index + 1;
         paso.classList.remove('active', 'completado');
@@ -249,7 +237,6 @@ function cambiarPaso() {
         }
     });
     
-    // Mostrar/ocultar botones
     const btnAnterior = document.getElementById('btn-anterior');
     const btnSiguiente = document.getElementById('btn-siguiente');
     
@@ -273,11 +260,7 @@ function cambiarPaso() {
 
 async function guardarCita(event) {
     event.preventDefault();
-    // ✅ VERIFICAR QUE STORAGE ESTÉ LISTO
-    if (!window.storage || !window.storage.db) {
-        window.app?.mostrarNotificacion('Base de datos no lista. Recarga la página.', 'error');
-        return;
-    }    
+    
     const nombre = document.getElementById('cliente-nombre').value;
     const telefono = document.getElementById('cliente-telefono').value;
     const email = document.getElementById('cliente-email').value;
@@ -323,11 +306,12 @@ function mostrarModalConfirmacion(cita) {
     const detalle = document.getElementById('confirmacion-detalle');
     
     detalle.innerHTML = `
-        <div><strong>Servicio:</strong> ${cita.servicioNombre}</div>
-        <div><strong>Barbero:</strong> ${cita.barberoNombre}</div>
+        <div><strong>Servicio:</strong> ${escapeHtml(cita.servicioNombre)}</div>
+        <div><strong>Barbero:</strong> ${escapeHtml(cita.barberoNombre)}</div>
         <div><strong>Fecha:</strong> ${formatearFecha(cita.fecha)}</div>
         <div><strong>Hora:</strong> ${cita.hora}</div>
         <div><strong>Total:</strong> $${cita.precio.toLocaleString()}</div>
+        <div><strong>Estado:</strong> <span class="estado-pendiente">Pendiente</span></div>
     `;
     
     modal.style.display = 'flex';
@@ -335,10 +319,14 @@ function mostrarModalConfirmacion(cita) {
     const closeBtn = modal.querySelector('.modal-close');
     const aceptarBtn = document.getElementById('cerrar-modal-btn');
     
-    closeBtn.onclick = () => modal.style.display = 'none';
+    closeBtn.onclick = () => {
+        modal.style.display = 'none';
+        window.router?.navegar('/portal/mis-citas');
+    };
+    
     aceptarBtn.onclick = () => {
         modal.style.display = 'none';
-        // Redirigir a mis citas o mantener en agendar
+        window.router?.navegar('/portal/mis-citas');
     };
 }
 
@@ -350,8 +338,7 @@ function reiniciarSeleccion() {
         fechaSeleccionada: null,
         horaSeleccionada: null,
         servicios: estado.servicios,
-        barberos: estado.barberos,
-        fechasDisponibles: []
+        barberos: estado.barberos
     };
     
     cambiarPaso();
@@ -370,6 +357,13 @@ function getNombreDia(dia) {
 function formatearFecha(fecha) {
     const d = new Date(fecha);
     return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function setupEventListeners() {
