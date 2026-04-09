@@ -1,35 +1,53 @@
+// src/core/storage.js
 // ─────────────────────────────────────────────────────────────────────
 // BARBERHUB - STORAGE (IndexedDB + LocalStorage)
 // ─────────────────────────────────────────────────────────────────────
 
+console.log('💾 Storage module cargado');
+
 export const storage = {
     db: null,
     dbName: 'BarberHubDB',
-    dbVersion: 2,
+    dbVersion: 3,  // ✅ Incrementar versión para forzar actualización
+    initialized: false,
     
     // Inicializar IndexedDB
     init: function() {
         return new Promise((resolve, reject) => {
-            if (this.db) {
+            // ✅ Si ya está inicializado, resolver inmediatamente
+            if (this.db && this.initialized) {
+                console.log('✅ Storage ya inicializado');
                 resolve(this.db);
                 return;
             }
             
+            console.log('🔄 Inicializando IndexedDB...');
+            
             const request = indexedDB.open(this.dbName, this.dbVersion);
             
             request.onerror = () => {
-                console.error('Error abriendo IndexedDB:', request.error);
+                console.error('❌ Error abriendo IndexedDB:', request.error);
                 reject(request.error);
             };
             
             request.onsuccess = () => {
                 this.db = request.result;
-                console.log('✅ IndexedDB inicializado');
+                this.initialized = true;
+                console.log('✅ IndexedDB inicializado correctamente');
+                
+                // ✅ Manejar cierre de la base de datos
+                this.db.onclose = () => {
+                    console.warn('⚠️ IndexedDB cerrada');
+                    this.initialized = false;
+                    this.db = null;
+                };
+                
                 resolve(this.db);
             };
             
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+                console.log('🔄 Actualizando estructura de IndexedDB...');
                 
                 // Crear stores si no existen
                 const stores = [
@@ -43,22 +61,31 @@ export const storage = {
                             keyPath: 'id', 
                             autoIncrement: true 
                         });
+                        console.log(`✅ Store creado: ${storeName}`);
                         
                         // Crear índices
                         if (storeName === 'citas') {
                             store.createIndex('fecha', 'fecha', { unique: false });
                             store.createIndex('estado', 'estado', { unique: false });
                             store.createIndex('clienteId', 'clienteId', { unique: false });
+                            store.createIndex('barberoId', 'barberoId', { unique: false });
                         } else if (storeName === 'clientes') {
                             store.createIndex('telefono', 'telefono', { unique: false });
                             store.createIndex('email', 'email', { unique: false });
+                        } else if (storeName === 'barberos') {
+                            store.createIndex('estado', 'estado', { unique: false });
                         } else if (storeName === 'servicios') {
                             store.createIndex('nombre', 'nombre', { unique: false });
                             store.createIndex('precio', 'precio', { unique: false });
+                            store.createIndex('estado', 'estado', { unique: false });
                         } else if (storeName === 'productos') {
                             store.createIndex('nombre', 'nombre', { unique: false });
                             store.createIndex('categoria', 'categoria', { unique: false });
                             store.createIndex('stock', 'stock', { unique: false });
+                        } else if (storeName === 'ventas') {
+                            store.createIndex('fecha', 'fecha', { unique: false });
+                            store.createIndex('metodo', 'metodo', { unique: false });
+                            store.createIndex('estado', 'estado', { unique: false });
                         }
                     }
                 });
@@ -68,27 +95,62 @@ export const storage = {
         });
     },
     
+    // ✅ Verificar si la base de datos está lista
+    isReady: function() {
+        return this.db !== null && this.initialized === true;
+    },
+    
+    // ✅ Esperar a que la base de datos esté lista
+    waitForReady: async function() {
+        if (this.isReady()) return true;
+        
+        return new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                if (this.isReady()) {
+                    clearInterval(checkInterval);
+                    resolve(true);
+                }
+            }, 100);
+            
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                resolve(false);
+            }, 5000);
+        });
+    },
+    
     // Guardar un registro
     guardar: function(storeName, data) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            // ✅ Esperar a que la BD esté lista
+            await this.waitForReady();
+            
             if (!this.db) {
                 reject(new Error('Base de datos no inicializada'));
                 return;
             }
             
-            const transaction = this.db.transaction([storeName], 'readwrite');
-            const store = transaction.objectStore(storeName);
-            
-            // Agregar timestamps
-            if (!data.id) {
-                data.creado = new Date().toISOString();
+            try {
+                const transaction = this.db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                
+                // Agregar timestamps
+                const now = new Date().toISOString();
+                if (!data.id) {
+                    data.creado = now;
+                }
+                data.actualizado = now;
+                
+                const request = store.put(data);
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+                
+                transaction.onerror = () => reject(transaction.error);
+                transaction.oncomplete = () => console.log(`✅ Guardado en ${storeName}`);
+            } catch (error) {
+                reject(error);
             }
-            data.actualizado = new Date().toISOString();
-            
-            const request = store.put(data);
-            
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
         });
     },
     
@@ -96,6 +158,13 @@ export const storage = {
     guardarMultiples: function(storeName, dataArray) {
         return new Promise(async (resolve, reject) => {
             try {
+                await this.waitForReady();
+                
+                if (!this.db) {
+                    reject(new Error('Base de datos no inicializada'));
+                    return;
+                }
+                
                 const results = [];
                 for (const data of dataArray) {
                     const result = await this.guardar(storeName, data);
@@ -110,70 +179,94 @@ export const storage = {
     
     // Obtener un registro por ID
     obtener: function(storeName, id) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.waitForReady();
+            
             if (!this.db) {
                 reject(new Error('Base de datos no inicializada'));
                 return;
             }
             
-            const transaction = this.db.transaction([storeName], 'readonly');
-            const store = transaction.objectStore(storeName);
-            const request = store.get(id);
-            
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+            try {
+                const transaction = this.db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(id);
+                
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => reject(request.error);
+            } catch (error) {
+                reject(error);
+            }
         });
     },
     
     // Obtener todos los registros
     obtenerTodos: function(storeName) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.waitForReady();
+            
             if (!this.db) {
                 reject(new Error('Base de datos no inicializada'));
                 return;
             }
             
-            const transaction = this.db.transaction([storeName], 'readonly');
-            const store = transaction.objectStore(storeName);
-            const request = store.getAll();
-            
-            request.onsuccess = () => resolve(request.result || []);
-            request.onerror = () => reject(request.error);
+            try {
+                const transaction = this.db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            } catch (error) {
+                reject(error);
+            }
         });
     },
     
     // Obtener por índice
     obtenerPorIndice: function(storeName, indexName, value) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.waitForReady();
+            
             if (!this.db) {
                 reject(new Error('Base de datos no inicializada'));
                 return;
             }
             
-            const transaction = this.db.transaction([storeName], 'readonly');
-            const store = transaction.objectStore(storeName);
-            const index = store.index(indexName);
-            const request = index.getAll(value);
-            
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+            try {
+                const transaction = this.db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const index = store.index(indexName);
+                const request = index.getAll(value);
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            } catch (error) {
+                reject(error);
+            }
         });
     },
     
     // Eliminar un registro
     eliminar: function(storeName, id) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.waitForReady();
+            
             if (!this.db) {
                 reject(new Error('Base de datos no inicializada'));
                 return;
             }
             
-            const transaction = this.db.transaction([storeName], 'readwrite');
-            const store = transaction.objectStore(storeName);
-            const request = store.delete(id);
-            
-            request.onsuccess = () => resolve(true);
-            request.onerror = () => reject(request.error);
+            try {
+                const transaction = this.db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+                
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => reject(request.error);
+            } catch (error) {
+                reject(error);
+            }
         });
     },
     
@@ -193,35 +286,47 @@ export const storage = {
     
     // Limpiar store
     limpiarStore: function(storeName) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.waitForReady();
+            
             if (!this.db) {
                 reject(new Error('Base de datos no inicializada'));
                 return;
             }
             
-            const transaction = this.db.transaction([storeName], 'readwrite');
-            const store = transaction.objectStore(storeName);
-            const request = store.clear();
-            
-            request.onsuccess = () => resolve(true);
-            request.onerror = () => reject(request.error);
+            try {
+                const transaction = this.db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.clear();
+                
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => reject(request.error);
+            } catch (error) {
+                reject(error);
+            }
         });
     },
     
     // Contar registros
     contar: function(storeName) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.waitForReady();
+            
             if (!this.db) {
                 reject(new Error('Base de datos no inicializada'));
                 return;
             }
             
-            const transaction = this.db.transaction([storeName], 'readonly');
-            const store = transaction.objectStore(storeName);
-            const request = store.count();
-            
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+            try {
+                const transaction = this.db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.count();
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            } catch (error) {
+                reject(error);
+            }
         });
     },
     
@@ -229,26 +334,70 @@ export const storage = {
     buscar: function(storeName, filtros) {
         return new Promise(async (resolve, reject) => {
             try {
-                let datos = await this.obtenerTodos(storeName);
+                const datos = await this.obtenerTodos(storeName);
                 
-                // Aplicar filtros
-                if (filtros) {
-                    datos = datos.filter(item => {
-                        for (const [key, value] of Object.entries(filtros)) {
-                            if (item[key] !== value) return false;
-                        }
-                        return true;
-                    });
+                if (!filtros) {
+                    resolve(datos);
+                    return;
                 }
                 
-                resolve(datos);
+                const filtered = datos.filter(item => {
+                    for (const [key, value] of Object.entries(filtros)) {
+                        if (item[key] !== value) return false;
+                    }
+                    return true;
+                });
+                
+                resolve(filtered);
             } catch (error) {
                 reject(error);
             }
         });
     },
     
-    // LocalStorage wrapper
+    // ============================================
+    // DATOS DE EJEMPLO PARA INICIALIZAR
+    // ============================================
+    
+    async cargarDatosEjemplo() {
+        console.log('📦 Cargando datos de ejemplo...');
+        
+        // Verificar si ya hay datos
+        const barberos = await this.obtenerTodos('barberos');
+        if (barberos.length > 0) {
+            console.log('📦 Ya hay datos, omitiendo ejemplos');
+            return;
+        }
+        
+        // Barberos de ejemplo
+        const barberosEjemplo = [
+            { id: 1, nombre: 'Carlos Martínez', telefono: '555-0101', email: 'carlos@barberhub.com', especialidad: 'Corte', comision: 40, estado: 'activo', horarioInicio: '09:00', horarioFin: '18:00', diasDescanso: ['Dom'], citasAtendidas: 0, ingresosGenerados: 0, rating: 0 },
+            { id: 2, nombre: 'Miguel Rodríguez', telefono: '555-0102', email: 'miguel@barberhub.com', especialidad: 'Barba', comision: 45, estado: 'activo', horarioInicio: '10:00', horarioFin: '19:00', diasDescanso: ['Lun'], citasAtendidas: 0, ingresosGenerados: 0, rating: 0 },
+            { id: 3, nombre: 'Juan Pérez', telefono: '555-0103', email: 'juan@barberhub.com', especialidad: 'Todo', comision: 50, estado: 'activo', horarioInicio: '08:00', horarioFin: '17:00', diasDescanso: ['Mié'], citasAtendidas: 0, ingresosGenerados: 0, rating: 0 }
+        ];
+        
+        // Servicios de ejemplo
+        const serviciosEjemplo = [
+            { id: 1, nombre: 'Corte de Cabello', categoria: 'Corte', precio: 350, duracion: 30, estado: 'activo', icono: '✂️', descripcion: 'Corte clásico o moderno según preferencia', barberos: [1, 2, 3] },
+            { id: 2, nombre: 'Barba', categoria: 'Barba', precio: 200, duracion: 20, estado: 'activo', icono: '🧔', descripcion: 'Arreglo de barba con navaja', barberos: [1, 2] },
+            { id: 3, nombre: 'Corte + Barba', categoria: 'Paquete', precio: 500, duracion: 50, estado: 'activo', icono: '✨', descripcion: 'Combo completo de corte y barba', barberos: [1, 2, 3] }
+        ];
+        
+        // Guardar datos
+        for (const barbero of barberosEjemplo) {
+            await this.guardar('barberos', barbero);
+        }
+        for (const servicio of serviciosEjemplo) {
+            await this.guardar('servicios', servicio);
+        }
+        
+        console.log('✅ Datos de ejemplo cargados');
+    },
+    
+    // ============================================
+    // LOCALSTORAGE WRAPPER
+    // ============================================
+    
     localStorage: {
         set: function(key, value) {
             try {
@@ -291,7 +440,10 @@ export const storage = {
         }
     },
     
-    // SessionStorage wrapper
+    // ============================================
+    // SESSIONSTORAGE WRAPPER
+    // ============================================
+    
     sessionStorage: {
         set: function(key, value) {
             try {
@@ -334,9 +486,14 @@ export const storage = {
         }
     },
     
-    // Backup completo
+    // ============================================
+    // BACKUP
+    // ============================================
+    
     backup: async function() {
         try {
+            await this.waitForReady();
+            
             const stores = ['citas', 'clientes', 'barberos', 'servicios', 'productos', 'ventas', 'config'];
             const backup = {};
             
@@ -346,8 +503,8 @@ export const storage = {
             
             backup.metadata = {
                 fecha: new Date().toISOString(),
-                version: '1.0.0',
-                totalRegistros: Object.values(backup).reduce((sum, arr) => sum + arr.length, 0)
+                version: '2.0.0',
+                totalRegistros: Object.values(backup).reduce((sum, arr) => sum + (arr?.length || 0), 0)
             };
             
             return backup;
@@ -357,9 +514,10 @@ export const storage = {
         }
     },
     
-    // Restaurar backup
     restaurar: async function(backup) {
         try {
+            await this.waitForReady();
+            
             for (const [storeName, data] of Object.entries(backup)) {
                 if (storeName !== 'metadata' && Array.isArray(data)) {
                     await this.limpiarStore(storeName);
@@ -378,3 +536,5 @@ export const storage = {
 
 // Exportar para uso global
 window.storage = storage;
+
+console.log('💾 Storage module listo');
