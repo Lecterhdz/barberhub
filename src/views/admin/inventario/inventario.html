@@ -1,0 +1,196 @@
+<!-- src/views/admin/inventario/inventario.html -->
+<div class="inventario-container">
+    <!-- Header -->
+    <div class="inventario-header">
+        <div>
+            <h2>📦 Gestión de Inventario</h2>
+            <p class="inventario-subtitle">Control de productos y stock</p>
+        </div>
+        <button class="btn btn-primary" id="btn-nuevo-producto">
+            + Nuevo Producto
+        </button>
+    </div>
+
+    <!-- Alertas de stock bajo -->
+    <div id="alertas-stock" class="alertas-stock" style="display: none;">
+        <div class="alertas-header">
+            <span>⚠️</span>
+            <h4>Productos con stock bajo</h4>
+        </div>
+        <div id="lista-alertas" class="lista-alertas"></div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="inventario-filtros">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" 
+                   id="search-producto" 
+                   placeholder="Buscar producto..."
+                   class="search-input">
+        </div>
+        <div class="filtros-actions">
+            <select id="filtro-categoria" class="filtro-select">
+                <option value="todos">Todas las categorías</option>
+                <option value="Cabello">💇 Cabello</option>
+                <option value="Barba">🧔 Barba</option>
+                <option value="Afeitado">🪒 Afeitado</option>
+                <option value="Cuidado">🧴 Cuidado</option>
+                <option value="Accesorios">💈 Accesorios</option>
+            </select>
+            <select id="filtro-stock" class="filtro-select">
+                <option value="todos">Todos los stocks</option>
+                <option value="bajo">⚠️ Stock bajo</option>
+                <option value="normal">✅ Stock normal</option>
+                <option value="agotado">❌ Agotados</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="inventario-table-container">
+        <table class="inventario-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Costo</th>
+                    <th>Stock</th>
+                    <th>Ganancia</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="productos-table-body">
+                <tr>
+                    <td colspan="7" class="loading-cell">
+                        <div class="loading-spinner">Cargando productos...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" id="pagination">
+        <button class="page-btn" id="prev-page" disabled>Anterior</button>
+        <span id="page-info">Página 1 de 1</span>
+        <button class="page-btn" id="next-page" disabled>Siguiente</button>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Producto -->
+<div id="producto-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Nuevo Producto</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form id="producto-form">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del producto *</label>
+                        <input type="text" id="producto-nombre" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría *</label>
+                        <select id="producto-categoria" required class="form-control">
+                            <option value="Cabello">💇 Cabello</option>
+                            <option value="Barba">🧔 Barba</option>
+                            <option value="Afeitado">🪒 Afeitado</option>
+                            <option value="Cuidado">🧴 Cuidado</option>
+                            <option value="Accesorios">💈 Accesorios</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precio venta *</label>
+                        <input type="number" id="producto-precio" required class="form-control" step="10" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Costo *</label>
+                        <input type="number" id="producto-costo" required class="form-control" step="10" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock actual *</label>
+                        <input type="number" id="producto-stock" required class="form-control" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock mínimo *</label>
+                        <input type="number" id="producto-stock-minimo" required class="form-control" min="0" value="5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea id="producto-descripcion" rows="2" class="form-control" placeholder="Descripción del producto..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Proveedor</label>
+                    <input type="text" id="producto-proveedor" class="form-control" placeholder="Nombre del proveedor">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelar-modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ver Producto -->
+<div id="producto-ver-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Detalles del Producto</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="producto-detalle"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cerrar-ver-modal">Cerrar</button>
+            <button class="btn btn-primary" id="editar-ver-modal">Editar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajustar Stock -->
+<div id="stock-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>Ajustar Stock</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Producto</label>
+                <input type="text" id="stock-producto-nombre" readonly class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Stock actual</label>
+                <input type="text" id="stock-actual" readonly class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Tipo de ajuste</label>
+                <select id="stock-tipo" class="form-control">
+                    <option value="entrada">📥 Entrada (Agregar)</option>
+                    <option value="salida">📤 Salida (Quitar)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Cantidad</label>
+                <input type="number" id="stock-cantidad" min="1" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Motivo</label>
+                <input type="text" id="stock-motivo" class="form-control" placeholder="Ej: Compra a proveedor, Venta, Merma">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelar-stock">Cancelar</button>
+            <button class="btn btn-primary" id="confirmar-stock">Aplicar</button>
+        </div>
+    </div>
+</div>
