@@ -5,6 +5,7 @@
 
 import { storage } from './storage.js';
 import { utils } from './utils.js';
+import { router } from './router.js';
 
 console.log('🏗️ BarberHub Core v2.0');
 
@@ -75,8 +76,49 @@ export const app = {
         
         // Inicializar UI
         this.renderizarUI();
+        this.renderizarHeader();
+        this.renderizarFooter();
+        
+        // ✅ INICIAR EL ROUTER PARA MANEJAR LAS VISTAS
+        if (window.router) {
+            // Si ya estamos en una ruta, manejarla
+            const rutaInicial = window.location.hash.substring(1) || '/portal/agendar';
+            window.router.navegar(rutaInicial, false);
+        } else {
+            console.error('❌ Router no disponible');
+        }
+        
+        // Ocultar loader
+        setTimeout(() => this.ocultarLoader(), 500);
         
         console.log('✅ BarberHub v2.0 listo');
+    },
+    // ✅ AGREGAR FUNCIONES DE LOADER
+    mostrarLoader() {
+        let loader = document.getElementById('app-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'app-loader';
+            loader.innerHTML = `
+                <div class="loader-overlay">
+                    <div class="loader-spinner"></div>
+                    <p>Cargando BarberHub...</p>
+                </div>
+            `;
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'flex';
+    },
+    
+    ocultarLoader() {
+        const loader = document.getElementById('app-loader');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                loader.style.opacity = '1';
+            }, 300);
+        }
     },
     
     // ============================================
@@ -444,7 +486,16 @@ export const app = {
                 </nav>
             </div>
         `;
-        
+        // ✅ USAR EL ROUTER PARA NAVEGAR
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const path = link.getAttribute('data-path');
+                if (window.router) {
+                    window.router.navegar(path);
+                }
+            });
+        });        
         // Marcar link activo
         const currentPath = window.location.hash.substring(1);
         document.querySelectorAll('.sidebar-link').forEach(link => {
