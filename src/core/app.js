@@ -59,7 +59,16 @@ export const app = {
     
     async init() {
         console.log('🚀 Inicializando BarberHub v2.0...');
+         // Mostrar loader
+        this.mostrarLoader();
         
+        // ✅ INICIALIZAR STORAGE PRIMERO
+        if (window.storage) {
+            await window.storage.init();
+            console.log('✅ Storage inicializado');
+        } else {
+            console.error('❌ Storage no disponible');
+        }       
         // Cargar configuración guardada
         await this.cargarConfiguracion();
         
