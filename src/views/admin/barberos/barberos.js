@@ -26,11 +26,11 @@ async function init() {
 
 async function cargarBarberos() {
     // Obtener del caché global
-    if (window.app && window.app.estado && window.app.estado.cache.barberos) {
-        barberos = window.app.estado.cache.barberos;
-    } else {
-        barberos = await window.storage?.obtenerTodos('barberos') || [];
-    }
+    if (window.app && window.app.estado && window.app.estado.cache.barberos.length > 0) {
+        clientes = window.app.estado.cache.barberos;
+        renderizarTabla();
+        return;
+    }}
     
     // Si no hay datos, cargar ejemplos
     if (barberos.length === 0) {
