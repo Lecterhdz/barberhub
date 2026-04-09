@@ -24,14 +24,18 @@ async function init() {
 }
 
 async function cargarClientes() {
-    // Obtener del caché global
-    if (window.app && window.app.estado && window.app.estado.cache.clientes) {
+    // ✅ Tomar del caché global
+    if (window.app && window.app.estado && window.app.estado.cache.clientes.length > 0) {
         clientes = window.app.estado.cache.clientes;
-    } else {
-        clientes = await window.storage?.obtenerTodos('clientes') || [];
+        renderizarTabla();
+        return;
     }
     
-    console.log(`📦 ${clientes.length} clientes cargados`);
+    // Solo si no hay caché, cargar de storage
+    const stored = await window.storage?.obtenerTodos('clientes') || [];
+    clientes = stored;
+    if (window.app) window.app.estado.cache.clientes = stored;
+    renderizarTabla();
 }
 
 // ============================================
