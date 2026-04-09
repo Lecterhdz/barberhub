@@ -273,7 +273,11 @@ function cambiarPaso() {
 
 async function guardarCita(event) {
     event.preventDefault();
-    
+    // ✅ VERIFICAR QUE STORAGE ESTÉ LISTO
+    if (!window.storage || !window.storage.db) {
+        window.app?.mostrarNotificacion('Base de datos no lista. Recarga la página.', 'error');
+        return;
+    }    
     const nombre = document.getElementById('cliente-nombre').value;
     const telefono = document.getElementById('cliente-telefono').value;
     const email = document.getElementById('cliente-email').value;
