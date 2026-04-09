@@ -177,6 +177,11 @@ export const router = {
         // Resolver redirecciones
         ruta = this.resolverRuta(ruta);
         
+        // ✅ No recargar si es la misma ruta
+        if (this.rutaActual === ruta) {
+            console.log('⏳ Misma ruta, ignorando recarga');
+            return;
+        }        
         // Verificar acceso
         if (!this.tieneAcceso(ruta)) {
             console.log('🔒 Sin acceso a', ruta);
