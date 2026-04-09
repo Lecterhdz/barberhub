@@ -1,288 +1,81 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Chart.js para gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#1a1a1a">
-    <meta name="description" content="BarberHub - Sistema de gestión inteligente para barberías. Administra citas, clientes, inventario y más.">
-    <meta name="keywords" content="barbería, gestión, citas, clientes, inventario, software barbería">
-    <meta name="author" content="BarberHub">
-    <meta name="robots" content="index, follow">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lecterhdz.github.io/barberhub/">
-    <meta property="og:title" content="BarberHub - Gestión Inteligente para Barberías">
-    <meta property="og:description" content="Sistema completo para la gestión de tu barbería">
-    <meta property="og:image" content="https://lecterhdz.github.io/barberhub/img/og-image.png">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://lecterhdz.github.io/barberhub/">
-    <meta property="twitter:title" content="BarberHub - Gestión Inteligente para Barberías">
-    <meta property="twitter:description" content="Sistema completo para la gestión de tu barbería">
-    
-    <!-- ✅ CSP mejorada -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https:;">
-    
     <title>BarberHub - Gestión Inteligente para Barberías</title>
     
-    <!-- Preconnect para fuentes externas -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- ✅ Manifest PWA -->
-    <link rel="manifest" href="./manifest.json">
-    
-    <!-- ✅ Iconos multi-formato -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='80' font-size='80' text-anchor='middle'%3E💈%3C/text%3E%3C/svg%3E">
-    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='16' y='26' font-size='26' text-anchor='middle'%3E💈%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Ctext x='90' y='140' font-size='140' text-anchor='middle'%3E💈%3C/text%3E%3C/svg%3E">
-    
-    <!-- ✅ Core Styles -->
+    <!-- Styles -->
     <link rel="stylesheet" href="./src/styles/variables.css">
     <link rel="stylesheet" href="./src/styles/base.css">
     <link rel="stylesheet" href="./src/styles/layout.css">
-    <link rel="stylesheet" href="./src/styles/animations.css">
-    <link rel="stylesheet" href="./src/styles/components.css">
     <link rel="stylesheet" href="./src/core/themes/dark-amber.css" id="theme-css">
     
-    <!-- ✅ Feature CSS (se actualiza dinámicamente) -->
-    <link rel="stylesheet" href="./src/features/auth/auth.css" id="feature-css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
-    <!-- ✅ Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- ✅ Inline critical CSS para evitar FOUC -->
     <style>
-        /* Critical CSS para renderizado inicial */
-        * {
+        /* Estilos iniciales para evitar pantalla negra */
+        body {
+            background: #1a1a1a;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #1a1a1a;
-            color: #ffffff;
-            overflow-x: hidden;
-        }
-        
         #app {
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
-        
-        /* Loader inicial */
-        .initial-loader {
+        .loading-inicial {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-        
-        .loader-content {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
+            color: white;
         }
-        
-        .loader-spinner {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 20px;
-            border: 4px solid rgba(255, 107, 53, 0.2);
+        .loading-spinner-inicial {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
             border-top-color: #ff6b35;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
         }
-        
-        .loader-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #ff6b35, #ff9f4a);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 10px;
-        }
-        
-        .loader-subtitle {
-            color: #888;
-            font-size: 0.9rem;
-        }
-        
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-        
-        /* Ocultar contenido hasta que cargue */
-        #app-header, #app-main, #app-sidebar, #app-footer {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        #app.loaded #app-header,
-        #app.loaded #app-main,
-        #app.loaded #app-sidebar,
-        #app.loaded #app-footer {
-            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <!-- Loader inicial -->
-    <div id="initial-loader" class="initial-loader">
-        <div class="loader-content">
-            <div class="loader-spinner"></div>
-            <div class="loader-title">💈 BarberHub</div>
-            <div class="loader-subtitle">Cargando sistema...</div>
-        </div>
-    </div>
-    
-    <!-- ✅ App Container -->
     <div id="app">
-        <!-- Header (inyectado por app.js) -->
+        <div class="loading-inicial" id="loading-inicial">
+            <div class="loading-spinner-inicial"></div>
+            <p>Cargando BarberHub...</p>
+        </div>
         <header id="app-header"></header>
-        
-        <!-- Container principal con sidebar y contenido -->
         <div class="app-layout">
-            <!-- Sidebar (inyectado por Sidebar.js) -->
             <aside id="app-sidebar"></aside>
-            
-            <!-- Main Content (cambiado por router.js) -->
             <main id="app-main"></main>
         </div>
-        
-        <!-- Footer (inyectado por app.js) -->
         <footer id="app-footer"></footer>
     </div>
-    
-    <!-- Modal container para modales dinámicos -->
-    <div id="modal-container"></div>
-    
-    <!-- Notification container -->
-    <div id="notification-container"></div>
-    
-    <!-- ✅ Scripts core (solo los necesarios) -->
+
+    <!-- Core Scripts -->
     <script type="module">
-        // Importar y inicializar la app
         import { app } from './src/core/app.js';
         
-        // Ocultar loader cuando la app esté lista
+        // Ocultar loading cuando la app esté lista
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                const loader = document.getElementById('initial-loader');
-                if (loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                        document.getElementById('app').classList.add('loaded');
-                    }, 500);
-                }
+                const loading = document.getElementById('loading-inicial');
+                if (loading) loading.style.display = 'none';
             }, 500);
         });
         
-        // Manejar errores globales
-        window.addEventListener('error', (e) => {
-            console.error('Error global:', e.error);
-            // Mostrar error en consola pero no romper la app
-        });
-        
-        // Manejar promesas rechazadas
-        window.addEventListener('unhandledrejection', (e) => {
-            console.error('Promesa rechazada:', e.reason);
-        });
+        // Inicializar
+        window.app = app;
+        app.init();
     </script>
-    
-    <!-- ✅ Service Worker con actualización -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => {
-                        console.log('✅ Service Worker registrado:', reg.scope);
-                        
-                        // Verificar actualizaciones
-                        reg.addEventListener('updatefound', () => {
-                            const newWorker = reg.installing;
-                            console.log('🔄 Nueva versión del SW encontrada');
-                            
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('✅ Nueva versión disponible, recarga para actualizar');
-                                    // Mostrar notificación al usuario
-                                    const notification = document.createElement('div');
-                                    notification.className = 'update-notification';
-                                    notification.innerHTML = `
-                                        <div class="update-content">
-                                            <span>🔄</span>
-                                            <p>Nueva versión disponible</p>
-                                            <button onclick="location.reload()">Actualizar</button>
-                                        </div>
-                                    `;
-                                    document.body.appendChild(notification);
-                                }
-                            });
-                        });
-                    })
-                    .catch(err => console.log('⚠️ Service Worker error:', err));
-            });
-        }
-        
-        // Detectar si es la primera vez que se instala la PWA
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            window.deferredPrompt = e;
-            
-            // Mostrar banner de instalación
-            const installBanner = document.createElement('div');
-            installBanner.className = 'install-banner';
-            installBanner.innerHTML = `
-                <div class="install-content">
-                    <span>📱</span>
-                    <p>Instala BarberHub en tu dispositivo</p>
-                    <button id="install-btn">Instalar</button>
-                    <button id="close-banner">✕</button>
-                </div>
-            `;
-            document.body.appendChild(installBanner);
-            
-            document.getElementById('install-btn')?.addEventListener('click', async () => {
-                if (window.deferredPrompt) {
-                    window.deferredPrompt.prompt();
-                    const { outcome } = await window.deferredPrompt.userChoice;
-                    console.log(`Instalación: ${outcome}`);
-                    window.deferredPrompt = null;
-                    installBanner.remove();
-                }
-            });
-            
-            document.getElementById('close-banner')?.addEventListener('click', () => {
-                installBanner.remove();
-            });
-        });
-    </script>
-    
-    <!-- ✅ Google Analytics (opcional, reemplazar con tu ID) -->
-    <!--
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-XXXXX-X"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'UA-XXXXX-X');
-    </script>
-    -->
 </body>
 </html>
