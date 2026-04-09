@@ -282,7 +282,63 @@ export const app = {
             this.mostrarNotificacion('Sesión cerrada', 'info');
         }
     },
-    
+    renderHeader: function() {
+        const header = document.getElementById('app-header');
+        if (!header) return;
+        
+        const autenticado = this.estado.autenticado;
+        const licencia = this.estado.licencia;
+        const vista = this.estado.vista;
+        
+        let navButtons = '';
+        
+        if (vista === 'portal') {
+            navButtons = `
+                <div class="portal-nav-buttons">
+                    <a href="#/portal/agendar" class="nav-btn ${this.estado.modulo === 'agendar' ? 'active' : ''}">
+                        📅 Agendar
+                    </a>
+                    <a href="#/portal/mis-citas" class="nav-btn ${this.estado.modulo === 'mis-citas' ? 'active' : ''}">
+                        📋 Mis Citas
+                    </a>
+                </div>
+            `;
+        }
+        
+        header.innerHTML = `
+            <div class="header-content">
+                <div class="header-logo">
+                    ${vista === 'admin' ? `<button class="hamburger-btn" id="hamburger-btn">☰</button>` : ''}
+                    <div>
+                        <h1 class="header-title">💈 BarberHub</h1>
+                        <p class="header-subtitle">${autenticado ? 'Panel Administrativo' : 'Agenda tu cita'}</p>
+                    </div>
+                </div>
+                ${navButtons}
+                <div class="header-actions">
+                    ${autenticado ? `
+                        <div class="license-badge">✅ ${licencia.tipo}</div>
+                        <button class="btn-logout" id="btn-logout">🚪 Salir</button>
+                    ` : `
+                        <button class="btn-login" id="btn-login">🔐 Iniciar Sesión</button>
+                    `}
+                </div>
+            </div>
+        `;
+        
+        // ✅ DISPARAR EVENTO PARA THEMESWITCHER
+        window.dispatchEvent(new CustomEvent('header-ready'));
+        
+        // Eventos
+        const loginBtn = document.getElementById('btn-login');
+        if (loginBtn) loginBtn.onclick = () => this.mostrarModal('login');
+        
+        const logoutBtn = document.getElementById('btn-logout');
+        if (logoutBtn) logoutBtn.onclick = () => this.logout();
+        
+        const hamburger = document.getElementById('hamburger-btn');
+        if (hamburger) hamburger.onclick = () => this.toggleSidebar();
+    },    
     // ============================================
     // CACHÉ DE DATOS
     // ============================================
