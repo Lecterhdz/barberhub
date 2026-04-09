@@ -247,7 +247,8 @@ export const router = {
     
     async cargarHTML(viewPath) {
         const basePath = this.getBasePath();
-        const htmlPath = `${basePath}/src/views/${viewPath}.html`;
+        // ✅ Buscar en subcarpeta: ej: portal/agendar/agendar.html
+        const htmlPath = `${basePath}/src/views/${viewPath}/${viewPath.split('/').pop()}.html`;
         
         try {
             const response = await fetch(htmlPath);
@@ -260,14 +261,17 @@ export const router = {
             return `<div class="error-container">
                         <h2>⚠️ Error</h2>
                         <p>No se pudo cargar la vista: ${viewPath}</p>
+                        <p class="error-details">${error.message}</p>
                         <button onclick="location.reload()">Recargar</button>
                     </div>`;
         }
     },
     
+    // Reemplaza cargarCSS con esta versión:
     async cargarCSS(viewPath) {
         const basePath = this.getBasePath();
-        const cssPath = `${basePath}/src/views/${viewPath}.css`;
+        // ✅ Buscar en subcarpeta
+        const cssPath = `${basePath}/src/views/${viewPath}/${viewPath.split('/').pop()}.css`;
         
         return new Promise((resolve) => {
             const linkId = `css-${viewPath.replace(/\//g, '-')}`;
@@ -292,9 +296,11 @@ export const router = {
         });
     },
     
+    // Reemplaza cargarJS con esta versión:
     async cargarJS(viewPath) {
         const basePath = this.getBasePath();
-        const jsPath = `${basePath}/src/views/${viewPath}.js`;
+        // ✅ Buscar en subcarpeta
+        const jsPath = `${basePath}/src/views/${viewPath}/${viewPath.split('/').pop()}.js`;
         
         return new Promise((resolve) => {
             const scriptId = `js-${viewPath.replace(/\//g, '-')}`;
