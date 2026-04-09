@@ -1,12 +1,13 @@
+// src/components/ThemeSwitcher.js
 // ─────────────────────────────────────────────────────────────────────
-// BARBERHUB - THEME SWITCHER (Menú Desplegable)
-// ─────────────────────────────────────────────────────────────────────
+
+console.log('🎨 ThemeSwitcher cargado');
 
 export const ThemeSwitcher = {
     temas: [
-        { id: 'dark-amber', nombre: 'Ámbar Oscuro', icono: '🌙', color: '#ff6b35', descripcion: 'Clásico y elegante' },
-        { id: 'dark-neon', nombre: 'Neón Oscuro', icono: '💚', color: '#00ff88', descripcion: 'Moderno y vibrante' },
-        { id: 'light-clean', nombre: 'Claro Limpio', icono: '☀️', color: '#ff9f4a', descripcion: 'Claro y profesional' }
+        { id: 'dark-amber', nombre: 'Ámbar', icono: '🌙', color: '#ff6b35' },
+        { id: 'dark-neon', nombre: 'Neón', icono: '💚', color: '#00ff88' },
+        { id: 'light-clean', nombre: 'Claro', icono: '☀️', color: '#ff9f4a' }
     ],
     
     temaActual: 'dark-amber',
@@ -14,44 +15,38 @@ export const ThemeSwitcher = {
     init: function() {
         console.log('🎨 Inicializando ThemeSwitcher...');
         
-        // Cargar tema guardado
         const temaGuardado = localStorage.getItem('barberhub_tema');
-        if (temaGuardado && this.temas.find(t => t.id === temaGuardado)) {
+        if (temaGuardado) {
             this.temaActual = temaGuardado;
         }
         
         this.aplicarTema(this.temaActual);
-        this.crearBotonDropdown();
+        this.agregarBoton();
         
-        // Escuchar cuando el header esté listo
+        // Escuchar cuando el header cambie
         window.addEventListener('header-ready', () => {
-            this.crearBotonDropdown();
+            this.agregarBoton();
         });
     },
     
-    crearBotonDropdown: function() {
+    agregarBoton: function() {
         const headerActions = document.querySelector('.header-actions');
         if (!headerActions) {
-            setTimeout(() => this.crearBotonDropdown(), 100);
+            setTimeout(() => this.agregarBoton(), 100);
             return;
         }
         
-        // Eliminar botón anterior si existe
-        const existingBtn = document.getElementById('theme-dropdown');
-        if (existingBtn) {
-            existingBtn.remove();
-        }
+        // Evitar duplicados
+        if (document.getElementById('theme-dropdown')) return;
         
         const temaActualObj = this.temas.find(t => t.id === this.temaActual);
         
-        // Crear el dropdown container
+        // Crear dropdown
         const dropdown = document.createElement('div');
         dropdown.className = 'theme-dropdown';
         dropdown.id = 'theme-dropdown';
         
-        // Crear el botón principal
         const btn = document.createElement('button');
-        btn.id = 'theme-dropdown-btn';
         btn.className = 'theme-dropdown-btn';
         btn.innerHTML = `
             <span class="theme-dropdown-icon">${temaActualObj.icono}</span>
@@ -59,7 +54,6 @@ export const ThemeSwitcher = {
             <span class="theme-dropdown-arrow">▼</span>
         `;
         
-        // Crear el menú desplegable
         const menu = document.createElement('div');
         menu.className = 'theme-dropdown-menu';
         menu.innerHTML = `
@@ -69,12 +63,10 @@ export const ThemeSwitcher = {
             </div>
             <div class="theme-menu-options">
                 ${this.temas.map(tema => `
-                    <button class="theme-option ${this.temaActual === tema.id ? 'active' : ''}" 
-                            data-theme="${tema.id}">
+                    <button class="theme-option ${this.temaActual === tema.id ? 'active' : ''}" data-theme="${tema.id}">
                         <span class="theme-option-icon">${tema.icono}</span>
                         <div class="theme-option-info">
                             <div class="theme-option-name">${tema.nombre}</div>
-                            <div class="theme-option-desc">${tema.descripcion}</div>
                         </div>
                         <div class="theme-option-color" style="background: ${tema.color}"></div>
                         ${this.temaActual === tema.id ? '<span class="theme-option-check">✓</span>' : ''}
@@ -86,90 +78,37 @@ export const ThemeSwitcher = {
         dropdown.appendChild(btn);
         dropdown.appendChild(menu);
         
-        // LIMPIAR header-actions y reconstruir en orden
-        // Guardar elementos existentes que queremos preservar
-        const licenseBadge = headerActions.querySelector('.license-badge');
-        const configBtn = headerActions.querySelector('.btn-icon, .config-btn');
-        const logoutBtn = headerActions.querySelector('.btn-logout');
+        // Insertar al inicio del header-actions
+        headerActions.insertBefore(dropdown, headerActions.firstChild);
         
-        // Limpiar header-actions
-        while (headerActions.firstChild) {
-            headerActions.removeChild(headerActions.firstChild);
-        }
-        
-        // Reconstruir en el orden correcto
-        headerActions.appendChild(dropdown);  // 1. Dropdown de temas
-        
-        if (licenseBadge) {
-            headerActions.appendChild(licenseBadge);  // 2. Badge de licencia
-        }
-        
-        // 3. Botón de configuración
-        let configButton = configBtn;
-        if (!configButton) {
-            configButton = document.createElement('button');
-            configButton.className = 'btn-icon config-btn';
-            configButton.innerHTML = '⚙️';
-            configButton.title = 'Configuración';
-            configButton.onclick = () => {
-                if (window.app && window.app.openConfiguracion) {
-                    window.app.openConfiguracion();
-                } else {
-                    console.log('Configuración - próximamente');
-                }
-            };
-        }
-        headerActions.appendChild(configButton);
-        
-        // 4. Botón de salir
-        let logoutButton = logoutBtn;
-        if (!logoutButton) {
-            logoutButton = document.createElement('button');
-            logoutButton.className = 'btn-logout';
-            logoutButton.innerHTML = '🚪 Salir';
-            logoutButton.onclick = () => {
-                if (window.app && window.app.logout) {
-                    window.app.logout();
-                }
-            };
-        }
-        headerActions.appendChild(logoutButton);
-        
-        // Eventos del dropdown
-        btn.addEventListener('click', (e) => {
+        // Eventos
+        btn.onclick = (e) => {
             e.stopPropagation();
-            const isOpen = dropdown.classList.contains('open');
-            
-            document.querySelectorAll('.theme-dropdown.open').forEach(d => {
-                if (d !== dropdown) d.classList.remove('open');
-            });
-            
             dropdown.classList.toggle('open');
-        });
+        };
         
         menu.querySelectorAll('.theme-option').forEach(option => {
-            option.addEventListener('click', (e) => {
+            option.onclick = (e) => {
                 e.stopPropagation();
                 const themeId = option.dataset.theme;
                 this.cambiarTema(themeId);
                 dropdown.classList.remove('open');
                 this.actualizarBoton(themeId);
                 this.actualizarMenuActivo(themeId);
-            });
+            };
         });
         
+        // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!dropdown.contains(e.target)) {
                 dropdown.classList.remove('open');
             }
         });
-        
-        console.log('✅ Dropdown de temas creado con botones de configuración y salir');
     },
     
     actualizarBoton: function(themeId) {
         const tema = this.temas.find(t => t.id === themeId);
-        const btn = document.getElementById('theme-dropdown-btn');
+        const btn = document.querySelector('#theme-dropdown .theme-dropdown-btn');
         if (btn && tema) {
             btn.innerHTML = `
                 <span class="theme-dropdown-icon">${tema.icono}</span>
@@ -180,11 +119,9 @@ export const ThemeSwitcher = {
     },
     
     actualizarMenuActivo: function(themeId) {
-        const options = document.querySelectorAll('.theme-option');
-        options.forEach(option => {
+        document.querySelectorAll('.theme-option').forEach(option => {
             if (option.dataset.theme === themeId) {
                 option.classList.add('active');
-                // Agregar check si no existe
                 if (!option.querySelector('.theme-option-check')) {
                     const check = document.createElement('span');
                     check.className = 'theme-option-check';
@@ -205,7 +142,6 @@ export const ThemeSwitcher = {
         
         this.temaActual = themeId;
         this.aplicarTema(themeId);
-        
         localStorage.setItem('barberhub_tema', themeId);
         
         if (window.app && window.app.estado) {
@@ -214,9 +150,6 @@ export const ThemeSwitcher = {
         }
         
         console.log(`🎨 Tema cambiado a: ${tema.nombre}`);
-        
-        // Mostrar notificación
-        this.mostrarNotificacion(`${tema.icono} Tema cambiado a ${tema.nombre}`);
     },
     
     aplicarTema: function(themeId) {
@@ -232,31 +165,12 @@ export const ThemeSwitcher = {
         }
         
         themeLink.href = `./src/core/themes/${themeId}.css`;
-    },
-    
-    mostrarNotificacion: function(mensaje) {
-        const notification = document.createElement('div');
-        notification.className = 'theme-notification';
-        notification.innerHTML = `
-            <div class="theme-notification-content">
-                <span>🎨</span>
-                <p>${mensaje}</p>
-            </div>
-        `;
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.classList.add('fade-out');
-            setTimeout(() => notification.remove(), 300);
-        }, 2000);
     }
 };
 
-// Inicializar
+// Inicializar automáticamente
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        ThemeSwitcher.init();
-    });
+    document.addEventListener('DOMContentLoaded', () => ThemeSwitcher.init());
 } else {
     ThemeSwitcher.init();
 }
