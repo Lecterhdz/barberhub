@@ -1,0 +1,358 @@
+/* src/views/admin/dashboard/dashboard.css */
+
+.dashboard-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.dashboard-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.dashboard-date {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+.btn-refresh {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-refresh:hover {
+    background: var(--bg-hover);
+    transform: rotate(180deg);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 10px 0;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-trend {
+    font-size: 0.75rem;
+    margin-top: 8px;
+    color: #4caf50;
+}
+
+.stat-trend.negative {
+    color: #f44336;
+}
+
+/* Dashboard Grids */
+.dashboard-grid,
+.dashboard-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.full-width {
+    grid-column: span 2;
+}
+
+/* Cards */
+.card {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.btn-sm {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+}
+
+.btn-sm:hover {
+    background: var(--bg-hover);
+    border-color: var(--color-primary);
+}
+
+/* Chart Container */
+.chart-container {
+    padding: 15px;
+    height: 300px;
+    position: relative;
+}
+
+.chart-select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+/* Lists */
+.citas-lista,
+.servicios-lista,
+.actividad-lista {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.cita-item,
+.servicio-item,
+.actividad-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.cita-item:hover,
+.servicio-item:hover,
+.actividad-item:hover {
+    background: var(--bg-hover);
+    transform: translateX(3px);
+}
+
+.cita-info {
+    flex: 1;
+}
+
+.cita-cliente {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.cita-hora {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.cita-servicio {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.cita-estado {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.estado-pendiente {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+}
+
+.estado-confirmada {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.estado-completada {
+    background: rgba(33, 150, 243, 0.2);
+    color: #2196f3;
+}
+
+.estado-cancelada {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+.servicio-info {
+    flex: 1;
+}
+
+.servicio-nombre {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.servicio-stats {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.servicio-precio {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.actividad-texto {
+    margin-bottom: 4px;
+}
+
+.actividad-fecha {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.actividad-icono {
+    font-size: 1.5rem;
+    margin-right: 12px;
+}
+
+/* Loading */
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .dashboard-grid,
+    .dashboard-grid-2 {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .full-width {
+        grid-column: span 1;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .dashboard-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 10px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cita-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .cita-estado {
+        align-self: center;
+    }
+}
