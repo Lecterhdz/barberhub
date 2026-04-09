@@ -1,0 +1,135 @@
+<!-- src/views/admin/clientes/clientes.html -->
+<div class="clientes-container">
+    <!-- Header -->
+    <div class="clientes-header">
+        <div>
+            <h2>👥 Gestión de Clientes</h2>
+            <p class="clientes-subtitle">Administra tu base de datos de clientes</p>
+        </div>
+        <button class="btn btn-primary" id="btn-nuevo-cliente">
+            + Nuevo Cliente
+        </button>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="clientes-filtros">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" 
+                   id="search-cliente" 
+                   placeholder="Buscar por nombre, teléfono o email..."
+                   class="search-input">
+        </div>
+        <div class="filtros-actions">
+            <select id="filtro-estado" class="filtro-select">
+                <option value="todos">Todos los clientes</option>
+                <option value="activo">Activos</option>
+                <option value="inactivo">Inactivos</option>
+            </select>
+            <button class="btn-icon" id="btn-exportar" title="Exportar">
+                📥
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla de clientes -->
+    <div class="clientes-table-container">
+        <table class="clientes-table">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Contacto</th>
+                    <th>Visitas</th>
+                    <th>Última visita</th>
+                    <th>Gasto total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="clientes-table-body">
+                <tr>
+                    <td colspan="7" class="loading-cell">
+                        <div class="loading-spinner">Cargando clientes...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" id="pagination">
+        <button class="page-btn" id="prev-page" disabled>Anterior</button>
+        <span id="page-info">Página 1 de 1</span>
+        <button class="page-btn" id="next-page" disabled>Siguiente</button>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Cliente -->
+<div id="cliente-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Nuevo Cliente</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form id="cliente-form">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="cliente-nombre" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono *</label>
+                        <input type="tel" id="cliente-telefono" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="cliente-email" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de nacimiento</label>
+                        <input type="date" id="cliente-nacimiento" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <textarea id="cliente-direccion" rows="2" class="form-control"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea id="cliente-notas" rows="2" class="form-control" placeholder="Preferencias, observaciones..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="cliente-estado" class="form-control">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelar-modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ver Cliente -->
+<div id="cliente-ver-modal" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3>Detalles del Cliente</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="cliente-detalle">
+            <!-- Contenido dinámico -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cerrar-ver-modal">Cerrar</button>
+            <button class="btn btn-primary" id="editar-ver-modal">Editar</button>
+        </div>
+    </div>
+</div>
