@@ -410,4 +410,62 @@ function setupEventListeners() {
     document.getElementById('btn-nuevo-barbero')?.addEventListener('click', nuevoBarbero);
     document.getElementById('cancelar-modal')?.addEventListener('click', cerrarModal);
     document.getElementById('barbero-form')?.addEventListener('submit', guardarBarbero);
-    document.getElementById('cerrar-ver-modal')?.addEventListener('click', () => cerrarModal('barbero-ver-modal
+    document.getElementById('cerrar-ver-modal')?.addEventListener('click', () => cerrarModal('barbero-ver-modal'));
+    document.getElementById('editar-ver-modal')?.addEventListener('click', editarDesdeVer);
+    
+    document.getElementById('search-barbero')?.addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        currentPage = 1;
+        renderizarGrid();
+    });
+    
+    document.getElementById('filtro-estado')?.addEventListener('change', (e) => {
+        currentFilter = e.target.value;
+        currentPage = 1;
+        renderizarGrid();
+    });
+    
+    document.getElementById('filtro-especialidad')?.addEventListener('change', (e) => {
+        currentEspecialidad = e.target.value;
+        currentPage = 1;
+        renderizarGrid();
+    });
+    
+    document.getElementById('prev-page')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderizarGrid();
+        }
+    });
+    
+    document.getElementById('next-page')?.addEventListener('click', () => {
+        const totalPages = Math.ceil(filtrarBarberos().length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderizarGrid();
+        }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') cerrarModal();
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================
+// INICIALIZAR
+// ============================================
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+export { init };
