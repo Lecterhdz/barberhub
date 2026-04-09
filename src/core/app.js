@@ -24,7 +24,7 @@ export const app = {
         // UI
         vista: 'portal',      // 'portal' | 'admin'
         modulo: 'agendar',    // módulo actual
-        sidebarAbierto: true,  // estado del menú hamburguesa
+        sidebarAbierto: window.innerWidth > 768,  // estado del menú hamburguesa
         modal: null,          // { tipo: 'login', 'confirmar', etc, data: {} }
         
         // ========== CACHÉ DE DATOS (PERSISTE ENTRE MÓDULOS) ==========
@@ -344,9 +344,15 @@ export const app = {
     // ============================================
     
     async cargarCachePublico() {
+        // ✅ Si ya está cargado, no volver a cargar
+        if (this.estado.cache.cargado) {
+            console.log('📦 Caché ya cargado, omitiendo recarga');
+            return;
+        }        
         console.log('📦 Cargando caché público...');
         
         try {
+            await storage.init();
             // Cargar barberos
             const barberos = await storage.obtenerTodos('barberos');
             if (barberos.length > 0) {
@@ -372,7 +378,103 @@ export const app = {
             this.estado.cache.servicios = this.getServiciosEjemplo();
         }
     },
+    // ✅ Nueva función para recargar solo la vista actual sin perder datos
+    async recargarVista() {
+        const rutaActual = window.location.hash.substring(1) || '/portal/agendar';
+        if (window.router) {
+            await window.router.manejarRuta();
+        }
+    },
     
+    // ✅ Modificar renderizarSidebar para que sea responsive
+    renderizarSidebar() {
+        const sidebar = document.getElementById('app-sidebar');
+        if (!sidebar) return;
+        
+        if (this.estado.vista !== 'admin') {
+            sidebar.style.display = 'none';
+            return;
+        }
+        
+        sidebar.style.display = 'block';
+        
+        // ✅ Aplicar clase según el estado del sidebar
+        if (this.estado.sidebarAbierto) {
+            sidebar.classList.remove('sidebar-cerrado');
+        } else {
+            sidebar.classList.add('sidebar-cerrado');
+        }
+        
+        const menuItems = [
+            { path: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
+            { path: '/admin/clientes', icon: '👥', label: 'Clientes' },
+            { path: '/admin/barberos', icon: '✂️', label: 'Barberos' },
+            { path: '/admin/citas', icon: '📅', label: 'Citas' },
+            { path: '/admin/servicios', icon: '💈', label: 'Servicios' },
+            { path: '/admin/inventario', icon: '📦', label: 'Inventario' },
+            { path: '/admin/caja', icon: '💰', label: 'Caja' },
+            { path: '/admin/reportes', icon: '📈', label: 'Reportes' }
+        ];
+        
+        sidebar.innerHTML = `
+            <div class="sidebar-container">
+                <div class="sidebar-header">
+                    <h3>💈 BarberHub</h3>
+                </div>
+                <nav class="sidebar-nav">
+                    ${menuItems.map(item => `
+                        <a href="#" class="sidebar-link" data-path="${item.path}">
+                            <span class="sidebar-icon">${item.icon}</span>
+                            <span class="sidebar-label">${item.label}</span>
+                        </a>
+                    `).join('')}
+                </nav>
+            </div>
+        `;
+        
+        // Eventos de navegación
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const path = link.getAttribute('data-path');
+                if (window.router) {
+                    window.router.navegar(path);
+                }
+                // ✅ En móvil, cerrar sidebar después de navegar
+                if (window.innerWidth <= 768) {
+                    this.toggleSidebar();
+                }
+            });
+        });
+        
+        // Marcar link activo
+        const currentPath = window.location.hash.substring(1);
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            const linkPath = link.getAttribute('data-path');
+            if (linkPath === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    },
+    
+    // ✅ Mejorar toggleSidebar
+    toggleSidebar() {
+        this.estado.sidebarAbierto = !this.estado.sidebarAbierto;
+        this.guardarConfiguracion();
+        
+        const sidebar = document.getElementById('app-sidebar');
+        const main = document.getElementById('app-main');
+        
+        if (sidebar) {
+            if (this.estado.sidebarAbierto) {
+                sidebar.classList.remove('sidebar-cerrado');
+                if (main) main.classList.remove('main-sidebar-cerrado');
+            } else {
+                sidebar.classList.add('sidebar-cerrado');
+                if (main) main.classList.add('main-sidebar-cerrado');
+            }
+        }
+    },    
     async cargarCachePrivado() {
         console.log('📦 Cargando caché privado...');
         
