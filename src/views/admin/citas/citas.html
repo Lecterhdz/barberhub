@@ -1,0 +1,173 @@
+<!-- src/views/admin/citas/citas.html -->
+<div class="citas-container">
+    <!-- Header -->
+    <div class="citas-header">
+        <div>
+            <h2>📅 Gestión de Citas</h2>
+            <p class="citas-subtitle">Administra las citas de tu barbería</p>
+        </div>
+        <button class="btn btn-primary" id="btn-nueva-cita">
+            + Nueva Cita
+        </button>
+    </div>
+
+    <!-- Vista Toggle -->
+    <div class="citas-view-toggle">
+        <button class="view-btn active" data-view="calendario">
+            📅 Vista Calendario
+        </button>
+        <button class="view-btn" data-view="lista">
+            📋 Vista Lista
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="citas-filtros">
+        <div class="filtros-fecha">
+            <button class="filtro-fecha-btn active" data-fecha="hoy">Hoy</button>
+            <button class="filtro-fecha-btn" data-fecha="manana">Mañana</button>
+            <button class="filtro-fecha-btn" data-fecha="semana">Esta Semana</button>
+            <input type="date" id="fecha-personalizada" class="filtro-fecha-input">
+        </div>
+        <div class="filtros-actions">
+            <select id="filtro-barbero" class="filtro-select">
+                <option value="todos">Todos los barberos</option>
+            </select>
+            <select id="filtro-estado" class="filtro-select">
+                <option value="todos">Todos los estados</option>
+                <option value="pendiente">⏳ Pendiente</option>
+                <option value="confirmada">✅ Confirmada</option>
+                <option value="completada">🎉 Completada</option>
+                <option value="cancelada">❌ Cancelada</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Vista Calendario -->
+    <div id="vista-calendario" class="vista-calendario">
+        <div class="calendario-header">
+            <button class="calendario-nav" id="semana-anterior">◀</button>
+            <h3 id="semana-actual">Semana actual</h3>
+            <button class="calendario-nav" id="semana-siguiente">▶</button>
+        </div>
+        <div class="calendario-grid" id="calendario-grid">
+            <div class="loading-spinner">Cargando calendario...</div>
+        </div>
+    </div>
+
+    <!-- Vista Lista -->
+    <div id="vista-lista" class="vista-lista" style="display: none;">
+        <div class="citas-table-container">
+            <table class="citas-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Cliente</th>
+                        <th>Servicio</th>
+                        <th>Barbero</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="citas-table-body">
+                    <tr>
+                        <td colspan="7" class="loading-cell">
+                            <div class="loading-spinner">Cargando citas...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="pagination-lista">
+            <button class="page-btn" id="prev-page-lista" disabled>Anterior</button>
+            <span id="page-info-lista">Página 1 de 1</span>
+            <button class="page-btn" id="next-page-lista" disabled>Siguiente</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva/Editar Cita -->
+<div id="cita-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Nueva Cita</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form id="cita-form">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente *</label>
+                        <select id="cita-cliente" required class="form-control">
+                            <option value="">Seleccionar cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Barbero *</label>
+                        <select id="cita-barbero" required class="form-control">
+                            <option value="">Seleccionar barbero</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Servicio *</label>
+                        <select id="cita-servicio" required class="form-control">
+                            <option value="">Seleccionar servicio</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio</label>
+                        <input type="text" id="cita-precio" readonly class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha *</label>
+                        <input type="date" id="cita-fecha" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Hora *</label>
+                        <select id="cita-hora" required class="form-control">
+                            <option value="">Seleccionar hora</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="cita-estado" class="form-control">
+                        <option value="pendiente">⏳ Pendiente</option>
+                        <option value="confirmada">✅ Confirmada</option>
+                        <option value="completada">🎉 Completada</option>
+                        <option value="cancelada">❌ Cancelada</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notas adicionales</label>
+                    <textarea id="cita-notas" rows="2" class="form-control" placeholder="Preferencias, observaciones..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelar-modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ver Cita -->
+<div id="cita-ver-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Detalles de la Cita</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="cita-detalle"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cerrar-ver-modal">Cerrar</button>
+            <button class="btn btn-primary" id="editar-ver-modal">Editar</button>
+            <button class="btn btn-danger" id="cancelar-ver-modal" style="display: none;">Cancelar</button>
+        </div>
+    </div>
+</div>
