@@ -48,11 +48,10 @@ export const ThemeSwitcher = {
     },
     
     agregarBoton() {
-        const headerActions = document.querySelector('.header-actions');
-        if (!headerActions) {
-            console.log('❌ header-actions no encontrado');
-            return;
-        }
+        // Buscar en desktop primero, luego en móvil
+        let headerActions = document.querySelector('.header-actions');
+        let desktopContainer = document.getElementById('theme-dropdown-desktop');
+        let movilContainer = document.getElementById('theme-dropdown-container');
         
         if (document.getElementById('theme-dropdown')) return;
         
@@ -61,17 +60,17 @@ export const ThemeSwitcher = {
         
         const dropdown = document.createElement('div');
         dropdown.id = 'theme-dropdown';
-        dropdown.style.cssText = 'position: relative; margin-right: 10px;';
+        dropdown.style.cssText = 'position: relative; display: inline-block;';
         
         dropdown.innerHTML = `
-            <button id="theme-btn" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; color: var(--text-primary);">
+            <button id="theme-btn" style="display: flex; align-items: center; gap: 4px; padding: 5px 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-size: 0.75rem;">
                 <span>${temaActualObj.icono}</span>
                 <span>${temaActualObj.nombre}</span>
                 <span>▼</span>
             </button>
-            <div id="theme-menu" style="position: absolute; top: 100%; right: 0; margin-top: 5px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; min-width: 150px; display: none; z-index: 1000;">
+            <div id="theme-menu" style="position: absolute; top: 100%; right: 0; margin-top: 5px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; min-width: 120px; display: none; z-index: 1000;">
                 ${this.temas.map(tema => `
-                    <button data-theme="${tema.id}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 15px; background: none; border: none; cursor: pointer; color: var(--text-primary);">
+                    <button data-theme="${tema.id}" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; background: none; border: none; cursor: pointer; color: var(--text-primary); font-size: 0.75rem;">
                         <span>${tema.icono}</span>
                         <span>${tema.nombre}</span>
                     </button>
@@ -79,7 +78,20 @@ export const ThemeSwitcher = {
             </div>
         `;
         
-        headerActions.insertBefore(dropdown, headerActions.firstChild);
+        // Insertar en el contenedor correspondiente
+        if (desktopContainer) {
+            desktopContainer.appendChild(dropdown);
+            console.log('✅ Botón de tema agregado en desktop');
+        } else if (movilContainer) {
+            movilContainer.appendChild(dropdown);
+            console.log('✅ Botón de tema agregado en móvil');
+        } else if (headerActions) {
+            headerActions.appendChild(dropdown);
+            console.log('✅ Botón de tema agregado en header-actions');
+        } else {
+            console.log('⚠️ No se encontró contenedor para el botón de temas');
+            return;
+        }
         
         const btn = document.getElementById('theme-btn');
         const menu = document.getElementById('theme-menu');
@@ -102,8 +114,6 @@ export const ThemeSwitcher = {
         document.addEventListener('click', () => {
             menu.style.display = 'none';
         });
-        
-        console.log('✅ Botón de tema agregado');
     },
     
     cambiarTema(themeId) {
