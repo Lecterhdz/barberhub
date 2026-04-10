@@ -264,32 +264,31 @@ export const app = {
         const isMisCitas = rutaActual === '/portal/mis-citas';
         
         const portalNavButtons = !autenticado ? `
-            <div style="display: flex; gap: 10px; margin: 0 20px;">
-                <a href="#/portal/agendar" class="portal-nav-btn" style="padding: 8px 16px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.85rem;">
-                    📅 Agendar
+            <div class="portal-nav-buttons">
+                <a href="#/portal/agendar" class="nav-btn" style="padding: 8px 12px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.8rem; transition: all 0.2s;">
+                    📅
                 </a>
-                <a href="#/portal/mis-citas" class="portal-nav-btn" style="padding: 8px 16px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.85rem;">
-                    📋 Mis Citas
+                <a href="#/portal/mis-citas" class="nav-btn" style="padding: 8px 12px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.8rem; transition: all 0.2s;">
+                    📋
                 </a>
             </div>
         ` : '';
         
         header.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: var(--header-height); flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 15px; flex-shrink: 0;">
-                    <button id="hamburger-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">☰</button>
+            <div class="header-content" style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: var(--header-height); gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                    <button id="hamburger-btn" style="display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-primary);">☰</button>
                     <div>
-                        <h1 style="color: var(--color-primary); cursor: pointer; font-size: clamp(0.9rem, 5vw, 1.3rem);" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
-                        <p style="font-size: 0.7rem;">${autenticado ? `Admin - ${licencia.tipo}` : 'Cliente'}</p>
+                        <h1 class="header-title" style="font-size: clamp(0.9rem, 4vw, 1.2rem); cursor: pointer;" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
                     </div>
                 </div>
                 ${portalNavButtons}
-                <div class="header-actions" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                <div class="header-actions">
                     ${autenticado ? `
-                        <div style="padding: 5px 12px; background: rgba(76,175,80,0.2); border-radius: 20px; font-size: 0.75rem;">✅ ${licencia.tipo}</div>
-                        <button id="btn-logout" style="background: rgba(244,67,54,0.1); border: none; padding: 8px 16px; border-radius: 8px; color: #f44336; cursor: pointer;">🚪 Salir</button>
+                        <div class="license-badge" style="padding: 4px 8px; font-size: 0.7rem;">✅ ${licencia.tipo}</div>
+                        <button id="btn-logout" class="btn-logout">🚪</button>
                     ` : `
-                        <button id="btn-login" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; color: var(--text-primary); cursor: pointer;">🔐 Admin</button>
+                        <button id="btn-login" class="btn-login">🔐</button>
                     `}
                 </div>
             </div>
