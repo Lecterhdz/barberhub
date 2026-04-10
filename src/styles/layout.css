@@ -273,9 +273,28 @@ body, #app {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+/* Botón de temas */
+#theme-dropdown {
+    position: relative;
+    margin-right: 5px;
 }
 
+.theme-dropdown-btn,
+#theme-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
 /* Botones */
 .btn-icon {
     width: 38px;
@@ -314,17 +333,13 @@ body, #app {
     transform: translateY(-2px);
 }
 
-.btn-login {
-    padding: 8px 16px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-primary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all var(--transition-fast);
+.btn-login,
+.btn-logout {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px;
+    white-space: nowrap;
 }
 
 .btn-login:hover {
@@ -613,7 +628,7 @@ body, #app {
     
     /* Header móvil */
     .header-title {
-        font-size: 1rem;
+        font-size: 0.85rem !important;
     }
     
     .header-subtitle {
@@ -621,21 +636,27 @@ body, #app {
     }
     
     .header-content {
-        padding: 0 15px;
+        flex-wrap: wrap;
+        padding: 5px 10px !important;
+        height: auto !important;
+        min-height: var(--header-height);
     }
     
     .header-actions {
-        gap: 8px;
+        gap: 4px;
     }
     
     /* Portal nav buttons en móvil */
     .portal-nav-buttons {
         margin: 0 10px;
     }
-    
+    .license-badge {
+        display: none !important;
+    }    
     .nav-btn {
-        padding: 6px 12px;
-        font-size: 0.8rem;
+        padding: 4px 8px !important;
+        font-size: 0.65rem !important;
+        border-radius: 6px !important;
     }
     
     /* Botones de acción en móvil */
@@ -676,21 +697,32 @@ body, #app {
 
 /* MÓVILES PEQUEÑOS (max 480px) */
 @media (max-width: 480px) {
-    #app-main {
-        padding: 10px;
+    .header-actions {
+        gap: 3px;
     }
     
-    .portal-nav-buttons {
-        gap: 5px;
+    .theme-dropdown-btn,
+    #theme-btn {
+        padding: 3px 6px !important;
+        font-size: 0.65rem !important;
+    }
+    
+    .btn-login,
+    .btn-logout {
+        padding: 3px 6px !important;
+        font-size: 0.65rem !important;
     }
     
     .nav-btn {
-        padding: 5px 8px;
-        font-size: 0.7rem;
+        padding: 3px 5px !important;
+        font-size: 0.6rem !important;
     }
     
-    .theme-dropdown-btn {
-        padding: 5px 8px;
+    .portal-nav-buttons {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 5px;
     }
 }
 
