@@ -1,0 +1,456 @@
+/* Tema JARVIS - Iron Man Style (Holográfico) */
+
+[data-theme="dark-neon"] {
+    /* Colores JARVIS (azul/cyan holográfico) */
+    --color-primary: #0088cc;        /* Azul más oscuro */
+    --color-primary-light: #22aadd;  /* Azul claro más tenue */
+    --color-primary-dark: #006699;   /* Azul muy oscuro */
+    --color-secondary: #0066cc;      /* Azul secundario oscuro */
+    --color-accent: #ff3366;
+    
+    /* Fondos oscuros con tono azulado */
+    --bg-primary: #020408;      /* Casi negro azulado */
+    --bg-secondary: #040a14;    /* Azul muy oscuro */
+    --bg-tertiary: #080e1a;     /* Azul oscuro */
+    --bg-hover: #0c1424;        /* Hover más sutil */
+    
+    /* Texto holográfico */
+    --text-primary: #cceeff;     /* Blanco azulado */
+    --text-secondary: #22aaff;   /* Azul holográfico */
+    --text-light: #4488cc;       /* Azul más tenue */
+    
+    /* Bordes con brillo azul */
+    --border-color: rgba(0, 212, 255, 0.35);
+    
+    /* Sombras holográficas */
+    --shadow-sm: 0 0 5px rgba(0, 136, 204, 0.25);
+    --shadow-md: 0 0 12px rgba(0, 136, 204, 0.35);
+    --shadow-lg: 0 0 20px rgba(0, 136, 204, 0.45);
+}
+
+/* ============================================
+   TÍTULOS HOLOGRÁFICOS
+   ============================================ */
+[data-theme="dark-neon"] .header-title,
+[data-theme="dark-neon"] .sidebar-header h3,
+[data-theme="dark-neon"] h1, 
+[data-theme="dark-neon"] h2,
+[data-theme="dark-neon"] h3,
+[data-theme="dark-neon"] .card-title {
+    background: linear-gradient(135deg, #22aadd, #0088cc, #22aadd);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+    text-shadow: 0 0 8px rgba(0, 136, 204, 0.4);
+    letter-spacing: 1px;
+    animation: titlePulse 3s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    50% {
+        text-shadow: 0 0 25px rgba(0, 212, 255, 0.7);
+    }
+}
+
+/* ============================================
+   SIDEBAR - MENÚ HOLOGRÁFICO
+   ============================================ */
+[data-theme="dark-neon"] #app-sidebar {
+    background: rgba(5, 11, 20, 0.15);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+[data-theme="dark-neon"] .sidebar-link {
+    position: relative;
+    margin: 4px 8px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark-neon"] .sidebar-link:hover {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00d4ff !important;
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+    transform: translateX(5px);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+}
+
+[data-theme="dark-neon"] .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(0, 136, 204, 0.2), rgba(0, 68, 136, 0.1));
+    border-left: 2px solid #22aadd;
+    color: #22aadd !important;
+    text-shadow: 0 0 6px rgba(0, 136, 204, 0.4);
+    box-shadow: 0 0 12px rgba(0, 136, 204, 0.2);
+}
+
+/* Efecto de brillo en el borde del link activo */
+[data-theme="dark-neon"] .sidebar-link.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    background: radial-gradient(circle, rgba(0,212,255,0.2) 0%, transparent 80%);
+    pointer-events: none;
+}
+
+[data-theme="dark-neon"] .sidebar-icon {
+    filter: drop-shadow(0 0 5px rgba(0, 212, 255, 0.5));
+}
+
+/* ============================================
+   BOTONES HOLOGRÁFICOS
+   ============================================ */
+[data-theme="dark-neon"] .btn-primary,
+[data-theme="dark-neon"] .btn-login,
+[data-theme="dark-neon"] .btn-submit {
+    background: rgba(0, 212, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    color: #00d4ff !important;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+[data-theme="dark-neon"] .btn-primary:hover,
+[data-theme="dark-neon"] .btn-login:hover {
+    background: rgba(0, 212, 255, 0.25);
+    border-color: rgba(0, 212, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+}
+
+/* Efecto de onda al hacer clic */
+[data-theme="dark-neon"] .btn-primary::after,
+[data-theme="dark-neon"] .btn-login::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+[data-theme="dark-neon"] .btn-primary:active::after,
+[data-theme="dark-neon"] .btn-login:active::after {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+}
+
+/* Botón logout */
+[data-theme="dark-neon"] .btn-logout {
+    background: rgba(255, 51, 102, 0.12);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 51, 102, 0.3);
+    color: #ff6699;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark-neon"] .btn-logout:hover {
+    background: rgba(255, 51, 102, 0.2);
+    border-color: rgba(255, 51, 102, 0.6);
+    box-shadow: 0 0 15px rgba(255, 51, 102, 0.3);
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   TARJETAS HOLOGRÁFICAS
+   ============================================ */
+[data-theme="dark-neon"] .card,
+[data-theme="dark-neon"] .stat-card,
+[data-theme="dark-neon"] .servicio-card,
+[data-theme="dark-neon"] .barbero-card {
+    background: rgba(10, 20, 40, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="dark-neon"] .card:hover,
+[data-theme="dark-neon"] .stat-card:hover {
+    border-color: #00d4ff;
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.35);
+    transform: translateY(-5px);
+}
+
+/* Efecto de brillo holográfico en tarjetas */
+[data-theme="dark-neon"] .card::before,
+[data-theme="dark-neon"] .stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+[data-theme="dark-neon"] .card:hover::before,
+[data-theme="dark-neon"] .stat-card:hover::before {
+    opacity: 1;
+}
+
+/* ============================================
+   INPUTS HOLOGRÁFICOS
+   ============================================ */
+[data-theme="dark-neon"] input,
+[data-theme="dark-neon"] select,
+[data-theme="dark-neon"] textarea,
+[data-theme="dark-neon"] .form-control {
+    background: rgba(15, 25, 45, 0.8);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #e0f0ff;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark-neon"] input:focus,
+[data-theme="dark-neon"] select:focus,
+[data-theme="dark-neon"] textarea:focus,
+[data-theme="dark-neon"] .form-control:focus {
+    border-color: #00d4ff;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    outline: none;
+}
+
+/* ============================================
+   TABLAS HOLOGRÁFICAS
+   ============================================ */
+[data-theme="dark-neon"] table {
+    border-color: rgba(0, 212, 255, 0.2);
+}
+
+[data-theme="dark-neon"] th {
+    background: rgba(0, 212, 255, 0.1);
+    color: #00d4ff !important;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+    text-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+}
+
+[data-theme="dark-neon"] tr:hover {
+    background: rgba(0, 212, 255, 0.05);
+}
+
+/* ============================================
+   HEADER HOLOGRÁFICO
+   ============================================ */
+[data-theme="dark-neon"] #app-header {
+    background: rgba(5, 11, 20, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+/* ============================================
+   BADGES HOLOGRÁFICOS
+   ============================================ */
+[data-theme="dark-neon"] .badge-activo,
+[data-theme="dark-neon"] .license-badge,
+[data-theme="dark-neon"] .estado-badge {
+    background: rgba(0, 212, 255, 0.12);
+    color: #00d4ff !important;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+/* ============================================
+   DROPDOWN DE TEMAS
+   ============================================ */
+[data-theme="dark-neon"] .theme-dropdown-btn {
+    background: rgba(0, 212, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #00d4ff;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark-neon"] .theme-dropdown-btn:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.6);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+[data-theme="dark-neon"] .theme-option.active {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00d4ff !important;
+}
+[data-theme="dark-neon"] .btn-volver {
+    background: rgba(100, 116, 139, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    color: #94a3b8;
+}
+
+[data-theme="dark-neon"] .btn-volver:hover {
+    background: rgba(100, 116, 139, 0.25);
+    border-color: rgba(100, 116, 139, 0.5);
+}
+
+/* ============================================
+   SCROLLBAR HOLOGRÁFICO
+   ============================================ */
+[data-theme="dark-neon"] ::-webkit-scrollbar-track {
+    background: #0a1428;
+}
+
+[data-theme="dark-neon"] ::-webkit-scrollbar-thumb {
+    background: #00d4ff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #00d4ff;
+}
+
+[data-theme="dark-neon"] ::-webkit-scrollbar-thumb:hover {
+    background: #44e4ff;
+    box-shadow: 0 0 15px #00d4ff;
+}
+
+/* ============================================
+   EFECTO DE ESCÁNER HOLOGRÁFICO
+   ============================================ */
+[data-theme="dark-neon"] .dashboard-container::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #00d4ff, #0088ff, #00d4ff, transparent);
+    animation: scanLine 4s linear infinite;
+    pointer-events: none;
+    z-index: 100;
+}
+
+@keyframes scanLine {
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* ============================================
+   ANIMACIÓN DE CARGA JARVIS
+   ============================================ */
+[data-theme="dark-neon"] .loader-spinner {
+    border-color: rgba(0, 212, 255, 0.2);
+    border-top-color: #00d4ff;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+}
+
+/* ============================================
+   NOTIFICACIONES HOLOGRÁFICAS
+   ============================================ */
+[data-theme="dark-neon"] .notification {
+    background: rgba(10, 20, 40, 0.9);
+    backdrop-filter: blur(12px);
+    border-left: 3px solid #00d4ff;
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.25);
+}
+/* ============================================
+   CORRECCIÓN DE BOTONES EN NEÓN
+   ============================================ */
+
+/* Botones de acción en tablas (Editar, Cancelar, etc.) */
+[data-theme="dark-neon"] .btn-card,
+[data-theme="dark-neon"] .btn-card-editar,
+[data-theme="dark-neon"] .btn-card-eliminar,
+[data-theme="dark-neon"] .btn-card-ver,
+[data-theme="dark-neon"] button:not(.btn-primary):not(.btn-login):not(.btn-logout):not(.theme-dropdown-btn) {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #00d4ff !important;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark-neon"] .btn-card:hover,
+[data-theme="dark-neon"] .btn-card-editar:hover,
+[data-theme="dark-neon"] button:not(.btn-primary):hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.6);
+    color: #44e4ff !important;
+    transform: translateY(-2px);
+}
+
+/* Botón Cancelar específicamente */
+[data-theme="dark-neon"] .btn-secondary,
+[data-theme="dark-neon"] #cancelar-modal,
+[data-theme="dark-neon"] .cancelar-btn,
+[data-theme="dark-neon"] .btn-cancelar {
+    background: rgba(100, 116, 139, 0.15);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark-neon"] .btn-secondary:hover,
+[data-theme="dark-neon"] #cancelar-modal:hover,
+[data-theme="dark-neon"] .cancelar-btn:hover {
+    background: rgba(100, 116, 139, 0.25);
+    border-color: rgba(100, 116, 139, 0.5);
+    color: #cbd5e1 !important;
+}
+
+/* Botón Eliminar */
+[data-theme="dark-neon"] .btn-danger,
+[data-theme="dark-neon"] .eliminar-btn,
+[data-theme="dark-neon"] .btn-eliminar {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171 !important;
+}
+
+[data-theme="dark-neon"] .btn-danger:hover,
+[data-theme="dark-neon"] .eliminar-btn:hover,
+[data-theme="dark-neon"] .btn-eliminar:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #ff8a8a !important;
+}
+
+/* Botón Ver */
+[data-theme="dark-neon"] .btn-ver {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa !important;
+}
+
+[data-theme="dark-neon"] .btn-ver:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.6);
+    color: #93c5fd !important;
+}
+
+/* Botones de paginación */
+[data-theme="dark-neon"] .page-btn {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #00d4ff !important;
+}
+
+[data-theme="dark-neon"] .page-btn:hover:not(:disabled) {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.6);
+    color: #44e4ff !important;
+}
+
+[data-theme="dark-neon"] .page-btn:disabled {
+    opacity: 0.4;
+    color: #64748b !important;
+}

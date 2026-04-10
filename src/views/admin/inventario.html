@@ -1,0 +1,371 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--color-primary);">📦 Gestión de Inventario</h2>
+        <button id="btn-nuevo-producto" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">+ Nuevo Producto</button>
+    </div>
+
+    <!-- Alertas de stock bajo -->
+    <div id="alertas-stock" style="display: none; background: rgba(255,152,0,0.1); border-left: 4px solid #ff9800; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span style="font-size: 1.3rem;">⚠️</span>
+            <strong>Productos con stock bajo</strong>
+        </div>
+        <div id="lista-alertas" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <input type="text" id="search-producto" placeholder="🔍 Buscar producto..." style="flex: 1; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+        <select id="filtro-categoria" style="padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todas las categorías</option>
+            <option value="Cabello">💇 Cabello</option>
+            <option value="Barba">🧔 Barba</option>
+            <option value="Afeitado">🪒 Afeitado</option>
+            <option value="Cuidado">🧴 Cuidado</option>
+            <option value="Accesorios">💈 Accesorios</option>
+        </select>
+        <select id="filtro-stock" style="padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todos los stocks</option>
+            <option value="bajo">⚠️ Stock bajo</option>
+            <option value="agotado">❌ Agotados</option>
+        </select>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 12px; text-align: left;">Producto</th>
+                    <th style="padding: 12px; text-align: left;">Categoría</th>
+                    <th style="padding: 12px; text-align: right;">Precio</th>
+                    <th style="padding: 12px; text-align: right;">Stock</th>
+                    <th style="padding: 12px; text-align: right;">Stock Mínimo</th>
+                    <th style="padding: 12px; text-align: center;">Estado</th>
+                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="productos-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Producto -->
+<div id="producto-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="modal-title" style="color: var(--color-primary);">Nuevo Producto</h3>
+            <button id="cerrar-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <form id="producto-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Nombre del producto *</label>
+                <input type="text" id="producto-nombre" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Categoría</label>
+                <select id="producto-categoria" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="Cabello">💇 Cabello</option>
+                    <option value="Barba">🧔 Barba</option>
+                    <option value="Afeitado">🪒 Afeitado</option>
+                    <option value="Cuidado">🧴 Cuidado</option>
+                    <option value="Accesorios">💈 Accesorios</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Precio de venta *</label>
+                <input type="number" id="producto-precio" required step="10" min="0" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Costo *</label>
+                <input type="number" id="producto-costo" required step="10" min="0" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Stock actual *</label>
+                <input type="number" id="producto-stock" required min="0" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Stock mínimo *</label>
+                <input type="number" id="producto-stock-minimo" required min="0" value="5" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Descripción</label>
+                <textarea id="producto-descripcion" rows="2" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);"></textarea>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Proveedor</label>
+                <input type="text" id="producto-proveedor" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="cancelar-modal" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ajustar Stock -->
+<div id="stock-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 400px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color: var(--color-primary);">Ajustar Stock</h3>
+            <button id="cerrar-stock-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <form id="stock-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Producto</label>
+                <input type="text" id="stock-producto-nombre" readonly style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Stock actual</label>
+                <input type="text" id="stock-actual" readonly style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Tipo de ajuste</label>
+                <select id="stock-tipo" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="entrada">📥 Entrada (Agregar)</option>
+                    <option value="salida">📤 Salida (Quitar)</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Cantidad</label>
+                <input type="number" id="stock-cantidad" min="1" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Motivo</label>
+                <input type="text" id="stock-motivo" placeholder="Ej: Compra, Venta, Merma" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="cancelar-stock" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Aplicar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('🔵 Ejecutando script de inventario.html');
+        
+        let productos = [];
+        let currentEditId = null;
+        let currentStockId = null;
+        
+        function cargarProductos() {
+            productos = window.app?.estado?.cache?.productos || [];
+            if (productos.length === 0) {
+                productos = [
+                    { id: 1, nombre: 'Shampoo Profesional', categoria: 'Cabello', precio: 250, costo: 120, stock: 15, stockMinimo: 5, descripcion: 'Shampoo para todo tipo de cabello', proveedor: 'Loreal' },
+                    { id: 2, nombre: 'Cera para barba', categoria: 'Barba', precio: 180, costo: 80, stock: 3, stockMinimo: 5, descripcion: 'Cera modeladora', proveedor: 'Pinaud' },
+                    { id: 3, nombre: 'Aceite para barba', categoria: 'Barba', precio: 220, costo: 100, stock: 2, stockMinimo: 5, descripcion: 'Aceite nutritivo', proveedor: 'Pinaud' },
+                    { id: 4, nombre: 'Navaja de seguridad', categoria: 'Afeitado', precio: 350, costo: 200, stock: 5, stockMinimo: 3, descripcion: 'Navaja clásica', proveedor: 'Merkur' }
+                ];
+                window.app.estado.cache.productos = productos;
+            }
+            renderizarTabla();
+            verificarAlertasStock();
+        }
+        
+        function verificarAlertasStock() {
+            const productosBajo = productos.filter(p => p.stock <= p.stockMinimo && p.stock > 0);
+            const productosAgotados = productos.filter(p => p.stock === 0);
+            const alertas = [...productosBajo, ...productosAgotados];
+            
+            const alertasContainer = document.getElementById('alertas-stock');
+            const listaAlertas = document.getElementById('lista-alertas');
+            
+            if (alertas.length === 0) {
+                alertasContainer.style.display = 'none';
+                return;
+            }
+            
+            alertasContainer.style.display = 'block';
+            listaAlertas.innerHTML = alertas.map(p => `
+                <div style="background: var(--bg-tertiary); padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
+                    <span>${p.stock === 0 ? '❌' : '⚠️'}</span>
+                    <span>${p.nombre}</span>
+                    <span style="color: #ff9800; font-weight: bold;">Stock: ${p.stock}</span>
+                    <button onclick="abrirAjustarStock(${p.id})" style="background: none; border: none; cursor: pointer;">➕</button>
+                </div>
+            `).join('');
+        }
+        
+        function renderizarTabla() {
+            const tbody = document.getElementById('productos-tbody');
+            if (!tbody) return;
+            
+            const categoria = document.getElementById('filtro-categoria')?.value || 'todos';
+            const stockFiltro = document.getElementById('filtro-stock')?.value || 'todos';
+            const busqueda = document.getElementById('search-producto')?.value.toLowerCase() || '';
+            
+            let filtered = [...productos];
+            if (categoria !== 'todos') filtered = filtered.filter(p => p.categoria === categoria);
+            if (stockFiltro === 'bajo') filtered = filtered.filter(p => p.stock <= p.stockMinimo && p.stock > 0);
+            if (stockFiltro === 'agotado') filtered = filtered.filter(p => p.stock === 0);
+            if (busqueda) filtered = filtered.filter(p => p.nombre.toLowerCase().includes(busqueda));
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No hay productos registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(p => `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 12px;">
+                        <strong>${p.nombre}</strong>
+                        ${p.descripcion ? `<br><small style="color: var(--text-secondary);">${p.descripcion.substring(0, 40)}</small>` : ''}
+                    </td>
+                    <td style="padding: 12px;">${p.categoria}</td>
+                    <td style="padding: 12px; text-align: right;">$${p.precio.toLocaleString()}</td>
+                    <td style="padding: 12px; text-align: right;">
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: ${p.stock === 0 ? 'rgba(244,67,54,0.2)' : p.stock <= p.stockMinimo ? 'rgba(255,152,0,0.2)' : 'rgba(76,175,80,0.2)'}; color: ${p.stock === 0 ? '#f44336' : p.stock <= p.stockMinimo ? '#ff9800' : '#4caf50'};">
+                            ${p.stock} / ${p.stockMinimo}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: right;">${p.stockMinimo}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: ${p.stock > p.stockMinimo ? 'rgba(76,175,80,0.2)' : 'rgba(255,152,0,0.2)'}; color: ${p.stock > p.stockMinimo ? '#4caf50' : '#ff9800'};">
+                            ${p.stock > p.stockMinimo ? 'Normal' : p.stock === 0 ? 'Agotado' : 'Bajo'}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <button onclick="abrirAjustarStock(${p.id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem;" title="Ajustar stock">📦</button>
+                        <button onclick="editarProducto(${p.id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem;">✏️</button>
+                        <button onclick="eliminarProducto(${p.id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem;">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function guardarProductos() {
+            if (window.app) window.app.estado.cache.productos = productos;
+            for (const p of productos) await window.storage?.guardar('productos', p);
+            renderizarTabla();
+            verificarAlertasStock();
+        }
+        
+        window.abrirAjustarStock = function(id) {
+            const producto = productos.find(p => p.id === id);
+            if (!producto) return;
+            currentStockId = id;
+            document.getElementById('stock-producto-nombre').value = producto.nombre;
+            document.getElementById('stock-actual').value = producto.stock;
+            document.getElementById('stock-cantidad').value = '';
+            document.getElementById('stock-tipo').value = 'entrada';
+            document.getElementById('stock-motivo').value = '';
+            document.getElementById('stock-modal').style.display = 'flex';
+        };
+        
+        window.editarProducto = function(id) {
+            const producto = productos.find(p => p.id === id);
+            if (!producto) return;
+            currentEditId = id;
+            document.getElementById('modal-title').textContent = 'Editar Producto';
+            document.getElementById('producto-nombre').value = producto.nombre;
+            document.getElementById('producto-categoria').value = producto.categoria;
+            document.getElementById('producto-precio').value = producto.precio;
+            document.getElementById('producto-costo').value = producto.costo;
+            document.getElementById('producto-stock').value = producto.stock;
+            document.getElementById('producto-stock-minimo').value = producto.stockMinimo;
+            document.getElementById('producto-descripcion').value = producto.descripcion || '';
+            document.getElementById('producto-proveedor').value = producto.proveedor || '';
+            document.getElementById('producto-modal').style.display = 'flex';
+        };
+        
+        window.eliminarProducto = async function(id) {
+            if (confirm('¿Eliminar este producto?')) {
+                productos = productos.filter(p => p.id !== id);
+                await guardarProductos();
+            }
+        };
+        
+        document.getElementById('btn-nuevo-producto')?.addEventListener('click', () => {
+            currentEditId = null;
+            document.getElementById('modal-title').textContent = 'Nuevo Producto';
+            document.getElementById('producto-form').reset();
+            document.getElementById('producto-stock-minimo').value = '5';
+            document.getElementById('producto-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('cerrar-modal')?.addEventListener('click', () => {
+            document.getElementById('producto-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelar-modal')?.addEventListener('click', () => {
+            document.getElementById('producto-modal').style.display = 'none';
+        });
+        
+        document.getElementById('producto-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productoData = {
+                id: currentEditId || Date.now(),
+                nombre: document.getElementById('producto-nombre').value,
+                categoria: document.getElementById('producto-categoria').value,
+                precio: parseInt(document.getElementById('producto-precio').value),
+                costo: parseInt(document.getElementById('producto-costo').value),
+                stock: parseInt(document.getElementById('producto-stock').value),
+                stockMinimo: parseInt(document.getElementById('producto-stock-minimo').value),
+                descripcion: document.getElementById('producto-descripcion').value,
+                proveedor: document.getElementById('producto-proveedor').value
+            };
+            
+            if (currentEditId) {
+                const index = productos.findIndex(p => p.id === currentEditId);
+                if (index !== -1) productos[index] = productoData;
+            } else {
+                productos.push(productoData);
+            }
+            
+            await guardarProductos();
+            document.getElementById('producto-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cerrar-stock-modal')?.addEventListener('click', () => {
+            document.getElementById('stock-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelar-stock')?.addEventListener('click', () => {
+            document.getElementById('stock-modal').style.display = 'none';
+        });
+        
+        document.getElementById('stock-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const producto = productos.find(p => p.id === currentStockId);
+            if (!producto) return;
+            
+            const tipo = document.getElementById('stock-tipo').value;
+            const cantidad = parseInt(document.getElementById('stock-cantidad').value);
+            
+            if (!cantidad || cantidad <= 0) {
+                alert('Ingrese una cantidad válida');
+                return;
+            }
+            
+            if (tipo === 'entrada') {
+                producto.stock += cantidad;
+            } else {
+                if (producto.stock - cantidad < 0) {
+                    alert('No hay suficiente stock');
+                    return;
+                }
+                producto.stock -= cantidad;
+            }
+            
+            await guardarProductos();
+            document.getElementById('stock-modal').style.display = 'none';
+        });
+        
+        document.getElementById('search-producto')?.addEventListener('input', () => renderizarTabla());
+        document.getElementById('filtro-categoria')?.addEventListener('change', () => renderizarTabla());
+        document.getElementById('filtro-stock')?.addEventListener('change', () => renderizarTabla());
+        
+        cargarProductos();
+        
+        window.addEventListener('app:datos-listos', () => {
+            productos = window.app?.estado?.cache?.productos || [];
+            renderizarTabla();
+            verificarAlertasStock();
+        });
+    })();
+</script>

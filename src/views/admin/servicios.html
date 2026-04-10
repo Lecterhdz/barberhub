@@ -1,0 +1,220 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--color-primary);">💈 Gestión de Servicios</h2>
+        <button id="btn-nuevo-servicio" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">+ Nuevo Servicio</button>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <input type="text" id="search-servicio" placeholder="🔍 Buscar servicio..." style="flex: 1; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+        <select id="filtro-categoria" style="padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todas las categorías</option>
+            <option value="Corte">✂️ Corte</option>
+            <option value="Barba">🧔 Barba</option>
+            <option value="Color">🎨 Color</option>
+            <option value="Tratamiento">💆 Tratamiento</option>
+            <option value="Paquete">✨ Paquete</option>
+        </select>
+        <select id="filtro-estado" style="padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todos</option>
+            <option value="activo">Activos</option>
+            <option value="inactivo">Inactivos</option>
+        </select>
+    </div>
+
+    <!-- Grid de servicios -->
+    <div id="servicios-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+</div>
+
+<!-- Modal Nuevo/Editar Servicio -->
+<div id="servicio-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="modal-title" style="color: var(--color-primary);">Nuevo Servicio</h3>
+            <button id="cerrar-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <form id="servicio-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Nombre del servicio *</label>
+                <input type="text" id="servicio-nombre" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Categoría</label>
+                <select id="servicio-categoria" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="Corte">✂️ Corte</option>
+                    <option value="Barba">🧔 Barba</option>
+                    <option value="Color">🎨 Color</option>
+                    <option value="Tratamiento">💆 Tratamiento</option>
+                    <option value="Paquete">✨ Paquete</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Precio *</label>
+                <input type="number" id="servicio-precio" required step="50" min="0" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Duración (minutos)</label>
+                <input type="number" id="servicio-duracion" value="30" step="15" min="15" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Descripción</label>
+                <textarea id="servicio-descripcion" rows="2" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);"></textarea>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Estado</label>
+                <select id="servicio-estado" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="cancelar-modal" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('🔵 Ejecutando script de servicios.html');
+        
+        let servicios = [];
+        let currentEditId = null;
+        
+        function cargarServicios() {
+            servicios = window.app?.estado?.cache?.servicios || [];
+            if (servicios.length === 0) {
+                servicios = [
+                    { id: 1, nombre: 'Corte de Cabello', categoria: 'Corte', precio: 350, duracion: 30, descripcion: 'Corte clásico o moderno', estado: 'activo' },
+                    { id: 2, nombre: 'Barba', categoria: 'Barba', precio: 200, duracion: 20, descripcion: 'Arreglo de barba con navaja', estado: 'activo' },
+                    { id: 3, nombre: 'Corte + Barba', categoria: 'Paquete', precio: 500, duracion: 50, descripcion: 'Combo completo', estado: 'activo' },
+                    { id: 4, nombre: 'Coloración', categoria: 'Color', precio: 800, duracion: 90, descripcion: 'Tinte o reflejos', estado: 'activo' },
+                    { id: 5, nombre: 'Tratamiento Capilar', categoria: 'Tratamiento', precio: 400, duracion: 45, descripcion: 'Hidratación profunda', estado: 'activo' }
+                ];
+                window.app.estado.cache.servicios = servicios;
+            }
+            renderizarGrid();
+        }
+        
+        function renderizarGrid() {
+            const grid = document.getElementById('servicios-grid');
+            if (!grid) return;
+            
+            const categoria = document.getElementById('filtro-categoria')?.value || 'todos';
+            const estado = document.getElementById('filtro-estado')?.value || 'todos';
+            const busqueda = document.getElementById('search-servicio')?.value.toLowerCase() || '';
+            
+            let filtered = [...servicios];
+            if (categoria !== 'todos') filtered = filtered.filter(s => s.categoria === categoria);
+            if (estado !== 'todos') filtered = filtered.filter(s => s.estado === estado);
+            if (busqueda) filtered = filtered.filter(s => s.nombre.toLowerCase().includes(busqueda));
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; padding: 40px;">No hay servicios registrados</div>';
+                return;
+            }
+            
+            grid.innerHTML = filtered.map(s => `
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div style="font-size: 2rem;">${s.categoria === 'Corte' ? '✂️' : s.categoria === 'Barba' ? '🧔' : s.categoria === 'Color' ? '🎨' : s.categoria === 'Tratamiento' ? '💆' : '✨'}</div>
+                            <h3 style="margin: 10px 0 5px;">${s.nombre}</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.8rem;">${s.categoria}</p>
+                        </div>
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: ${s.estado === 'activo' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}; color: ${s.estado === 'activo' ? '#4caf50' : '#f44336'};">${s.estado === 'activo' ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <p>💰 Precio: <strong style="color: var(--color-primary);">$${s.precio.toLocaleString()}</strong></p>
+                        <p>⏱️ Duración: ${s.duracion} minutos</p>
+                        ${s.descripcion ? `<p style="color: var(--text-secondary); font-size: 0.8rem;">📝 ${s.descripcion}</p>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button onclick="editarServicio(${s.id})" style="flex: 1; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">✏️ Editar</button>
+                        <button onclick="eliminarServicio(${s.id})" style="flex: 1; padding: 8px; background: rgba(244,67,54,0.2); border: none; border-radius: 8px; color: #f44336; cursor: pointer;">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function guardarServicios() {
+            if (window.app) window.app.estado.cache.servicios = servicios;
+            for (const s of servicios) await window.storage?.guardar('servicios', s);
+            renderizarGrid();
+        }
+        
+        window.editarServicio = function(id) {
+            const servicio = servicios.find(s => s.id === id);
+            if (!servicio) return;
+            currentEditId = id;
+            document.getElementById('modal-title').textContent = 'Editar Servicio';
+            document.getElementById('servicio-nombre').value = servicio.nombre;
+            document.getElementById('servicio-categoria').value = servicio.categoria;
+            document.getElementById('servicio-precio').value = servicio.precio;
+            document.getElementById('servicio-duracion').value = servicio.duracion;
+            document.getElementById('servicio-descripcion').value = servicio.descripcion || '';
+            document.getElementById('servicio-estado').value = servicio.estado;
+            document.getElementById('servicio-modal').style.display = 'flex';
+        };
+        
+        window.eliminarServicio = async function(id) {
+            if (confirm('¿Eliminar este servicio?')) {
+                servicios = servicios.filter(s => s.id !== id);
+                await guardarServicios();
+            }
+        };
+        
+        document.getElementById('btn-nuevo-servicio')?.addEventListener('click', () => {
+            currentEditId = null;
+            document.getElementById('modal-title').textContent = 'Nuevo Servicio';
+            document.getElementById('servicio-form').reset();
+            document.getElementById('servicio-duracion').value = '30';
+            document.getElementById('servicio-estado').value = 'activo';
+            document.getElementById('servicio-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('cerrar-modal')?.addEventListener('click', () => {
+            document.getElementById('servicio-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelar-modal')?.addEventListener('click', () => {
+            document.getElementById('servicio-modal').style.display = 'none';
+        });
+        
+        document.getElementById('servicio-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const servicioData = {
+                id: currentEditId || Date.now(),
+                nombre: document.getElementById('servicio-nombre').value,
+                categoria: document.getElementById('servicio-categoria').value,
+                precio: parseInt(document.getElementById('servicio-precio').value),
+                duracion: parseInt(document.getElementById('servicio-duracion').value),
+                descripcion: document.getElementById('servicio-descripcion').value,
+                estado: document.getElementById('servicio-estado').value
+            };
+            
+            if (currentEditId) {
+                const index = servicios.findIndex(s => s.id === currentEditId);
+                if (index !== -1) servicios[index] = servicioData;
+            } else {
+                servicios.push(servicioData);
+            }
+            
+            await guardarServicios();
+            document.getElementById('servicio-modal').style.display = 'none';
+        });
+        
+        document.getElementById('search-servicio')?.addEventListener('input', () => renderizarGrid());
+        document.getElementById('filtro-categoria')?.addEventListener('change', () => renderizarGrid());
+        document.getElementById('filtro-estado')?.addEventListener('change', () => renderizarGrid());
+        
+        cargarServicios();
+        
+        window.addEventListener('app:datos-listos', () => {
+            servicios = window.app?.estado?.cache?.servicios || [];
+            renderizarGrid();
+        });
+    })();
+</script>

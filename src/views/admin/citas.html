@@ -1,0 +1,398 @@
+<div style="max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--color-primary);">📅 Gestión de Citas</h2>
+        <button id="btn-nueva-cita" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">+ Nueva Cita</button>
+    </div>
+
+    <!-- Vista toggle y filtros -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-vista-calendario" class="vista-btn active" style="padding: 8px 16px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">📅 Calendario</button>
+            <button id="btn-vista-lista" class="vista-btn" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">📋 Lista</button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <select id="filtro-estado" style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                <option value="todos">Todos los estados</option>
+                <option value="pendiente">⏳ Pendiente</option>
+                <option value="confirmada">✅ Confirmada</option>
+                <option value="completada">🎉 Completada</option>
+                <option value="cancelada">❌ Cancelada</option>
+            </select>
+            <select id="filtro-barbero" style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                <option value="todos">Todos los barberos</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Vista Calendario -->
+    <div id="vista-calendario" style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button id="semana-anterior" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">◀ Anterior</button>
+            <h3 id="semana-actual" style="margin: 0;">Semana actual</h3>
+            <button id="semana-siguiente" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Siguiente ▶</button>
+        </div>
+        <div id="calendario-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;"></div>
+    </div>
+
+    <!-- Vista Lista -->
+    <div id="vista-lista" style="display: none; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 12px; text-align: left;">Fecha</th>
+                    <th style="padding: 12px; text-align: left;">Hora</th>
+                    <th style="padding: 12px; text-align: left;">Cliente</th>
+                    <th style="padding: 12px; text-align: left;">Servicio</th>
+                    <th style="padding: 12px; text-align: left;">Barbero</th>
+                    <th style="padding: 12px; text-align: center;">Estado</th>
+                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                </table>
+            </thead>
+            <tbody id="citas-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nueva/Editar Cita -->
+<div id="cita-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="modal-title" style="color: var(--color-primary);">Nueva Cita</h3>
+            <button id="cerrar-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <form id="cita-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Cliente</label>
+                <select id="cita-cliente" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="">Seleccionar cliente</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Barbero</label>
+                <select id="cita-barbero" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="">Seleccionar barbero</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Servicio</label>
+                <select id="cita-servicio" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="">Seleccionar servicio</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Fecha</label>
+                <input type="date" id="cita-fecha" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Hora</label>
+                <select id="cita-hora" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="">Seleccionar hora</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Estado</label>
+                <select id="cita-estado" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="pendiente">⏳ Pendiente</option>
+                    <option value="confirmada">✅ Confirmada</option>
+                    <option value="completada">🎉 Completada</option>
+                    <option value="cancelada">❌ Cancelada</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="cancelar-modal" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('🔵 Ejecutando script de citas.html');
+        
+        let citas = [];
+        let clientes = [];
+        let barberos = [];
+        let servicios = [];
+        let currentEditId = null;
+        let vistaActual = 'calendario';
+        let semanaInicio = new Date();
+        
+        function cargarDatos() {
+            citas = window.app?.estado?.cache?.citas || [];
+            clientes = window.app?.estado?.cache?.clientes || [];
+            barberos = window.app?.estado?.cache?.barberos || [];
+            servicios = window.app?.estado?.cache?.servicios || [];
+            
+            if (citas.length === 0) {
+                const hoy = new Date().toISOString().split('T')[0];
+                citas = [
+                    { id: 1, clienteId: 1, clienteNombre: 'Carlos López', barberoId: 1, barberoNombre: 'Carlos Martínez', servicioId: 1, servicioNombre: 'Corte de Cabello', precio: 350, fecha: hoy, hora: '10:00', estado: 'pendiente' },
+                    { id: 2, clienteId: 2, clienteNombre: 'Miguel Ángel', barberoId: 2, barberoNombre: 'Miguel Rodríguez', servicioId: 2, servicioNombre: 'Barba', precio: 200, fecha: hoy, hora: '11:30', estado: 'confirmada' }
+                ];
+                window.app.estado.cache.citas = citas;
+            }
+            
+            cargarSelectores();
+            renderizarVista();
+        }
+        
+        function cargarSelectores() {
+            const clienteSelect = document.getElementById('cita-cliente');
+            const barberoSelect = document.getElementById('cita-barbero');
+            const servicioSelect = document.getElementById('cita-servicio');
+            const filtroBarbero = document.getElementById('filtro-barbero');
+            
+            if (clienteSelect) {
+                clienteSelect.innerHTML = '<option value="">Seleccionar cliente</option>' + 
+                    clientes.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+            }
+            if (barberoSelect) {
+                barberoSelect.innerHTML = '<option value="">Seleccionar barbero</option>' + 
+                    barberos.filter(b => b.estado === 'activo').map(b => `<option value="${b.id}">${b.nombre}</option>`).join('');
+            }
+            if (servicioSelect) {
+                servicioSelect.innerHTML = '<option value="">Seleccionar servicio</option>' + 
+                    servicios.map(s => `<option value="${s.id}">${s.nombre} - $${s.precio}</option>`).join('');
+            }
+            if (filtroBarbero) {
+                filtroBarbero.innerHTML = '<option value="todos">Todos los barberos</option>' + 
+                    barberos.map(b => `<option value="${b.id}">${b.nombre}</option>`).join('');
+            }
+        }
+        
+        function cargarHoras(horaSeleccionada = null) {
+            const select = document.getElementById('cita-hora');
+            const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            select.innerHTML = '<option value="">Seleccionar hora</option>' + 
+                horas.map(h => `<option value="${h}" ${horaSeleccionada === h ? 'selected' : ''}>${h}</option>`).join('');
+        }
+        
+        function renderizarVista() {
+            if (vistaActual === 'calendario') {
+                document.getElementById('vista-calendario').style.display = 'block';
+                document.getElementById('vista-lista').style.display = 'none';
+                renderizarCalendario();
+            } else {
+                document.getElementById('vista-calendario').style.display = 'none';
+                document.getElementById('vista-lista').style.display = 'block';
+                renderizarLista();
+            }
+        }
+        
+        function renderizarCalendario() {
+            const grid = document.getElementById('calendario-grid');
+            if (!grid) return;
+            
+            const inicioSemana = new Date(semanaInicio);
+            inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay() + 1);
+            
+            const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            const hoy = new Date().toDateString();
+            const filtroEstado = document.getElementById('filtro-estado')?.value || 'todos';
+            const filtroBarbero = document.getElementById('filtro-barbero')?.value || 'todos';
+            
+            let citasFiltradas = [...citas];
+            if (filtroEstado !== 'todos') citasFiltradas = citasFiltradas.filter(c => c.estado === filtroEstado);
+            if (filtroBarbero !== 'todos') citasFiltradas = citasFiltradas.filter(c => c.barberoId == filtroBarbero);
+            
+            let html = '';
+            for (let i = 0; i < 7; i++) {
+                const fecha = new Date(inicioSemana);
+                fecha.setDate(inicioSemana.getDate() + i);
+                const fechaStr = fecha.toISOString().split('T')[0];
+                const citasDelDia = citasFiltradas.filter(c => c.fecha === fechaStr);
+                
+                html += `
+                    <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 10px; min-height: 120px;">
+                        <div style="font-weight: bold; text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); ${fecha.toDateString() === hoy ? 'color: var(--color-primary);' : ''}">
+                            ${diasSemana[i]}<br>${fecha.getDate()}/${fecha.getMonth() + 1}
+                        </div>
+                        <div style="margin-top: 8px;">
+                            ${citasDelDia.map(c => `
+                                <div style="background: var(--bg-secondary); border-radius: 8px; padding: 6px; margin-bottom: 5px; font-size: 0.75rem; border-left: 3px solid ${c.estado === 'pendiente' ? '#ff9800' : c.estado === 'confirmada' ? '#4caf50' : c.estado === 'completada' ? '#2196f3' : '#f44336'}; cursor: pointer;" onclick="editarCita(${c.id})">
+                                    <div><strong>${c.hora}</strong> - ${c.clienteNombre}</div>
+                                    <div style="color: var(--text-secondary);">${c.servicioNombre}</div>
+                                </div>
+                            `).join('')}
+                            ${citasDelDia.length === 0 ? '<div style="color: var(--text-secondary); font-size: 0.7rem; text-align: center; padding: 10px;">Sin citas</div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+            
+            const finSemana = new Date(inicioSemana);
+            finSemana.setDate(inicioSemana.getDate() + 6);
+            document.getElementById('semana-actual').textContent = `${inicioSemana.getDate()}/${inicioSemana.getMonth() + 1} - ${finSemana.getDate()}/${finSemana.getMonth() + 1}`;
+        }
+        
+        function renderizarLista() {
+            const tbody = document.getElementById('citas-tbody');
+            if (!tbody) return;
+            
+            const filtroEstado = document.getElementById('filtro-estado')?.value || 'todos';
+            const filtroBarbero = document.getElementById('filtro-barbero')?.value || 'todos';
+            
+            let filtered = [...citas];
+            if (filtroEstado !== 'todos') filtered = filtered.filter(c => c.estado === filtroEstado);
+            if (filtroBarbero !== 'todos') filtered = filtered.filter(c => c.barberoId == filtroBarbero);
+            
+            filtered.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No hay citas registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(c => `
+                <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="editarCita(${c.id})">
+                    <td style="padding: 12px;">${formatDate(c.fecha)}</td>
+                    <td style="padding: 12px;">${c.hora}</td>
+                    <td style="padding: 12px;">${c.clienteNombre}</td>
+                    <td style="padding: 12px;">${c.servicioNombre}</td>
+                    <td style="padding: 12px;">${c.barberoNombre}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        ${cita.estado === 'pendiente' ? `
+                            <button onclick="event.stopPropagation(); confirmarCita(${cita.id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #4caf50;" title="Confirmar">✅</button>
+                        ` : ''}
+                        <button onclick="event.stopPropagation(); editarCita(${cita.id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem;">✏️</button>
+                        <button onclick="event.stopPropagation(); eliminarCita(${cita.id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem;">🗑️</button>
+                    </td>
+
+                </tr>
+            `).join('');
+        }
+        
+        function formatDate(fecha) {
+            const d = new Date(fecha);
+            return d.toLocaleDateString('es-ES');
+        }
+        
+        async function guardarCitas() {
+            if (window.app) window.app.estado.cache.citas = citas;
+            for (const c of citas) await window.storage?.guardar('citas', c);
+            renderizarVista();
+        }
+        
+        window.editarCita = function(id) {
+            const cita = citas.find(c => c.id === id);
+            if (!cita) return;
+            currentEditId = id;
+            document.getElementById('modal-title').textContent = 'Editar Cita';
+            document.getElementById('cita-cliente').value = cita.clienteId;
+            document.getElementById('cita-barbero').value = cita.barberoId;
+            document.getElementById('cita-servicio').value = cita.servicioId;
+            document.getElementById('cita-fecha').value = cita.fecha;
+            document.getElementById('cita-estado').value = cita.estado;
+            document.getElementById('cita-modal').style.display = 'flex';
+            cargarHoras(cita.hora);
+        };
+        
+        window.eliminarCita = async function(id) {
+            if (confirm('¿Eliminar esta cita?')) {
+                citas = citas.filter(c => c.id !== id);
+                await guardarCitas();
+            }
+        };
+        
+        document.getElementById('btn-nueva-cita')?.addEventListener('click', () => {
+            currentEditId = null;
+            document.getElementById('modal-title').textContent = 'Nueva Cita';
+            document.getElementById('cita-form').reset();
+            document.getElementById('cita-fecha').value = new Date().toISOString().split('T')[0];
+            document.getElementById('cita-estado').value = 'pendiente';
+            document.getElementById('cita-modal').style.display = 'flex';
+            cargarHoras();
+        });
+        
+        document.getElementById('cita-servicio')?.addEventListener('change', () => {
+            const servicioId = document.getElementById('cita-servicio').value;
+            const servicio = servicios.find(s => s.id == servicioId);
+            if (servicio) {
+                // Mostrar precio si quieres
+            }
+        });
+        
+        document.getElementById('btn-vista-calendario')?.addEventListener('click', () => {
+            vistaActual = 'calendario';
+            document.querySelectorAll('.vista-btn').forEach(btn => {
+                btn.style.background = 'var(--bg-tertiary)';
+                btn.style.color = 'var(--text-primary)';
+                btn.style.border = '1px solid var(--border-color)';
+            });
+            document.getElementById('btn-vista-calendario').style.background = 'var(--color-primary)';
+            document.getElementById('btn-vista-calendario').style.color = 'white';
+            document.getElementById('btn-vista-calendario').style.border = 'none';
+            renderizarVista();
+        });
+        
+        document.getElementById('btn-vista-lista')?.addEventListener('click', () => {
+            vistaActual = 'lista';
+            document.querySelectorAll('.vista-btn').forEach(btn => {
+                btn.style.background = 'var(--bg-tertiary)';
+                btn.style.color = 'var(--text-primary)';
+                btn.style.border = '1px solid var(--border-color)';
+            });
+            document.getElementById('btn-vista-lista').style.background = 'var(--color-primary)';
+            document.getElementById('btn-vista-lista').style.color = 'white';
+            document.getElementById('btn-vista-lista').style.border = 'none';
+            renderizarVista();
+        });
+        
+        document.getElementById('semana-anterior')?.addEventListener('click', () => {
+            semanaInicio.setDate(semanaInicio.getDate() - 7);
+            renderizarCalendario();
+        });
+        
+        document.getElementById('semana-siguiente')?.addEventListener('click', () => {
+            semanaInicio.setDate(semanaInicio.getDate() + 7);
+            renderizarCalendario();
+        });
+        
+        document.getElementById('filtro-estado')?.addEventListener('change', () => renderizarVista());
+        document.getElementById('filtro-barbero')?.addEventListener('change', () => renderizarVista());
+        
+        document.getElementById('cerrar-modal')?.addEventListener('click', () => {
+            document.getElementById('cita-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelar-modal')?.addEventListener('click', () => {
+            document.getElementById('cita-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cita-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const citaData = {
+                id: currentEditId || Date.now(),
+                clienteId: parseInt(document.getElementById('cita-cliente').value),
+                clienteNombre: document.getElementById('cita-cliente').options[document.getElementById('cita-cliente').selectedIndex]?.text || '',
+                barberoId: parseInt(document.getElementById('cita-barbero').value),
+                barberoNombre: document.getElementById('cita-barbero').options[document.getElementById('cita-barbero').selectedIndex]?.text || '',
+                servicioId: parseInt(document.getElementById('cita-servicio').value),
+                servicioNombre: document.getElementById('cita-servicio').options[document.getElementById('cita-servicio').selectedIndex]?.text.split(' -')[0] || '',
+                precio: servicios.find(s => s.id == document.getElementById('cita-servicio').value)?.precio || 0,
+                fecha: document.getElementById('cita-fecha').value,
+                hora: document.getElementById('cita-hora').value,
+                estado: document.getElementById('cita-estado').value
+            };
+            
+            if (currentEditId) {
+                const index = citas.findIndex(c => c.id === currentEditId);
+                if (index !== -1) citas[index] = citaData;
+            } else {
+                citas.push(citaData);
+            }
+            
+            await guardarCitas();
+            document.getElementById('cita-modal').style.display = 'none';
+        });
+        
+        cargarDatos();
+        
+        window.addEventListener('app:datos-listos', () => {
+            cargarDatos();
+        });
+    })();
+</script>

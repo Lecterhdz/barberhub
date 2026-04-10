@@ -1,0 +1,319 @@
+<div style="max-width: 800px; margin: 0 auto;">
+    <h2 style="color: var(--color-primary);">📅 Agendar Cita</h2>
+
+    <div id="paso-1">
+        <h3>✂️ 1. Selecciona un servicio</h3>
+        <div id="servicios-lista"></div>
+    </div>
+
+    <div id="paso-2" style="display: none;">
+        <h3>💈 2. Selecciona un barbero</h3>
+        <div id="barberos-lista"></div>
+        <button id="btn-volver-1" class="btn-volver">◀ Volver</button>
+    </div>
+
+    <div id="paso-3" style="display: none;">
+        <h3>📅 3. Selecciona fecha y hora</h3>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1;">
+                <h4>Fecha</h4>
+                <div id="fechas-grid"></div>
+            </div>
+            <div style="flex: 1;">
+                <h4>Hora</h4>
+                <div id="horas-grid"></div>
+            </div>
+        </div>
+        <button id="btn-volver-2" class="btn-volver">◀ Volver</button>
+    </div>
+
+    <div id="paso-4" style="display: none;">
+        <h3>📝 4. Tus datos</h3>
+        <form id="cliente-form">
+            <div style="margin-bottom: 15px;">
+                <label>Nombre completo *</label>
+                <input type="text" id="cliente-nombre" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>Teléfono *</label>
+                <input type="tel" id="cliente-telefono" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>Email (opcional)</label>
+                <input type="email" id="cliente-email" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>Notas</label>
+                <textarea id="cita-notas" rows="2" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);"></textarea>
+            </div>
+            
+            <!-- Datos para transferencia -->
+            <div id="datos-transferencia" style="background: rgba(0, 255, 136, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 3px solid #00ff88;">
+                <p style="margin: 0 0 5px; font-weight: bold;">💳 Depósito de $50 MXN para apartar tu cita</p>
+                <p style="margin: 0; font-size: 0.8rem;">Banco: BBVA | Cuenta: 1234 5678 9012 3456</p>
+                <p style="margin: 0; font-size: 0.8rem;">CLABE: 012 345 6789 01234567 8</p>
+                <p style="margin: 10px 0 0; font-size: 0.7rem;">⚠️ El depósito se descuenta del total del servicio</p>
+                
+                <div style="margin-top: 10px;">
+                    <label style="display: block; font-size: 0.8rem; margin-bottom: 5px;">📎 Subir comprobante (opcional)</label>
+                    <input type="file" id="comprobante" accept="image/*,application/pdf" style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; width: 100%;">
+                    <small style="font-size: 0.7rem;">Puedes enviar el comprobante por WhatsApp después</small>
+                </div>
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 12px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">✅ Confirmar Cita</button>
+        </form>
+        <button id="btn-volver-3" class="btn-volver" style="margin-top: 10px;">◀ Volver</button>
+    </div>
+</div>
+
+<style>
+    .servicio-card, .barbero-card, .fecha-card, .hora-card {
+        background: var(--bg-secondary);
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .servicio-card:hover, .barbero-card:hover, .fecha-card:hover, .hora-card:hover {
+        background: var(--bg-hover);
+        transform: translateX(5px);
+    }
+    .servicio-card.selected, .barbero-card.selected, .fecha-card.selected, .hora-card.selected {
+        border-color: var(--color-primary);
+        background: var(--bg-hover);
+    }
+    .btn-volver {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+    .fechas-grid, .horas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 10px;
+    }
+    .hora-card.ocupada {
+        opacity: 0.5;
+        text-decoration: line-through;
+        cursor: not-allowed;
+    }
+</style>
+
+<script>
+    (function() {
+        console.log('🔵 Agendar Cita - Portal Cliente');
+        
+        let servicioSeleccionado = null;
+        let barberoSeleccionado = null;
+        let fechaSeleccionada = null;
+        let horaSeleccionada = null;
+        let paso = 1;
+        
+        let servicios = [];
+        let barberos = [];
+        
+        function cargarDatos() {
+            servicios = window.app?.estado?.cache?.servicios || [];
+            barberos = window.app?.estado?.cache?.barberos || [];
+            console.log('Datos:', servicios.length, 'servicios,', barberos.length, 'barberos');
+            renderizarServicios();
+        }
+        
+        function renderizarServicios() {
+            const container = document.getElementById('servicios-lista');
+            if (!container) return;
+            container.innerHTML = servicios.map(s => `
+                <div class="servicio-card" data-id="${s.id}">
+                    <strong>${s.nombre}</strong> - $${s.precio} - ${s.duracion} min
+                </div>
+            `).join('');
+            document.querySelectorAll('.servicio-card').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('.servicio-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    servicioSeleccionado = servicios.find(s => s.id == card.dataset.id);
+                    siguientePaso();
+                };
+            });
+        }
+        
+        function renderizarBarberos() {
+            const container = document.getElementById('barberos-lista');
+            if (!container) return;
+            const barberosActivos = barberos.filter(b => b.estado === 'activo');
+            container.innerHTML = barberosActivos.map(b => `
+                <div class="barbero-card" data-id="${b.id}">
+                    <strong>${b.nombre}</strong> - ${b.especialidad}
+                </div>
+            `).join('');
+            document.querySelectorAll('.barbero-card').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('.barbero-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    barberoSeleccionado = barberos.find(b => b.id == card.dataset.id);
+                    siguientePaso();
+                };
+            });
+        }
+        
+        function renderizarFechas() {
+            const container = document.getElementById('fechas-grid');
+            if (!container) return;
+            const fechas = [];
+            const hoy = new Date();
+            for (let i = 0; i < 14; i++) {
+                const fecha = new Date(hoy);
+                fecha.setDate(hoy.getDate() + i);
+                fechas.push(fecha);
+            }
+            container.innerHTML = fechas.map(f => `
+                <div class="fecha-card" data-fecha="${f.toISOString().split('T')[0]}">
+                    ${f.getDate()}/${f.getMonth()+1}
+                </div>
+            `).join('');
+            document.querySelectorAll('.fecha-card').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('.fecha-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    fechaSeleccionada = card.dataset.fecha;
+                    renderizarHoras();
+                };
+            });
+        }
+        
+        function renderizarHoras() {
+            const container = document.getElementById('horas-grid');
+            if (!container) return;
+            
+            const citasConfirmadas = window.app?.estado?.cache?.citas?.filter(c => 
+                c.fecha === fechaSeleccionada && c.estado === 'confirmada'
+            ) || [];
+            const horasOcupadas = citasConfirmadas.map(c => c.hora);
+            
+            const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            container.innerHTML = horas.map(h => `
+                <div class="hora-card ${horasOcupadas.includes(h) ? 'ocupada' : ''}" data-hora="${h}">
+                    ${h} ${horasOcupadas.includes(h) ? '❌' : ''}
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.hora-card:not(.ocupada)').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('.hora-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    horaSeleccionada = card.dataset.hora;
+                    siguientePaso();
+                };
+            });
+        }
+        
+        function siguientePaso() {
+            if (paso === 1 && servicioSeleccionado) {
+                paso = 2;
+                document.getElementById('paso-1').style.display = 'none';
+                document.getElementById('paso-2').style.display = 'block';
+                renderizarBarberos();
+            } else if (paso === 2 && barberoSeleccionado) {
+                paso = 3;
+                document.getElementById('paso-2').style.display = 'none';
+                document.getElementById('paso-3').style.display = 'block';
+                renderizarFechas();
+            } else if (paso === 3 && fechaSeleccionada && horaSeleccionada) {
+                paso = 4;
+                document.getElementById('paso-3').style.display = 'none';
+                document.getElementById('paso-4').style.display = 'block';
+            }
+        }
+        
+        function pasoAnterior() {
+            if (paso > 1) {
+                paso--;
+                document.getElementById(`paso-${paso+1}`).style.display = 'none';
+                document.getElementById(`paso-${paso}`).style.display = 'block';
+            }
+        }
+        
+        async function guardarCita(e) {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('cliente-nombre').value;
+            const telefono = document.getElementById('cliente-telefono').value;
+            const email = document.getElementById('cliente-email').value;
+            const notas = document.getElementById('cita-notas').value;
+            const comprobante = document.getElementById('comprobante')?.files[0];
+            
+            if (!nombre || !telefono) {
+                alert('Completa nombre y teléfono');
+                return;
+            }
+            
+            // Procesar comprobante si existe
+            let comprobanteData = null;
+            if (comprobante) {
+                const reader = new FileReader();
+                comprobanteData = await new Promise((resolve) => {
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(comprobante);
+                });
+            }
+            
+            const nuevaCita = {
+                id: Date.now(),
+                clienteNombre: nombre,
+                clienteTelefono: telefono,
+                clienteEmail: email,
+                barberoId: barberoSeleccionado.id,
+                barberoNombre: barberoSeleccionado.nombre,
+                servicioId: servicioSeleccionado.id,
+                servicioNombre: servicioSeleccionado.nombre,
+                precio: servicioSeleccionado.precio,
+                fecha: fechaSeleccionada,
+                hora: horaSeleccionada,
+                notas: notas,
+                estado: 'pendiente',
+                fechaCreacion: new Date().toISOString(),
+                deposito: 50,
+                depositoPagado: !!comprobante,
+                comprobante: comprobanteData
+            };
+            
+            await window.storage.guardar('citas', nuevaCita);
+            
+            // WhatsApp message
+            const mensajeWhatsApp = `Hola%20BarberHub%2C%20quiero%20agendar%20una%20cita%3A%0A%0A👤%20Cliente%3A%20${encodeURIComponent(nombre)}%0A📞%20Teléfono%3A%20${telefono}%0A✂️%20Servicio%3A%20${servicioSeleccionado.nombre}%0A💈%20Barbero%3A%20${barberoSeleccionado.nombre}%0A📅%20Fecha%3A%20${fechaSeleccionada}%0A⏰%20Hora%3A%20${horaSeleccionada}%0A💰%20Total%3A%20%24${servicioSeleccionado.precio}%0A💵%20Depósito%3A%20%2450%20${comprobante ? '(Comprobante adjunto)' : '(Pendiente)'}`;
+            
+            const whatsappLink = `https://wa.me/521234567890?text=${mensajeWhatsApp}`;
+            
+            alert('✅ Cita agendada correctamente\n\nTe enviaremos un mensaje de confirmación.');
+            
+            // Preguntar si quiere enviar WhatsApp
+            if (confirm('¿Enviar detalles de la cita por WhatsApp?')) {
+                window.open(whatsappLink, '_blank');
+            }
+            
+            // Resetear
+            servicioSeleccionado = null;
+            barberoSeleccionado = null;
+            fechaSeleccionada = null;
+            horaSeleccionada = null;
+            paso = 1;
+            document.getElementById('paso-4').style.display = 'none';
+            document.getElementById('paso-1').style.display = 'block';
+            document.getElementById('cliente-form').reset();
+            document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+        }
+        
+        document.getElementById('btn-volver-1')?.addEventListener('click', pasoAnterior);
+        document.getElementById('btn-volver-2')?.addEventListener('click', pasoAnterior);
+        document.getElementById('btn-volver-3')?.addEventListener('click', pasoAnterior);
+        document.getElementById('cliente-form')?.addEventListener('submit', guardarCita);
+        
+        cargarDatos();
+    })();
+</script>

@@ -1,0 +1,233 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--color-primary);">✂️ Gestión de Barberos</h2>
+        <button id="btn-nuevo-barbero" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">+ Nuevo Barbero</button>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <input type="text" id="search-barbero" placeholder="🔍 Buscar por nombre..." style="flex: 1; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+        <select id="filtro-especialidad" style="padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todas las especialidades</option>
+            <option value="Corte">✂️ Corte</option>
+            <option value="Barba">🧔 Barba</option>
+            <option value="Todo">✨ Todo</option>
+            <option value="Color">🎨 Color</option>
+        </select>
+        <select id="filtro-estado" style="padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todos</option>
+            <option value="activo">Activos</option>
+            <option value="inactivo">Inactivos</option>
+        </select>
+    </div>
+
+    <!-- Grid de barberos -->
+    <div id="barberos-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+</div>
+
+<!-- Modal Nuevo/Editar Barbero -->
+<div id="barbero-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="modal-title" style="color: var(--color-primary);">Nuevo Barbero</h3>
+            <button id="cerrar-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <form id="barbero-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Nombre completo *</label>
+                <input type="text" id="barbero-nombre" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Teléfono *</label>
+                <input type="tel" id="barbero-telefono" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Email</label>
+                <input type="email" id="barbero-email" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Especialidad</label>
+                <select id="barbero-especialidad" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="Corte">✂️ Corte</option>
+                    <option value="Barba">🧔 Barba</option>
+                    <option value="Todo">✨ Todo</option>
+                    <option value="Color">🎨 Color</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Comisión (%)</label>
+                <input type="number" id="barbero-comision" value="40" min="0" max="100" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Estado</label>
+                <select id="barbero-estado" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="cancelar-modal" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('🔵 Ejecutando script de barberos.html');
+        
+        let barberos = [];
+        let currentEditId = null;
+        
+        function cargarBarberos() {
+            barberos = window.app?.estado?.cache?.barberos || [];
+            if (barberos.length === 0) {
+                barberos = [
+                    { id: 1, nombre: 'Carlos Martínez', telefono: '555-0101', email: 'carlos@barber.com', especialidad: 'Corte', comision: 40, estado: 'activo', citasAtendidas: 0, ingresosGenerados: 0 },
+                    { id: 2, nombre: 'Miguel Rodríguez', telefono: '555-0102', email: 'miguel@barber.com', especialidad: 'Barba', comision: 45, estado: 'activo', citasAtendidas: 0, ingresosGenerados: 0 },
+                    { id: 3, nombre: 'Juan Pérez', telefono: '555-0103', email: 'juan@barber.com', especialidad: 'Todo', comision: 50, estado: 'activo', citasAtendidas: 0, ingresosGenerados: 0 }
+                ];
+                window.app.estado.cache.barberos = barberos;
+            }
+            renderizarGrid();
+        }
+        
+        function renderizarGrid() {
+            const grid = document.getElementById('barberos-grid');
+            if (!grid) return;
+            
+            const especialidad = document.getElementById('filtro-especialidad')?.value || 'todos';
+            const estado = document.getElementById('filtro-estado')?.value || 'todos';
+            const busqueda = document.getElementById('search-barbero')?.value.toLowerCase() || '';
+            
+            let filtered = [...barberos];
+            if (especialidad !== 'todos') {
+                filtered = filtered.filter(b => b.especialidad === especialidad);
+            }
+            if (estado !== 'todos') {
+                filtered = filtered.filter(b => b.estado === estado);
+            }
+            if (busqueda) {
+                filtered = filtered.filter(b => b.nombre.toLowerCase().includes(busqueda));
+            }
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; padding: 40px;">No hay barberos registrados</div>';
+                return;
+            }
+            
+            grid.innerHTML = filtered.map(b => `
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div style="font-size: 3rem;">${b.especialidad === 'Corte' ? '✂️' : b.especialidad === 'Barba' ? '🧔' : b.especialidad === 'Todo' ? '✨' : '🎨'}</div>
+                            <h3 style="margin: 10px 0 5px;">${b.nombre}</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.8rem;">${b.especialidad}</p>
+                        </div>
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: ${b.estado === 'activo' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}; color: ${b.estado === 'activo' ? '#4caf50' : '#f44336'};">${b.estado === 'activo' ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <p>📞 ${b.telefono}</p>
+                        <p>✉️ ${b.email || 'No registrado'}</p>
+                        <p>💰 Comisión: ${b.comision}%</p>
+                        <p>📊 Citas: ${b.citasAtendidas || 0} | Ingresos: $${(b.ingresosGenerados || 0).toLocaleString()}</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button onclick="editarBarbero(${b.id})" style="flex: 1; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">✏️ Editar</button>
+                        <button onclick="eliminarBarbero(${b.id})" style="flex: 1; padding: 8px; background: rgba(244,67,54,0.2); border: none; border-radius: 8px; color: #f44336; cursor: pointer;">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function guardarBarberos() {
+            if (window.app) {
+                window.app.estado.cache.barberos = barberos;
+            }
+            for (const b of barberos) {
+                await window.storage?.guardar('barberos', b);
+            }
+            renderizarGrid();
+        }
+        
+        window.editarBarbero = function(id) {
+            const barbero = barberos.find(b => b.id === id);
+            if (!barbero) return;
+            currentEditId = id;
+            document.getElementById('modal-title').textContent = 'Editar Barbero';
+            document.getElementById('barbero-nombre').value = barbero.nombre;
+            document.getElementById('barbero-telefono').value = barbero.telefono;
+            document.getElementById('barbero-email').value = barbero.email || '';
+            document.getElementById('barbero-especialidad').value = barbero.especialidad;
+            document.getElementById('barbero-comision').value = barbero.comision;
+            document.getElementById('barbero-estado').value = barbero.estado;
+            document.getElementById('barbero-modal').style.display = 'flex';
+        };
+        
+        window.eliminarBarbero = async function(id) {
+            if (confirm('¿Eliminar este barbero?')) {
+                barberos = barberos.filter(b => b.id !== id);
+                await guardarBarberos();
+            }
+        };
+        
+        document.getElementById('btn-nuevo-barbero')?.addEventListener('click', () => {
+            currentEditId = null;
+            document.getElementById('modal-title').textContent = 'Nuevo Barbero';
+            document.getElementById('barbero-form').reset();
+            document.getElementById('barbero-comision').value = '40';
+            document.getElementById('barbero-estado').value = 'activo';
+            document.getElementById('barbero-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('cerrar-modal')?.addEventListener('click', () => {
+            document.getElementById('barbero-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelar-modal')?.addEventListener('click', () => {
+            document.getElementById('barbero-modal').style.display = 'none';
+        });
+        
+        document.getElementById('barbero-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const barberoData = {
+                id: currentEditId || Date.now(),
+                nombre: document.getElementById('barbero-nombre').value,
+                telefono: document.getElementById('barbero-telefono').value,
+                email: document.getElementById('barbero-email').value,
+                especialidad: document.getElementById('barbero-especialidad').value,
+                comision: parseInt(document.getElementById('barbero-comision').value),
+                estado: document.getElementById('barbero-estado').value,
+                citasAtendidas: 0,
+                ingresosGenerados: 0
+            };
+            
+            if (currentEditId) {
+                const index = barberos.findIndex(b => b.id === currentEditId);
+                if (index !== -1) {
+                    barberoData.citasAtendidas = barberos[index].citasAtendidas;
+                    barberoData.ingresosGenerados = barberos[index].ingresosGenerados;
+                    barberos[index] = barberoData;
+                }
+            } else {
+                barberos.push(barberoData);
+            }
+            
+            await guardarBarberos();
+            document.getElementById('barbero-modal').style.display = 'none';
+        });
+        
+        document.getElementById('search-barbero')?.addEventListener('input', () => renderizarGrid());
+        document.getElementById('filtro-especialidad')?.addEventListener('change', () => renderizarGrid());
+        document.getElementById('filtro-estado')?.addEventListener('change', () => renderizarGrid());
+        
+        cargarBarberos();
+        
+        window.addEventListener('app:datos-listos', () => {
+            barberos = window.app?.estado?.cache?.barberos || [];
+            renderizarGrid();
+        });
+    })();
+</script>

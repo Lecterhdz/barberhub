@@ -1,0 +1,226 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--color-primary);">👥 Gestión de Clientes</h2>
+        <button id="btn-nuevo-cliente" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">+ Nuevo Cliente</button>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <input type="text" id="search-cliente" placeholder="🔍 Buscar por nombre o teléfono..." style="flex: 1; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+        <select id="filtro-estado" style="padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todos</option>
+            <option value="activo">Activos</option>
+            <option value="inactivo">Inactivos</option>
+        </select>
+    </div>
+
+    <!-- Tabla de clientes -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 12px; text-align: left;">Cliente</th>
+                    <th style="padding: 12px; text-align: left;">Contacto</th>
+                    <th style="padding: 12px; text-align: center;">Visitas</th>
+                    <th style="padding: 12px; text-align: center;">Gasto total</th>
+                    <th style="padding: 12px; text-align: center;">Estado</th>
+                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="clientes-tbody">
+                <tr><td colspan="6" style="text-align: center; padding: 40px;">Cargando clientes...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Cliente -->
+<div id="cliente-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="modal-title" style="color: var(--color-primary);">Nuevo Cliente</h3>
+            <button id="cerrar-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <form id="cliente-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Nombre completo *</label>
+                <input type="text" id="cliente-nombre" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Teléfono *</label>
+                <input type="tel" id="cliente-telefono" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Email</label>
+                <input type="email" id="cliente-email" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Estado</label>
+                <select id="cliente-estado" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="cancelar-modal" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('🔵 Ejecutando script de clientes.html');
+        
+        let clientes = [];
+        let currentEditId = null;
+        
+        // Cargar clientes desde el caché global
+        function cargarClientes() {
+            clientes = window.app?.estado?.cache?.clientes || [];
+            if (clientes.length === 0) {
+                // Datos de ejemplo si no hay
+                clientes = [
+                    { id: 1, nombre: 'Carlos López', telefono: '555-1234', email: 'carlos@email.com', visitas: 12, gastoTotal: 4200, estado: 'activo' },
+                    { id: 2, nombre: 'Miguel Ángel', telefono: '555-5678', email: 'miguel@email.com', visitas: 8, gastoTotal: 2800, estado: 'activo' },
+                    { id: 3, nombre: 'Juan Pérez', telefono: '555-9012', email: 'juan@email.com', visitas: 5, gastoTotal: 1750, estado: 'activo' },
+                    { id: 4, nombre: 'Ana Martínez', telefono: '555-3456', email: 'ana@email.com', visitas: 15, gastoTotal: 5250, estado: 'activo' }
+                ];
+                window.app.estado.cache.clientes = clientes;
+            }
+            renderizarTabla();
+        }
+        
+        function renderizarTabla() {
+            const tbody = document.getElementById('clientes-tbody');
+            if (!tbody) return;
+            
+            const filtro = document.getElementById('filtro-estado')?.value || 'todos';
+            const busqueda = document.getElementById('search-cliente')?.value.toLowerCase() || '';
+            
+            let filtered = [...clientes];
+            if (filtro !== 'todos') {
+                filtered = filtered.filter(c => c.estado === filtro);
+            }
+            if (busqueda) {
+                filtered = filtered.filter(c => 
+                    c.nombre.toLowerCase().includes(busqueda) || 
+                    c.telefono.includes(busqueda)
+                );
+            }
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No hay clientes registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(c => `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 12px;">
+                        <strong>${c.nombre}</strong><br>
+                        <small style="color: var(--text-secondary);">${c.telefono}</small>
+                    </td>
+                    <td style="padding: 12px;">${c.email || '-'}</td>
+                    <td style="padding: 12px; text-align: center;">${c.visitas || 0}</td>
+                    <td style="padding: 12px; text-align: center; color: var(--color-primary); font-weight: bold;">$${(c.gastoTotal || 0).toLocaleString()}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: ${c.estado === 'activo' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}; color: ${c.estado === 'activo' ? '#4caf50' : '#f44336'};">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <button onclick="editarCliente(${c.id})" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">✏️</button>
+                        <button onclick="eliminarCliente(${c.id})" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Guardar clientes en caché y storage
+        async function guardarClientes() {
+            if (window.app) {
+                window.app.estado.cache.clientes = clientes;
+            }
+            for (const c of clientes) {
+                await window.storage?.guardar('clientes', c);
+            }
+            renderizarTabla();
+        }
+        
+        // Funciones globales para los botones
+        window.editarCliente = function(id) {
+            const cliente = clientes.find(c => c.id === id);
+            if (!cliente) return;
+            currentEditId = id;
+            document.getElementById('modal-title').textContent = 'Editar Cliente';
+            document.getElementById('cliente-nombre').value = cliente.nombre;
+            document.getElementById('cliente-telefono').value = cliente.telefono;
+            document.getElementById('cliente-email').value = cliente.email || '';
+            document.getElementById('cliente-estado').value = cliente.estado;
+            document.getElementById('cliente-modal').style.display = 'flex';
+        };
+        
+        window.eliminarCliente = async function(id) {
+            if (confirm('¿Eliminar este cliente?')) {
+                clientes = clientes.filter(c => c.id !== id);
+                await guardarClientes();
+            }
+        };
+        
+        // Eventos
+        document.getElementById('btn-nuevo-cliente')?.addEventListener('click', () => {
+            currentEditId = null;
+            document.getElementById('modal-title').textContent = 'Nuevo Cliente';
+            document.getElementById('cliente-form').reset();
+            document.getElementById('cliente-estado').value = 'activo';
+            document.getElementById('cliente-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('cerrar-modal')?.addEventListener('click', () => {
+            document.getElementById('cliente-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelar-modal')?.addEventListener('click', () => {
+            document.getElementById('cliente-modal').style.display = 'none';
+        });
+        
+        document.getElementById('cliente-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const clienteData = {
+                id: currentEditId || Date.now(),
+                nombre: document.getElementById('cliente-nombre').value,
+                telefono: document.getElementById('cliente-telefono').value,
+                email: document.getElementById('cliente-email').value,
+                estado: document.getElementById('cliente-estado').value,
+                visitas: 0,
+                gastoTotal: 0
+            };
+            
+            if (currentEditId) {
+                const index = clientes.findIndex(c => c.id === currentEditId);
+                if (index !== -1) {
+                    clienteData.visitas = clientes[index].visitas;
+                    clienteData.gastoTotal = clientes[index].gastoTotal;
+                    clientes[index] = clienteData;
+                }
+            } else {
+                clientes.push(clienteData);
+            }
+            
+            await guardarClientes();
+            document.getElementById('cliente-modal').style.display = 'none';
+        });
+        
+        document.getElementById('search-cliente')?.addEventListener('input', () => renderizarTabla());
+        document.getElementById('filtro-estado')?.addEventListener('change', () => renderizarTabla());
+        
+        // Inicializar
+        cargarClientes();
+        
+        // Escuchar cambios en el caché global
+        window.addEventListener('app:datos-listos', () => {
+            clientes = window.app?.estado?.cache?.clientes || [];
+            renderizarTabla();
+        });
+    })();
+</script>

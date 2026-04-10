@@ -1,0 +1,492 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--color-primary);">💰 Caja y Ventas</h2>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-nueva-venta" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">+ Nueva Venta</button>
+            <button id="btn-cerrar-caja" style="background: rgba(244,67,54,0.2); border: 1px solid #f44336; padding: 10px 20px; border-radius: 8px; color: #f44336; cursor: pointer;">🔒 Cerrar Caja</button>
+        </div>
+    </div>
+
+    <!-- Resumen del día -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 2rem;">💵</div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Ventas del día</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="ventas-dia">$0</div>
+            </div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 2rem;">📊</div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Total ventas</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-ventas">$0</div>
+            </div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 2rem;">👥</div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Citas completadas</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="citas-completadas">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; gap: 10px;">
+            <button class="filtro-fecha-btn active" data-fecha="hoy" style="padding: 8px 16px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Hoy</button>
+            <button class="filtro-fecha-btn" data-fecha="ayer" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">Ayer</button>
+            <button class="filtro-fecha-btn" data-fecha="semana" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">Esta Semana</button>
+            <button class="filtro-fecha-btn" data-fecha="mes" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">Este Mes</button>
+        </div>
+        <select id="filtro-metodo" style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <option value="todos">Todos los métodos</option>
+            <option value="efectivo">💵 Efectivo</option>
+            <option value="tarjeta">💳 Tarjeta</option>
+            <option value="transferencia">🏦 Transferencia</option>
+        </select>
+    </div>
+
+    <!-- Tabla de ventas -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 12px; text-align: left;">Fecha</th>
+                    <th style="padding: 12px; text-align: left;">Cliente</th>
+                    <th style="padding: 12px; text-align: left;">Item</th>
+                    <th style="padding: 12px; text-align: right;">Monto</th>
+                    <th style="padding: 12px; text-align: center;">Método</th>
+                    <th style="padding: 12px; text-align: center;">Estado</th>
+                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="ventas-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nueva Venta -->
+<div id="venta-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color: var(--color-primary);">Nueva Venta</h3>
+            <button id="cerrar-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <form id="venta-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Tipo</label>
+                <select id="venta-tipo" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="servicio">✂️ Servicio</option>
+                    <option value="producto">📦 Producto</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Cliente</label>
+                <select id="venta-cliente" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="">Cliente general</option>
+                </select>
+            </div>
+            <div id="servicio-group">
+                <label style="display: block; margin-bottom: 5px;">Servicio</label>
+                <select id="venta-servicio" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="">Seleccionar servicio</option>
+                </select>
+            </div>
+            <div id="producto-group" style="display: none;">
+                <label style="display: block; margin-bottom: 5px;">Producto</label>
+                <select id="venta-producto" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="">Seleccionar producto</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Cantidad</label>
+                <input type="number" id="venta-cantidad" value="1" min="1" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Precio</label>
+                <input type="text" id="venta-precio" readonly style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Método de pago</label>
+                <select id="venta-metodo" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    <option value="efectivo">💵 Efectivo</option>
+                    <option value="tarjeta">💳 Tarjeta</option>
+                    <option value="transferencia">🏦 Transferencia</option>
+                </select>
+            </div>
+            <div id="efectivo-group" style="display: none;">
+                <label style="display: block; margin-bottom: 5px;">Recibido (Efectivo)</label>
+                <input type="number" id="venta-recibido" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                <small id="cambio-info" style="color: var(--color-primary);"></small>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                <button type="button" id="cancelar-modal" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Registrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Cerrar Caja -->
+<div id="cerrar-caja-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 25px; width: 90%; max-width: 400px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color: var(--color-primary);">Cierre de Caja</h3>
+            <button id="cerrar-cierre-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                <span>Ventas del día:</span>
+                <strong id="cierre-total">$0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                <span>Efectivo esperado:</span>
+                <strong id="cierre-efectivo">$0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                <span>Tarjeta:</span>
+                <strong id="cierre-tarjeta">$0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                <span>Transferencia:</span>
+                <strong id="cierre-transferencia">$0</strong>
+            </div>
+            <div style="margin: 15px 0;">
+                <label>Efectivo en caja:</label>
+                <input type="number" id="cierre-efectivo-real" style="width: 100%; padding: 10px; margin-top: 5px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            </div>
+            <div id="diferencia-container" style="display: none;">
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span>Diferencia:</span>
+                    <strong id="diferencia-valor" style="color: #f44336;">$0</strong>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                <button id="cancelar-cierre" style="padding: 10px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button id="confirmar-cierre" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Cerrar Caja</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('🔵 Ejecutando script de caja.html');
+        
+        let ventas = [];
+        let clientes = [];
+        let servicios = [];
+        let productos = [];
+        let currentFiltroFecha = 'hoy';
+        
+        function cargarDatos() {
+            ventas = window.app?.estado?.cache?.ventas || [];
+            clientes = window.app?.estado?.cache?.clientes || [];
+            servicios = window.app?.estado?.cache?.servicios || [];
+            productos = window.app?.estado?.cache?.productos || [];
+            
+            if (ventas.length === 0) {
+                const hoy = new Date().toISOString().split('T')[0];
+                ventas = [
+                    { id: 1, fecha: hoy, clienteNombre: 'Carlos López', tipo: 'servicio', itemNombre: 'Corte de Cabello', cantidad: 1, total: 350, metodo: 'efectivo', estado: 'pagado', recibido: 500, cambio: 150 },
+                    { id: 2, fecha: hoy, clienteNombre: 'Miguel Ángel', tipo: 'servicio', itemNombre: 'Barba', cantidad: 1, total: 200, metodo: 'tarjeta', estado: 'pagado' }
+                ];
+                window.app.estado.cache.ventas = ventas;
+            }
+            
+            cargarSelectores();
+            actualizarResumen();
+            renderizarTabla();
+        }
+        
+        function cargarSelectores() {
+            const clienteSelect = document.getElementById('venta-cliente');
+            const servicioSelect = document.getElementById('venta-servicio');
+            const productoSelect = document.getElementById('venta-producto');
+            
+            if (clienteSelect) {
+                clienteSelect.innerHTML = '<option value="">Cliente general</option>' + 
+                    clientes.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+            }
+            if (servicioSelect) {
+                servicioSelect.innerHTML = '<option value="">Seleccionar servicio</option>' + 
+                    servicios.filter(s => s.estado === 'activo').map(s => `<option value="${s.id}" data-precio="${s.precio}">${s.nombre} - $${s.precio}</option>`).join('');
+            }
+            if (productoSelect) {
+                productoSelect.innerHTML = '<option value="">Seleccionar producto</option>' + 
+                    productos.map(p => `<option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}">${p.nombre} - $${p.precio}</option>`).join('');
+            }
+        }
+        
+        function filtrarVentasPorFecha() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const ayer = new Date();
+            ayer.setDate(ayer.getDate() - 1);
+            const ayerStr = ayer.toISOString().split('T')[0];
+            const semanaAtras = new Date();
+            semanaAtras.setDate(semanaAtras.getDate() - 7);
+            const mesAtras = new Date();
+            mesAtras.setMonth(mesAtras.getMonth() - 1);
+            
+            switch(currentFiltroFecha) {
+                case 'hoy': return ventas.filter(v => v.fecha === hoy);
+                case 'ayer': return ventas.filter(v => v.fecha === ayerStr);
+                case 'semana': return ventas.filter(v => v.fecha >= semanaAtras.toISOString().split('T')[0]);
+                case 'mes': return ventas.filter(v => v.fecha >= mesAtras.toISOString().split('T')[0]);
+                default: return ventas;
+            }
+        }
+        
+        function actualizarResumen() {
+            const ventasFiltradas = filtrarVentasPorFecha();
+            const total = ventasFiltradas.reduce((sum, v) => sum + v.total, 0);
+            const totalGeneral = ventas.reduce((sum, v) => sum + v.total, 0);
+            const citasCompletadas = ventasFiltradas.filter(v => v.tipo === 'servicio').length;
+            
+            document.getElementById('ventas-dia').textContent = `$${total.toLocaleString()}`;
+            document.getElementById('total-ventas').textContent = `$${totalGeneral.toLocaleString()}`;
+            document.getElementById('citas-completadas').textContent = citasCompletadas;
+        }
+        
+        function renderizarTabla() {
+            const tbody = document.getElementById('ventas-tbody');
+            if (!tbody) return;
+            
+            const metodo = document.getElementById('filtro-metodo')?.value || 'todos';
+            let filtered = filtrarVentasPorFecha();
+            if (metodo !== 'todos') filtered = filtered.filter(v => v.metodo === metodo);
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">No hay ventas registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(v => `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 12px;">${v.fecha}</td>
+                    <td style="padding: 12px;">${v.clienteNombre}</td>
+                    <td style="padding: 12px;">${v.itemNombre} ${v.cantidad > 1 ? `x${v.cantidad}` : ''}</td>
+                    <td style="padding: 12px; text-align: right;">$${v.total.toLocaleString()}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: ${v.metodo === 'efectivo' ? 'rgba(76,175,80,0.2)' : v.metodo === 'tarjeta' ? 'rgba(33,150,243,0.2)' : 'rgba(156,39,176,0.2)'}; color: ${v.metodo === 'efectivo' ? '#4caf50' : v.metodo === 'tarjeta' ? '#2196f3' : '#9c27b0'};">
+                            ${v.metodo === 'efectivo' ? '💵 Efectivo' : v.metodo === 'tarjeta' ? '💳 Tarjeta' : '🏦 Transferencia'}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: rgba(76,175,80,0.2); color: #4caf50;">${v.estado === 'pagado' ? '✓ Pagado' : '✗ Anulado'}</span>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        ${v.estado === 'pagado' ? `<button onclick="anularVenta(${v.id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem;">🗑️</button>` : '-'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function toggleTipoVenta() {
+            const tipo = document.getElementById('venta-tipo').value;
+            document.getElementById('servicio-group').style.display = tipo === 'servicio' ? 'block' : 'none';
+            document.getElementById('producto-group').style.display = tipo === 'producto' ? 'block' : 'none';
+            actualizarPrecio();
+        }
+        
+        function actualizarPrecio() {
+            const tipo = document.getElementById('venta-tipo').value;
+            let precio = 0;
+            
+            if (tipo === 'servicio') {
+                const select = document.getElementById('venta-servicio');
+                const option = select.options[select.selectedIndex];
+                precio = parseInt(option?.dataset?.precio) || 0;
+            } else {
+                const select = document.getElementById('venta-producto');
+                const option = select.options[select.selectedIndex];
+                precio = parseInt(option?.dataset?.precio) || 0;
+            }
+            document.getElementById('venta-precio').value = precio ? `$${precio}` : '';
+            calcularCambio();
+        }
+        
+        function calcularCambio() {
+            const precio = parseInt(document.getElementById('venta-precio').value?.replace('$', '') || 0);
+            const recibido = parseInt(document.getElementById('venta-recibido').value) || 0;
+            const cambio = recibido - precio;
+            const cambioInfo = document.getElementById('cambio-info');
+            if (cambioInfo) {
+                if (cambio >= 0) {
+                    cambioInfo.textContent = `Cambio: $${cambio.toLocaleString()}`;
+                    cambioInfo.style.color = '#4caf50';
+                } else {
+                    cambioInfo.textContent = `Faltan: $${Math.abs(cambio).toLocaleString()}`;
+                    cambioInfo.style.color = '#f44336';
+                }
+            }
+        }
+        
+        window.anularVenta = async function(id) {
+            if (confirm('¿Anular esta venta?')) {
+                const index = ventas.findIndex(v => v.id === id);
+                if (index !== -1) {
+                    ventas[index].estado = 'anulado';
+                    await guardarVentas();
+                    actualizarResumen();
+                    renderizarTabla();
+                }
+            }
+        };
+        
+        async function guardarVentas() {
+            if (window.app) window.app.estado.cache.ventas = ventas;
+            for (const v of ventas) await window.storage?.guardar('ventas', v);
+            actualizarResumen();
+            renderizarTabla();
+        }
+        
+        document.getElementById('btn-nueva-venta')?.addEventListener('click', () => {
+            document.getElementById('venta-form').reset();
+            document.getElementById('venta-tipo').value = 'servicio';
+            document.getElementById('venta-cantidad').value = '1';
+            toggleTipoVenta();
+            document.getElementById('venta-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('venta-tipo')?.addEventListener('change', toggleTipoVenta);
+        document.getElementById('venta-metodo')?.addEventListener('change', () => {
+            const efectivoGroup = document.getElementById('efectivo-group');
+            efectivoGroup.style.display = document.getElementById('venta-metodo').value === 'efectivo' ? 'block' : 'none';
+        });
+        document.getElementById('venta-servicio')?.addEventListener('change', actualizarPrecio);
+        document.getElementById('venta-producto')?.addEventListener('change', actualizarPrecio);
+        document.getElementById('venta-cantidad')?.addEventListener('input', actualizarPrecio);
+        document.getElementById('venta-recibido')?.addEventListener('input', calcularCambio);
+        
+        document.getElementById('venta-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const tipo = document.getElementById('venta-tipo').value;
+            let itemId, itemNombre, precio;
+            
+            if (tipo === 'servicio') {
+                const select = document.getElementById('venta-servicio');
+                const option = select.options[select.selectedIndex];
+                itemId = parseInt(option.value);
+                itemNombre = option.text.split(' -')[0];
+                precio = parseInt(option.dataset.precio);
+            } else {
+                const select = document.getElementById('venta-producto');
+                const option = select.options[select.selectedIndex];
+                itemId = parseInt(option.value);
+                itemNombre = option.text.split(' -')[0];
+                precio = parseInt(option.dataset.precio);
+            }
+            
+            const cantidad = parseInt(document.getElementById('venta-cantidad').value);
+            const total = precio * cantidad;
+            const metodo = document.getElementById('venta-metodo').value;
+            const recibido = metodo === 'efectivo' ? parseInt(document.getElementById('venta-recibido').value) : total;
+            const clienteId = document.getElementById('venta-cliente').value;
+            const clienteNombre = clienteId ? clientes.find(c => c.id == clienteId)?.nombre : 'Cliente general';
+            
+            if (recibido < total) {
+                alert('Monto recibido insuficiente');
+                return;
+            }
+            
+            const nuevaVenta = {
+                id: Date.now(),
+                fecha: new Date().toISOString().split('T')[0],
+                clienteId: clienteId || null,
+                clienteNombre: clienteNombre,
+                tipo: tipo,
+                itemId: itemId,
+                itemNombre: itemNombre,
+                cantidad: cantidad,
+                precio: precio,
+                total: total,
+                metodo: metodo,
+                estado: 'pagado',
+                recibido: metodo === 'efectivo' ? recibido : null,
+                cambio: metodo === 'efectivo' ? recibido - total : null
+            };
+            
+            ventas.push(nuevaVenta);
+            await guardarVentas();
+            document.getElementById('venta-modal').style.display = 'none';
+        });
+        
+        // Cierre de caja
+        function cerrarCaja() {
+            const ventasDia = filtrarVentasPorFecha();
+            const total = ventasDia.reduce((sum, v) => sum + v.total, 0);
+            const efectivo = ventasDia.filter(v => v.metodo === 'efectivo').reduce((sum, v) => sum + v.total, 0);
+            const tarjeta = ventasDia.filter(v => v.metodo === 'tarjeta').reduce((sum, v) => sum + v.total, 0);
+            const transferencia = ventasDia.filter(v => v.metodo === 'transferencia').reduce((sum, v) => sum + v.total, 0);
+            
+            document.getElementById('cierre-total').textContent = `$${total.toLocaleString()}`;
+            document.getElementById('cierre-efectivo').textContent = `$${efectivo.toLocaleString()}`;
+            document.getElementById('cierre-tarjeta').textContent = `$${tarjeta.toLocaleString()}`;
+            document.getElementById('cierre-transferencia').textContent = `$${transferencia.toLocaleString()}`;
+            document.getElementById('cierre-efectivo-real').value = '';
+            document.getElementById('diferencia-container').style.display = 'none';
+            document.getElementById('cerrar-caja-modal').style.display = 'flex';
+        }
+        
+        document.getElementById('btn-cerrar-caja')?.addEventListener('click', cerrarCaja);
+        
+        document.getElementById('cierre-efectivo-real')?.addEventListener('input', () => {
+            const efectivoEsperado = parseInt(document.getElementById('cierre-efectivo').textContent.replace('$', '').replace(/\./g, '')) || 0;
+            const efectivoReal = parseInt(document.getElementById('cierre-efectivo-real').value) || 0;
+            const diferencia = efectivoReal - efectivoEsperado;
+            const diferenciaContainer = document.getElementById('diferencia-container');
+            const diferenciaValor = document.getElementById('diferencia-valor');
+            
+            if (efectivoReal > 0) {
+                diferenciaContainer.style.display = 'block';
+                diferenciaValor.textContent = `${diferencia >= 0 ? '+' : ''}$${Math.abs(diferencia).toLocaleString()}`;
+                diferenciaValor.style.color = diferencia === 0 ? '#4caf50' : diferencia > 0 ? '#ff9800' : '#f44336';
+            }
+        });
+        
+        document.getElementById('confirmar-cierre')?.addEventListener('click', () => {
+            alert('Caja cerrada correctamente');
+            document.getElementById('cerrar-caja-modal').style.display = 'none';
+        });
+        
+        document.querySelectorAll('#cerrar-cierre-modal, #cancelar-cierre').forEach(btn => {
+            btn?.addEventListener('click', () => {
+                document.getElementById('cerrar-caja-modal').style.display = 'none';
+            });
+        });
+        
+        document.querySelectorAll('.filtro-fecha-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filtro-fecha-btn').forEach(b => {
+                    b.style.background = 'var(--bg-tertiary)';
+                    b.style.color = 'var(--text-primary)';
+                    b.style.border = '1px solid var(--border-color)';
+                });
+                btn.style.background = 'var(--color-primary)';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+                currentFiltroFecha = btn.dataset.fecha;
+                actualizarResumen();
+                renderizarTabla();
+            });
+        });
+        
+        document.getElementById('filtro-metodo')?.addEventListener('change', () => renderizarTabla());
+        
+        document.querySelectorAll('#cerrar-modal, #cancelar-modal').forEach(btn => {
+            btn?.addEventListener('click', () => {
+                document.getElementById('venta-modal').style.display = 'none';
+            });
+        });
+        
+        cargarDatos();
+        
+        window.addEventListener('app:datos-listos', () => {
+            cargarDatos();
+        });
+    })();
+</script>

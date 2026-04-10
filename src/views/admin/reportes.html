@@ -1,0 +1,420 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--color-primary);">📈 Reportes y Estadísticas</h2>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-exportar-pdf" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 8px; cursor: pointer;">📄 PDF</button>
+            <button id="btn-exportar-excel" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 8px; cursor: pointer;">📊 Excel</button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display: flex; gap: 5px; margin-bottom: 20px; background: var(--bg-tertiary); border-radius: 12px; padding: 4px; flex-wrap: wrap;">
+        <button class="reporte-tab active" data-tab="ventas" style="padding: 10px 20px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">💰 Ventas</button>
+        <button class="reporte-tab" data-tab="citas" style="padding: 10px 20px; background: transparent; border: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer;">📅 Citas</button>
+        <button class="reporte-tab" data-tab="clientes" style="padding: 10px 20px; background: transparent; border: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer;">👥 Clientes</button>
+        <button class="reporte-tab" data-tab="barberos" style="padding: 10px 20px; background: transparent; border: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer;">✂️ Barberos</button>
+        <button class="reporte-tab" data-tab="inventario" style="padding: 10px 20px; background: transparent; border: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer;">📦 Inventario</button>
+    </div>
+
+    <!-- Filtros de fecha -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="filtro-fecha-reporte active" data-fecha="semana" style="padding: 8px 16px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Esta Semana</button>
+            <button class="filtro-fecha-reporte" data-fecha="mes" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">Este Mes</button>
+            <button class="filtro-fecha-reporte" data-fecha="trimestre" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">Trimestre</button>
+            <button class="filtro-fecha-reporte" data-fecha="anio" style="padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer;">Año</button>
+        </div>
+        <div id="filtros-personalizado" style="display: flex; gap: 10px; align-items: center;">
+            <input type="date" id="fecha-inicio" style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <span>a</span>
+            <input type="date" id="fecha-fin" style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+            <button id="aplicar-filtro" style="padding: 8px 16px; background: var(--color-primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Aplicar</button>
+        </div>
+    </div>
+
+    <!-- Panel Ventas -->
+    <div id="panel-ventas" class="reporte-panel">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">💰</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Ventas</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-ventas-reporte">$0</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">📊</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Transacciones</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-transacciones">0</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">💵</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Ticket Promedio</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="ticket-promedio">$0</div>
+            </div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 15px;">📈 Top 10 Productos/Servicios</h3>
+            <div id="top-items" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+            <h3 style="margin-bottom: 15px;">💳 Ventas por Método de Pago</h3>
+            <div id="metodos-lista" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;"></div>
+        </div>
+    </div>
+
+    <!-- Panel Citas -->
+    <div id="panel-citas" class="reporte-panel" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">📅</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Citas</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-citas">0</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">✅</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Completadas</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="citas-completadas-reporte">0</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">❌</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Canceladas</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="citas-canceladas">0</div>
+            </div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+            <h3 style="margin-bottom: 15px;">📊 Citas por Barbero</h3>
+            <div id="citas-barberos-lista" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Panel Clientes -->
+    <div id="panel-clientes" class="reporte-panel" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">👥</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Clientes</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-clientes">0</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">⭐</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Clientes Frecuentes</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="clientes-frecuentes">0</div>
+            </div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+            <h3 style="margin-bottom: 15px;">🏆 Top Clientes por Gasto</h3>
+            <div id="top-clientes" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Panel Barberos -->
+    <div id="panel-barberos" class="reporte-panel" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">✂️</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Barberos</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-barberos">0</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">💰</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Comisiones</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-comisiones">$0</div>
+            </div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+            <h3 style="margin-bottom: 15px;">🏆 Ranking de Barberos</h3>
+            <div id="ranking-barberos" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Panel Inventario -->
+    <div id="panel-inventario" class="reporte-panel" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">📦</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Total Productos</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="total-productos">0</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 2rem;">⚠️</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Stock Bajo</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);" id="stock-bajo-total">0</div>
+            </div>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px;">
+            <h3 style="margin-bottom: 15px;">⚠️ Productos con Stock Bajo</h3>
+            <div id="productos-stock-bajo" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('🔵 Ejecutando script de reportes.html');
+        
+        let ventas = [];
+        let citas = [];
+        let clientes = [];
+        let barberos = [];
+        let productos = [];
+        let currentTab = 'ventas';
+        let currentPeriodo = 'semana';
+        let fechaInicio = null;
+        let fechaFin = null;
+        
+        function cargarDatos() {
+            ventas = window.app?.estado?.cache?.ventas || [];
+            citas = window.app?.estado?.cache?.citas || [];
+            clientes = window.app?.estado?.cache?.clientes || [];
+            barberos = window.app?.estado?.cache?.barberos || [];
+            productos = window.app?.estado?.cache?.productos || [];
+            
+            cargarReporte();
+        }
+        
+        function getRangoFechas() {
+            const hoy = new Date();
+            let inicio = new Date();
+            
+            if (fechaInicio && fechaFin) {
+                return { inicio: new Date(fechaInicio), fin: new Date(fechaFin) };
+            }
+            
+            switch(currentPeriodo) {
+                case 'semana':
+                    inicio.setDate(hoy.getDate() - 7);
+                    break;
+                case 'mes':
+                    inicio.setMonth(hoy.getMonth() - 1);
+                    break;
+                case 'trimestre':
+                    inicio.setMonth(hoy.getMonth() - 3);
+                    break;
+                case 'anio':
+                    inicio.setFullYear(hoy.getFullYear() - 1);
+                    break;
+            }
+            return { inicio, fin: hoy };
+        }
+        
+        function filtrarPorFecha(items, fechaField = 'fecha') {
+            const { inicio, fin } = getRangoFechas();
+            return items.filter(item => {
+                const fechaItem = new Date(item[fechaField]);
+                return fechaItem >= inicio && fechaItem <= fin;
+            });
+        }
+        
+        function cargarReporteVentas() {
+            const ventasFiltradas = filtrarPorFecha(ventas);
+            const ventasPagadas = ventasFiltradas.filter(v => v.estado === 'pagado');
+            
+            const total = ventasPagadas.reduce((sum, v) => sum + v.total, 0);
+            const transacciones = ventasPagadas.length;
+            const ticketPromedio = transacciones > 0 ? total / transacciones : 0;
+            
+            document.getElementById('total-ventas-reporte').textContent = `$${total.toLocaleString()}`;
+            document.getElementById('total-transacciones').textContent = transacciones;
+            document.getElementById('ticket-promedio').textContent = `$${ticketPromedio.toLocaleString()}`;
+            
+            // Top items
+            const itemsCount = {};
+            ventasPagadas.forEach(v => {
+                itemsCount[v.itemNombre] = (itemsCount[v.itemNombre] || 0) + v.cantidad;
+            });
+            const topItems = Object.entries(itemsCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            
+            const topContainer = document.getElementById('top-items');
+            if (topContainer) {
+                topContainer.innerHTML = topItems.map(([nombre, cantidad]) => `
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color);">
+                        <span>${nombre}</span>
+                        <span style="color: var(--color-primary);">${cantidad} unidades</span>
+                    </div>
+                `).join('');
+                if (topItems.length === 0) topContainer.innerHTML = '<div style="text-align: center; padding: 20px;">No hay datos</div>';
+            }
+            
+            // Métodos de pago
+            const metodos = { efectivo: 0, tarjeta: 0, transferencia: 0 };
+            ventasPagadas.forEach(v => { metodos[v.metodo] = (metodos[v.metodo] || 0) + v.total; });
+            
+            const metodosContainer = document.getElementById('metodos-lista');
+            if (metodosContainer) {
+                metodosContainer.innerHTML = `
+                    <div><div style="font-size: 1.5rem;">💵</div><div style="color: var(--color-primary);">$${metodos.efectivo.toLocaleString()}</div><div>Efectivo</div></div>
+                    <div><div style="font-size: 1.5rem;">💳</div><div style="color: var(--color-primary);">$${metodos.tarjeta.toLocaleString()}</div><div>Tarjeta</div></div>
+                    <div><div style="font-size: 1.5rem;">🏦</div><div style="color: var(--color-primary);">$${metodos.transferencia.toLocaleString()}</div><div>Transferencia</div></div>
+                `;
+            }
+        }
+        
+        function cargarReporteCitas() {
+            const citasFiltradas = filtrarPorFecha(citas);
+            const completadas = citasFiltradas.filter(c => c.estado === 'completada');
+            const canceladas = citasFiltradas.filter(c => c.estado === 'cancelada');
+            
+            document.getElementById('total-citas').textContent = citasFiltradas.length;
+            document.getElementById('citas-completadas-reporte').textContent = completadas.length;
+            document.getElementById('citas-canceladas').textContent = canceladas.length;
+            
+            // Citas por barbero
+            const citasPorBarbero = {};
+            completadas.forEach(c => {
+                citasPorBarbero[c.barberoNombre] = (citasPorBarbero[c.barberoNombre] || 0) + 1;
+            });
+            
+            const ranking = Object.entries(citasPorBarbero).sort((a, b) => b[1] - a[1]);
+            const container = document.getElementById('citas-barberos-lista');
+            if (container) {
+                container.innerHTML = ranking.map(([nombre, cantidad]) => `
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color);">
+                        <span>${nombre}</span>
+                        <span style="color: var(--color-primary);">${cantidad} citas</span>
+                    </div>
+                `).join('');
+                if (ranking.length === 0) container.innerHTML = '<div style="text-align: center; padding: 20px;">No hay datos</div>';
+            }
+        }
+        
+        function cargarReporteClientes() {
+            document.getElementById('total-clientes').textContent = clientes.length;
+            const frecuentes = clientes.filter(c => (c.visitas || 0) >= 5).length;
+            document.getElementById('clientes-frecuentes').textContent = frecuentes;
+            
+            // Top clientes por gasto
+            const gastoPorCliente = {};
+            ventas.forEach(v => {
+                if (v.clienteId) {
+                    gastoPorCliente[v.clienteId] = (gastoPorCliente[v.clienteId] || 0) + v.total;
+                }
+            });
+            const topClientes = Object.entries(gastoPorCliente)
+                .map(([id, total]) => ({ nombre: clientes.find(c => c.id == id)?.nombre || 'Desconocido', total }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 10);
+            
+            const container = document.getElementById('top-clientes');
+            if (container) {
+                container.innerHTML = topClientes.map(c => `
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color);">
+                        <span>${c.nombre}</span>
+                        <span style="color: var(--color-primary);">$${c.total.toLocaleString()}</span>
+                    </div>
+                `).join('');
+                if (topClientes.length === 0) container.innerHTML = '<div style="text-align: center; padding: 20px;">No hay datos</div>';
+            }
+        }
+        
+        function cargarReporteBarberos() {
+            document.getElementById('total-barberos').textContent = barberos.length;
+            const comisiones = barberos.reduce((sum, b) => sum + ((b.ingresosGenerados || 0) * (b.comision || 0) / 100), 0);
+            document.getElementById('total-comisiones').textContent = `$${comisiones.toLocaleString()}`;
+            
+            // Ranking por citas
+            const citasPorBarbero = {};
+            citas.forEach(c => {
+                if (c.estado === 'completada') {
+                    citasPorBarbero[c.barberoNombre] = (citasPorBarbero[c.barberoNombre] || 0) + 1;
+                }
+            });
+            const ranking = Object.entries(citasPorBarbero).sort((a, b) => b[1] - a[1]);
+            
+            const container = document.getElementById('ranking-barberos');
+            if (container) {
+                container.innerHTML = ranking.map(([nombre, cantidad], i) => `
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color);">
+                        <span>${i + 1}. ${nombre}</span>
+                        <span style="color: var(--color-primary);">${cantidad} citas</span>
+                    </div>
+                `).join('');
+                if (ranking.length === 0) container.innerHTML = '<div style="text-align: center; padding: 20px;">No hay datos</div>';
+            }
+        }
+        
+        function cargarReporteInventario() {
+            const stockBajo = productos.filter(p => p.stock <= p.stockMinimo && p.stock > 0);
+            const stockAgotado = productos.filter(p => p.stock === 0);
+            
+            document.getElementById('total-productos').textContent = productos.length;
+            document.getElementById('stock-bajo-total').textContent = stockBajo.length + stockAgotado.length;
+            
+            const productosCriticos = [...stockBajo, ...stockAgotado];
+            const container = document.getElementById('productos-stock-bajo');
+            if (container) {
+                container.innerHTML = productosCriticos.map(p => `
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color);">
+                        <span>${p.nombre}</span>
+                        <span style="color: ${p.stock === 0 ? '#f44336' : '#ff9800'};">Stock: ${p.stock} / ${p.stockMinimo}</span>
+                    </div>
+                `).join('');
+                if (productosCriticos.length === 0) container.innerHTML = '<div style="text-align: center; padding: 20px;">No hay productos con stock bajo</div>';
+            }
+        }
+        
+        function cargarReporte() {
+            switch(currentTab) {
+                case 'ventas': cargarReporteVentas(); break;
+                case 'citas': cargarReporteCitas(); break;
+                case 'clientes': cargarReporteClientes(); break;
+                case 'barberos': cargarReporteBarberos(); break;
+                case 'inventario': cargarReporteInventario(); break;
+            }
+        }
+        
+        // Eventos
+        document.querySelectorAll('.reporte-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentTab = tab.dataset.tab;
+                document.querySelectorAll('.reporte-tab').forEach(t => {
+                    t.style.background = 'transparent';
+                    t.style.color = 'var(--text-secondary)';
+                });
+                tab.style.background = 'var(--color-primary)';
+                tab.style.color = 'white';
+                
+                document.querySelectorAll('.reporte-panel').forEach(panel => panel.style.display = 'none');
+                document.getElementById(`panel-${currentTab}`).style.display = 'block';
+                cargarReporte();
+            });
+        });
+        
+        document.querySelectorAll('.filtro-fecha-reporte').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filtro-fecha-reporte').forEach(b => {
+                    b.style.background = 'var(--bg-tertiary)';
+                    b.style.color = 'var(--text-primary)';
+                    b.style.border = '1px solid var(--border-color)';
+                });
+                btn.style.background = 'var(--color-primary)';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+                currentPeriodo = btn.dataset.fecha;
+                fechaInicio = null;
+                fechaFin = null;
+                cargarReporte();
+            });
+        });
+        
+        document.getElementById('aplicar-filtro')?.addEventListener('click', () => {
+            fechaInicio = document.getElementById('fecha-inicio').value;
+            fechaFin = document.getElementById('fecha-fin').value;
+            if (fechaInicio && fechaFin) {
+                cargarReporte();
+            }
+        });
+        
+        document.getElementById('btn-exportar-pdf')?.addEventListener('click', () => {
+            alert('📄 Exportando PDF... (Próximamente)');
+        });
+        
+        document.getElementById('btn-exportar-excel')?.addEventListener('click', () => {
+            alert('📊 Exportando Excel... (Próximamente)');
+        });
+        
+        cargarDatos();
+        
+        window.addEventListener('app:datos-listos', () => {
+            cargarDatos();
+        });
+    })();
+</script>

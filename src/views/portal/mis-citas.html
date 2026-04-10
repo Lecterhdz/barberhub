@@ -1,0 +1,136 @@
+<div style="max-width: 800px; margin: 0 auto;">
+    <h2 style="color: var(--color-primary);">📋 Mis Citas</h2>
+    
+    <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
+        <h3>🔍 Buscar mis citas</h3>
+        <p style="font-size: 0.85rem; margin-bottom: 15px;">Ingresa tu número de teléfono para ver tus citas</p>
+        <div style="display: flex; gap: 10px;">
+            <input type="tel" id="telefono-busqueda" placeholder="Ej: 555-1234" style="flex: 1; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary);">
+            <button id="btn-buscar" style="padding: 12px 24px; background: var(--color-primary); border: none; border-radius: 10px; color: white; cursor: pointer;">Buscar 🔍</button>
+        </div>
+    </div>
+    
+    <div id="resultados" style="display: none;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+            <button id="tab-proximas" class="tab-btn active" style="padding: 10px 20px; background: none; border: none; color: var(--color-primary); cursor: pointer; border-bottom: 2px solid var(--color-primary);">📅 Próximas</button>
+            <button id="tab-historial" class="tab-btn" style="padding: 10px 20px; background: none; border: none; color: var(--text-secondary); cursor: pointer;">📜 Historial</button>
+        </div>
+        <div id="lista-proximas"></div>
+        <div id="lista-historial" style="display: none;"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let citas = [];
+        let telefonoActual = '';
+        
+        async function buscarCitas() {
+            const telefono = document.getElementById('telefono-busqueda').value.trim();
+            if (!telefono) {
+                alert('Ingresa tu número de teléfono');
+                return;
+            }
+            
+            telefonoActual = telefono;
+            sessionStorage.setItem('cliente_telefono', telefono);
+            
+            const todasCitas = await window.storage.obtenerTodos('citas') || [];
+            citas = todasCitas.filter(c => c.clienteTelefono === telefono);
+            
+            document.getElementById('resultados').style.display = 'block';
+            renderizarCitas();
+        }
+        
+        function renderizarCitas() {
+            const hoy = new Date().toISOString().split('T')[0];
+            
+            const proximas = citas.filter(c => c.fecha >= hoy && c.estado !== 'cancelada')
+                .sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.hora || '').localeCompare(b.hora || ''));
+            
+            const historial = citas.filter(c => c.fecha < hoy || c.estado === 'cancelada')
+                .sort((a, b) => b.fecha.localeCompare(a.fecha));
+            
+            renderizarLista('lista-proximas', proximas, true);
+            renderizarLista('lista-historial', historial, false);
+        }
+        
+        function renderizarLista(containerId, citasLista, mostrarAcciones) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            if (citasLista.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">No hay citas</div>';
+                return;
+            }
+            
+            container.innerHTML = citasLista.map(c => `
+                <div style="background: var(--bg-secondary); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 3px solid ${c.estado === 'pendiente' ? '#ff9800' : c.estado === 'confirmada' ? '#4caf50' : c.estado === 'cancelada' ? '#f44336' : '#2196f3'};">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
+                        <div>
+                            <div><strong>${c.servicioNombre}</strong> - $${c.precio}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">📅 ${c.fecha} - ${c.hora}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">💈 ${c.barberoNombre}</div>
+                            <div style="margin-top: 8px;">
+                                <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: ${c.estado === 'pendiente' ? 'rgba(255,152,0,0.2)' : c.estado === 'confirmada' ? 'rgba(76,175,80,0.2)' : c.estado === 'cancelada' ? 'rgba(244,67,54,0.2)' : 'rgba(33,150,243,0.2)'}; color: ${c.estado === 'pendiente' ? '#ff9800' : c.estado === 'confirmada' ? '#4caf50' : c.estado === 'cancelada' ? '#f44336' : '#2196f3'};">
+                                    ${c.estado === 'pendiente' ? '⏳ Pendiente' : c.estado === 'confirmada' ? '✅ Confirmada' : c.estado === 'cancelada' ? '❌ Cancelada' : '🎉 Completada'}
+                                </span>
+                            </div>
+                        </div>
+                        ${mostrarAcciones && c.estado !== 'cancelada' && c.fecha >= new Date().toISOString().split('T')[0] ? `
+                            <div>
+                                <button onclick="cancelarCita(${c.id})" style="padding: 8px 16px; background: rgba(244,67,54,0.1); border: 1px solid #f44336; border-radius: 8px; color: #f44336; cursor: pointer;">Cancelar</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        window.cancelarCita = async function(id) {
+            if (!confirm('¿Cancelar esta cita?')) return;
+            
+            const cita = citas.find(c => c.id === id);
+            if (cita) {
+                cita.estado = 'cancelada';
+                await window.storage.guardar('citas', cita);
+                await buscarCitas();
+            }
+        };
+        
+        // Eventos
+        document.getElementById('btn-buscar')?.addEventListener('click', buscarCitas);
+        document.getElementById('telefono-busqueda')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscarCitas();
+        });
+        
+        document.getElementById('tab-proximas')?.addEventListener('click', () => {
+            document.getElementById('tab-proximas').classList.add('active');
+            document.getElementById('tab-proximas').style.borderBottom = '2px solid var(--color-primary)';
+            document.getElementById('tab-proximas').style.color = 'var(--color-primary)';
+            document.getElementById('tab-historial').classList.remove('active');
+            document.getElementById('tab-historial').style.borderBottom = 'none';
+            document.getElementById('tab-historial').style.color = 'var(--text-secondary)';
+            document.getElementById('lista-proximas').style.display = 'block';
+            document.getElementById('lista-historial').style.display = 'none';
+        });
+        
+        document.getElementById('tab-historial')?.addEventListener('click', () => {
+            document.getElementById('tab-historial').classList.add('active');
+            document.getElementById('tab-historial').style.borderBottom = '2px solid var(--color-primary)';
+            document.getElementById('tab-historial').style.color = 'var(--color-primary)';
+            document.getElementById('tab-proximas').classList.remove('active');
+            document.getElementById('tab-proximas').style.borderBottom = 'none';
+            document.getElementById('tab-proximas').style.color = 'var(--text-secondary)';
+            document.getElementById('lista-proximas').style.display = 'none';
+            document.getElementById('lista-historial').style.display = 'block';
+        });
+        
+        // Auto-buscar si hay teléfono guardado
+        const telefonoGuardado = sessionStorage.getItem('cliente_telefono');
+        if (telefonoGuardado) {
+            document.getElementById('telefono-busqueda').value = telefonoGuardado;
+            buscarCitas();
+        }
+    })();
+</script>
