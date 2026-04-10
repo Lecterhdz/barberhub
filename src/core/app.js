@@ -275,16 +275,16 @@ export const app = {
         ` : '';
         
         header.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: var(--header-height);">
-                <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: var(--header-height); flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 15px; flex-shrink: 0;">
                     <button id="hamburger-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">☰</button>
                     <div>
-                        <h1 style="color: var(--color-primary); cursor: pointer;" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
+                        <h1 style="color: var(--color-primary); cursor: pointer; font-size: clamp(0.9rem, 5vw, 1.3rem);" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
                         <p style="font-size: 0.7rem;">${autenticado ? `Admin - ${licencia.tipo}` : 'Cliente'}</p>
                     </div>
                 </div>
                 ${portalNavButtons}
-                <div class="header-actions" style="display: flex; align-items: center; gap: 15px;">
+                <div class="header-actions" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
                     ${autenticado ? `
                         <div style="padding: 5px 12px; background: rgba(76,175,80,0.2); border-radius: 20px; font-size: 0.75rem;">✅ ${licencia.tipo}</div>
                         <button id="btn-logout" style="background: rgba(244,67,54,0.1); border: none; padding: 8px 16px; border-radius: 8px; color: #f44336; cursor: pointer;">🚪 Salir</button>
