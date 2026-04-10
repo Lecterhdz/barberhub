@@ -263,13 +263,16 @@ export const app = {
         const isAgendar = rutaActual === '/portal/agendar' || rutaActual === '';
         const isMisCitas = rutaActual === '/portal/mis-citas';
         
+        // En renderizarHeader, modifica los botones de navegación
         const portalNavButtons = !autenticado ? `
             <div class="portal-nav-buttons">
-                <a href="#/portal/agendar" class="nav-btn" style="padding: 8px 12px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.8rem; transition: all 0.2s;">
-                    📅
+                <a href="#/portal/agendar" class="nav-btn" style="padding: 6px 10px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.75rem;">
+                    <span style="font-size: 1rem;">📅</span>
+                    <span class="nav-text">Agendar</span>
                 </a>
-                <a href="#/portal/mis-citas" class="nav-btn" style="padding: 8px 12px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.8rem; transition: all 0.2s;">
-                    📋
+                <a href="#/portal/mis-citas" class="nav-btn" style="padding: 6px 10px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.75rem;">
+                    <span style="font-size: 1rem;">📋</span>
+                    <span class="nav-text">Mis Citas</span>
                 </a>
             </div>
         ` : '';
