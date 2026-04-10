@@ -1,11 +1,11 @@
 // src/core/storage.js
-//import { 
-//    guardarFirestore, 
-//    obtenerTodosFirestore, 
-//    eliminarFirestore, 
-//    escucharCambios,
-//    COLLECTIONS 
-//} from './firebase.js';
+import { 
+    guardarFirestore, 
+    obtenerTodosFirestore, 
+    eliminarFirestore, 
+    escucharCambios,
+    COLLECTIONS 
+} from './firebase.js';
 
 console.log('💾 Storage module v2.0 (Firebase + IndexedDB)');
 
@@ -13,15 +13,14 @@ export const storage = {
     db: null,
     disponible: false,
     sincronizando: false,
-    firebaseEnabled: true, // Cambiar a false si no hay conexión
+    firebaseEnabled: true,
+    listeners: [],
 
     async init() {
         console.log('💾 Inicializando storage...');
         
-        // Inicializar IndexedDB (local)
         await this.initIndexedDB();
         
-        // Verificar conexión a Firebase
         if (this.firebaseEnabled) {
             try {
                 await this.sincronizarDatos();
@@ -38,7 +37,7 @@ export const storage = {
     
     initIndexedDB() {
         return new Promise((resolve) => {
-            const request = indexedDB.open('BarberHubDB', 4);
+            const request = indexedDB.open('BarberHubDB', 5);
             
             request.onupgradeneeded = (e) => {
                 const db = e.target.result;
@@ -77,7 +76,7 @@ export const storage = {
                 const datosFirebase = await obtenerTodosFirestore(coleccion);
                 const datosLocal = await this.obtenerTodos(coleccion);
                 
-                // Sincronizar: Firebase -> Local
+                // Firebase -> Local (nuevos o actualizados)
                 for (const dato of datosFirebase) {
                     const existeLocal = datosLocal.some(l => l.id === dato.id);
                     if (!existeLocal) {
@@ -86,7 +85,7 @@ export const storage = {
                     }
                 }
                 
-                // Sincronizar: Local -> Firebase
+                // Local -> Firebase (nuevos)
                 for (const dato of datosLocal) {
                     const existeFirebase = datosFirebase.some(f => f.id === dato.id);
                     if (!existeFirebase && dato.id) {
@@ -105,14 +104,14 @@ export const storage = {
     
     iniciarEscuchaTiempoReal() {
         for (const [key, coleccion] of Object.entries(COLLECTIONS)) {
-            escucharCambios(coleccion, async (datos) => {
+            const unsubscribe = escucharCambios(coleccion, async (datos) => {
                 console.log(`🔄 Cambios detectados en ${coleccion}:`, datos.length);
                 for (const dato of datos) {
                     await this.guardarLocal(coleccion, dato);
                 }
-                // Disparar evento para actualizar UI
                 window.dispatchEvent(new CustomEvent('firebase-sync', { detail: { coleccion, datos } }));
             });
+            this.listeners.push(unsubscribe);
         }
     },
     
@@ -133,10 +132,8 @@ export const storage = {
     },
     
     async guardar(storeName, data) {
-        // Guardar localmente
         const result = await this.guardarLocal(storeName, data);
         
-        // Guardar en Firebase si está disponible
         if (this.firebaseEnabled && data.id) {
             await guardarFirestore(storeName, data.id, data);
         }
@@ -186,25 +183,19 @@ export const storage = {
             try {
                 localStorage.setItem(key, JSON.stringify(value));
                 return true;
-            } catch (error) {
-                return false;
-            }
+            } catch(e) { return false; }
         },
         get(key, defaultValue = null) {
             try {
                 const item = localStorage.getItem(key);
                 return item ? JSON.parse(item) : defaultValue;
-            } catch (error) {
-                return defaultValue;
-            }
+            } catch(e) { return defaultValue; }
         },
         remove(key) {
             try {
                 localStorage.removeItem(key);
                 return true;
-            } catch (error) {
-                return false;
-            }
+            } catch(e) { return false; }
         }
     }
 };
