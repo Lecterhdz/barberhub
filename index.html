@@ -4,40 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#1a1a1a">
+    <meta name="description" content="BarberHub - Gestión Inteligente para Barberías">
     <title>BarberHub - Gestión Inteligente para Barberías</title>
     
-    <!-- Styles -->
-    <link rel="stylesheet" href="./src/styles/variables.css">
-    <link rel="stylesheet" href="./src/styles/base.css">
-    <link rel="stylesheet" href="./src/styles/layout.css">
-    <link rel="stylesheet" href="./src/core/themes/dark-amber.css" id="theme-css">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='80' font-size='80' text-anchor='middle'%3E💈%3C/text%3E%3C/svg%3E">
+    
+    <!-- Stylesheets -->
     
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
-        /* Estilos iniciales para evitar pantalla negra */
-        body {
-            background: #1a1a1a;
-            margin: 0;
-            padding: 0;
-        }
-        #app {
-            min-height: 100vh;
-        }
-        .loading-inicial {
+        /* Loader inicial */
+        .initial-loader {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
         }
-        .loading-spinner-inicial {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #333;
-            border-top-color: #ff6b35;
+        .initial-loader.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loader-content {
+            text-align: center;
+        }
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--color-primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
@@ -45,14 +49,32 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .loader-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 5px;
+        }
+        .loader-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
     </style>
+  <script type="module" crossorigin src="/assets/index-DpBCvRbi.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BxxWh0Zq.css">
 </head>
 <body>
-    <div id="app">
-        <div class="loading-inicial" id="loading-inicial">
-            <div class="loading-spinner-inicial"></div>
-            <p>Cargando BarberHub...</p>
+    <!-- Loader inicial -->
+    <div id="initial-loader" class="initial-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-title">💈 BarberHub</div>
+            <div class="loader-subtitle">Cargando sistema...</div>
         </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app">
         <header id="app-header"></header>
         <div class="app-layout">
             <aside id="app-sidebar"></aside>
@@ -61,21 +83,33 @@
         <footer id="app-footer"></footer>
     </div>
 
-    <!-- Core Scripts -->
-    <script type="module">
-        import { app } from './src/core/app.js';
-        
-        // Ocultar loading cuando la app esté lista
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const loading = document.getElementById('loading-inicial');
-                if (loading) loading.style.display = 'none';
-            }, 500);
+    <!-- Modal Container (para modales dinámicos) -->
+    <div id="modal-container"></div>
+
+    <!-- Script principal -->
+    
+    <script>
+        // Ocultar loader cuando la app esté lista
+        window.addEventListener('app-ready', () => {
+            const loader = document.getElementById('initial-loader');
+            if (loader) {
+                loader.classList.add('fade-out');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500);
+            }
         });
         
-        // Inicializar
-        window.app = app;
-        app.init();
+        // Fallback: ocultar loader después de 3 segundos
+        setTimeout(() => {
+            const loader = document.getElementById('initial-loader');
+            if (loader && loader.style.display !== 'none') {
+                loader.classList.add('fade-out');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500);
+            }
+        }, 3000);
     </script>
 </body>
 </html>

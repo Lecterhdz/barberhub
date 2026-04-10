@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase</title>
+</head>
+<body>
+    <h1>Probando Firebase</h1>
+    <div id="resultado"></div>
+    
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHI4oybtSl1TA_UuSVnBRxqgWlm2Ac_ds",
+            authDomain: "barberhub-d35f5.firebaseapp.com",
+            projectId: "barberhub-d35f5",
+            storageBucket: "barberhub-d35f5.firebasestorage.app",
+            messagingSenderId: "475649338273",
+            appId: "1:475649338273:web:91d0e33c0a7b4ebb4639e0"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const resultado = document.getElementById('resultado');
+        
+        async function testFirebase() {
+            try {
+                // Probar escritura
+                const docRef = await addDoc(collection(db, "test"), {
+                    mensaje: "Hola desde BarberHub",
+                    fecha: new Date().toISOString(),
+                    dispositivo: navigator.userAgent
+                });
+                resultado.innerHTML += `<p>✅ Escritura exitosa! ID: ${docRef.id}</p>`;
+                
+                // Probar lectura
+                const querySnapshot = await getDocs(collection(db, "test"));
+                resultado.innerHTML += `<p>✅ Lectura exitosa! Documentos encontrados: ${querySnapshot.size}</p>`;
+                resultado.innerHTML += `<p style="color: green;">🔥 Firebase funciona correctamente!</p>`;
+                
+            } catch (error) {
+                resultado.innerHTML += `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+        
+        testFirebase();
+    </script>
+</body>
+</html>
