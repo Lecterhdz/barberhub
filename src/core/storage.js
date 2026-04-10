@@ -1,11 +1,11 @@
 // src/core/storage.js
-import { 
-    guardarFirestore, 
-    obtenerTodosFirestore, 
-    eliminarFirestore, 
-    escucharCambios,
-    COLLECTIONS 
-} from './firebase.js';
+//import { 
+//    guardarFirestore, 
+//    obtenerTodosFirestore, 
+//    eliminarFirestore, 
+//    escucharCambios,
+//    COLLECTIONS 
+//} from './firebase.js';
 
 console.log('💾 Storage module v2.0 (Firebase + IndexedDB)');
 
