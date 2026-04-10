@@ -14,5 +14,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+export const COLLECTIONS = {
+    BARBEROS: 'barberos',
+    SERVICIOS: 'servicios',
+    CLIENTES: 'clientes',
+    CITAS: 'citas',
+    PRODUCTOS: 'productos',
+    VENTAS: 'ventas'
+};
 export { db };
