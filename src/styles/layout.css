@@ -914,3 +914,80 @@ body, #app {
     transform: translateY(-2px);
     filter: brightness(1.1);
 }
+/* ============================================
+   HEADER RESPONSIVE - CORRECCIÓN MÓVIL
+   ============================================ */
+
+/* Header actions - asegurar que los botones sean visibles */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Botón de temas en móvil */
+@media (max-width: 768px) {
+    .header-actions {
+        gap: 5px;
+    }
+    
+    .theme-dropdown-btn,
+    #theme-btn {
+        padding: 6px 8px !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .btn-login,
+    .btn-logout {
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .license-badge {
+        display: none !important;
+    }
+    
+    /* Asegurar que el botón de temas sea visible */
+    #theme-dropdown {
+        margin-right: 5px !important;
+    }
+    
+    .header-title {
+        font-size: 0.9rem !important;
+    }
+    
+    .portal-nav-buttons {
+        margin: 0 5px !important;
+        gap: 5px !important;
+    }
+    
+    .nav-btn {
+        padding: 5px 8px !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 480px) {
+    .header-actions {
+        gap: 3px;
+    }
+    
+    .theme-dropdown-btn,
+    #theme-btn {
+        padding: 4px 6px !important;
+        font-size: 0.7rem !important;
+    }
+    
+    .btn-login,
+    .btn-logout {
+        padding: 4px 8px !important;
+        font-size: 0.7rem !important;
+    }
+    
+    .portal-nav-buttons {
+        display: none !important;
+    }
+}
