@@ -263,44 +263,46 @@ export const app = {
         const isAgendar = rutaActual === '/portal/agendar' || rutaActual === '';
         const isMisCitas = rutaActual === '/portal/mis-citas';
         
-        // Versión móvil: todos los botones en una fila flexible
+        // Versión móvil: botones compactos
         const botonesMovil = !autenticado ? `
-            <div class="botones-movil" style="display: flex; gap: 5px; align-items: center;">
-                <a href="#/portal/agendar" class="nav-btn-movil" style="padding: 4px 8px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 6px; color: var(--text-primary); text-decoration: none; font-size: 0.65rem;">
+            <div class="botones-movil" style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center;">
+                <a href="#/portal/agendar" class="nav-btn-movil" style="padding: 5px 10px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.7rem;">
                     📅 Agendar
                 </a>
-                <a href="#/portal/mis-citas" class="nav-btn-movil" style="padding: 4px 8px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 6px; color: var(--text-primary); text-decoration: none; font-size: 0.65rem;">
+                <a href="#/portal/mis-citas" class="nav-btn-movil" style="padding: 5px 10px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.7rem;">
                     📋 Mis Citas
                 </a>
                 <div id="theme-dropdown-container" style="display: inline-block;"></div>
-                ${autenticado ? `
-                    <button id="btn-logout" class="btn-logout-movil" style="padding: 4px 8px; background: rgba(244,67,54,0.1); border: none; border-radius: 6px; color: #f44336; font-size: 0.65rem;">🚪</button>
-                ` : `
-                    <button id="btn-login" class="btn-login-movil" style="padding: 4px 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.65rem;">🔐</button>
-                `}
+                <button id="btn-login-movil" style="padding: 5px 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.7rem;">🔐</button>
             </div>
-        ` : '';
+        ` : `
+            <div class="botones-movil" style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center;">
+                <div class="license-badge" style="padding: 5px 10px; font-size: 0.7rem; background: rgba(76,175,80,0.2); border-radius: 20px;">✅ ${licencia.tipo}</div>
+                <div id="theme-dropdown-container" style="display: inline-block;"></div>
+                <button id="btn-logout-movil" style="padding: 5px 10px; background: rgba(244,67,54,0.1); border: none; border-radius: 8px; color: #f44336; font-size: 0.7rem;">🚪</button>
+            </div>
+        `;
         
         header.innerHTML = `
-            <div class="header-content" style="display: flex; flex-direction: column; padding: 8px 15px; gap: 8px;">
+            <div class="header-content" style="display: flex; flex-direction: column; padding: 8px 12px; gap: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <button id="hamburger-btn" style="display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-primary);">☰</button>
-                        <h1 class="header-title" style="font-size: 1.1rem; cursor: pointer; margin: 0;" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
+                        <h1 class="header-title" style="font-size: 1rem; cursor: pointer; margin: 0;" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
                     </div>
                     ${!autenticado ? `
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div id="theme-dropdown-desktop" style="display: inline-block;"></div>
-                            <button id="btn-login-desktop" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 8px; color: var(--text-primary); font-size: 0.75rem;">🔐 Admin</button>
+                            <button id="btn-login-desktop" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 8px; color: var(--text-primary); font-size: 0.7rem;">🔐 Admin</button>
                         </div>
                     ` : `
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div class="license-badge" style="padding: 4px 8px; font-size: 0.7rem; background: rgba(76,175,80,0.2); border-radius: 20px;">✅ ${licencia.tipo}</div>
-                            <button id="btn-logout-desktop" style="background: rgba(244,67,54,0.1); border: none; padding: 5px 12px; border-radius: 8px; color: #f44336; font-size: 0.75rem;">🚪 Salir</button>
+                            <button id="btn-logout-desktop" style="background: rgba(244,67,54,0.1); border: none; padding: 5px 12px; border-radius: 8px; color: #f44336; font-size: 0.7rem;">🚪</button>
                         </div>
                     `}
                 </div>
-                ${!autenticado ? `<div class="botones-movil-container" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">${botonesMovil}</div>` : ''}
+                ${!autenticado ? `<div class="botones-movil-container" style="display: flex; justify-content: center; margin-top: 5px;">${botonesMovil}</div>` : ''}
             </div>
         `;
         
@@ -309,8 +311,12 @@ export const app = {
         const themeDropdownMovil = document.getElementById('theme-dropdown-container');
         const existingDropdown = document.querySelector('#theme-dropdown');
         
-        if (existingDropdown && themeDropdownDesktop) {
-            themeDropdownDesktop.appendChild(existingDropdown);
+        if (existingDropdown) {
+            if (window.innerWidth <= 768 && themeDropdownMovil) {
+                themeDropdownMovil.appendChild(existingDropdown);
+            } else if (themeDropdownDesktop) {
+                themeDropdownDesktop.appendChild(existingDropdown);
+            }
         }
         
         // Eventos
@@ -318,6 +324,18 @@ export const app = {
         document.getElementById('btn-login-movil')?.addEventListener('click', () => this.mostrarModalLogin());
         document.getElementById('btn-logout-desktop')?.addEventListener('click', () => this.logout());
         document.getElementById('btn-logout-movil')?.addEventListener('click', () => this.logout());
+        
+        // Escuchar cambios de tamaño para mover el dropdown
+        window.addEventListener('resize', () => {
+            const dropdown = document.querySelector('#theme-dropdown');
+            if (dropdown) {
+                if (window.innerWidth <= 768 && themeDropdownMovil && !themeDropdownMovil.contains(dropdown)) {
+                    themeDropdownMovil.appendChild(dropdown);
+                } else if (window.innerWidth > 768 && themeDropdownDesktop && !themeDropdownDesktop.contains(dropdown)) {
+                    themeDropdownDesktop.appendChild(dropdown);
+                }
+            }
+        });
         
         const hamburger = document.getElementById('hamburger-btn');
         if (hamburger) {
