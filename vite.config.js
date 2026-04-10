@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  server: {
-    port: 3000,
-    open: true
+  base: '/barberhub/',  // ← Debe ser exactamente el nombre de tu repositorio
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true
   }
 })
