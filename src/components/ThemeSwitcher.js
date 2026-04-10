@@ -131,6 +131,8 @@ export const ThemeSwitcher = {
             document.head.appendChild(themeLink);
         }
         
+        // Usar ruta relativa correcta para GitHub Pages
+        const basePath = window.location.pathname.includes('/barberhub/') ? '/barberhub' : '';        
         themeLink.href = `/src/themes/${themeId}.css`;
     }
 };
