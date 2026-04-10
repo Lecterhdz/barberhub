@@ -181,23 +181,29 @@ body, #app {
 
 .portal-nav-buttons {
     display: flex;
-    gap: 10px;
-    margin: 0 20px;
+    gap: 8px;
+    margin: 0 10px;
+   flex-shrink: 0;
 }
 
 .nav-btn {
-    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
     background: var(--bg-tertiary);
-    border-radius: 10px;
+    border-radius: 8px;
     color: var(--text-primary);
     text-decoration: none;
-    font-size: 0.9rem;
-    transition: all var(--transition-fast);
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .nav-btn:hover {
     background: var(--bg-hover);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .nav-btn.active {
@@ -648,7 +654,8 @@ body, #app {
     
     /* Portal nav buttons en móvil */
     .portal-nav-buttons {
-        margin: 0 10px;
+        gap: 4px;
+        margin: 0 5px;
     }
     .license-badge {
         display: none !important;
@@ -723,6 +730,7 @@ body, #app {
         width: 100%;
         justify-content: center;
         margin-top: 5px;
+        margin: 0 3px;
     }
 }
 
