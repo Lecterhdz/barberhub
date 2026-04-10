@@ -263,42 +263,61 @@ export const app = {
         const isAgendar = rutaActual === '/portal/agendar' || rutaActual === '';
         const isMisCitas = rutaActual === '/portal/mis-citas';
         
-        // En renderizarHeader, modifica los botones de navegación
-        const portalNavButtons = !autenticado ? `
-            <div class="portal-nav-buttons">
-                <a href="#/portal/agendar" class="nav-btn" style="padding: 6px 10px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.75rem;">
-                    <span style="font-size: 1rem;">📅</span>
-                    <span class="nav-text">Agendar</span>
+        // Versión móvil: todos los botones en una fila flexible
+        const botonesMovil = !autenticado ? `
+            <div class="botones-movil" style="display: flex; gap: 5px; align-items: center;">
+                <a href="#/portal/agendar" class="nav-btn-movil" style="padding: 4px 8px; background: ${isAgendar ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 6px; color: var(--text-primary); text-decoration: none; font-size: 0.65rem;">
+                    📅 Agendar
                 </a>
-                <a href="#/portal/mis-citas" class="nav-btn" style="padding: 6px 10px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 0.75rem;">
-                    <span style="font-size: 1rem;">📋</span>
-                    <span class="nav-text">Mis Citas</span>
+                <a href="#/portal/mis-citas" class="nav-btn-movil" style="padding: 4px 8px; background: ${isMisCitas ? 'var(--color-primary)' : 'var(--bg-tertiary)'}; border-radius: 6px; color: var(--text-primary); text-decoration: none; font-size: 0.65rem;">
+                    📋 Mis Citas
                 </a>
+                <div id="theme-dropdown-container" style="display: inline-block;"></div>
+                ${autenticado ? `
+                    <button id="btn-logout" class="btn-logout-movil" style="padding: 4px 8px; background: rgba(244,67,54,0.1); border: none; border-radius: 6px; color: #f44336; font-size: 0.65rem;">🚪</button>
+                ` : `
+                    <button id="btn-login" class="btn-login-movil" style="padding: 4px 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.65rem;">🔐</button>
+                `}
             </div>
         ` : '';
         
         header.innerHTML = `
-            <div class="header-content" style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: var(--header-height); gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-                    <button id="hamburger-btn" style="display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-primary);">☰</button>
-                    <div>
-                        <h1 class="header-title" style="font-size: clamp(0.9rem, 4vw, 1.2rem); cursor: pointer;" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
+            <div class="header-content" style="display: flex; flex-direction: column; padding: 8px 15px; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button id="hamburger-btn" style="display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-primary);">☰</button>
+                        <h1 class="header-title" style="font-size: 1.1rem; cursor: pointer; margin: 0;" onclick="window.location.hash='/portal/agendar'">💈 BarberHub</h1>
                     </div>
-                </div>
-                ${portalNavButtons}
-                <div class="header-actions">
-                    ${autenticado ? `
-                        <div class="license-badge" style="padding: 4px 8px; font-size: 0.7rem;">✅ ${licencia.tipo}</div>
-                        <button id="btn-logout" class="btn-logout">🚪</button>
+                    ${!autenticado ? `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div id="theme-dropdown-desktop" style="display: inline-block;"></div>
+                            <button id="btn-login-desktop" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 8px; color: var(--text-primary); font-size: 0.75rem;">🔐 Admin</button>
+                        </div>
                     ` : `
-                        <button id="btn-login" class="btn-login">🔐</button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="license-badge" style="padding: 4px 8px; font-size: 0.7rem; background: rgba(76,175,80,0.2); border-radius: 20px;">✅ ${licencia.tipo}</div>
+                            <button id="btn-logout-desktop" style="background: rgba(244,67,54,0.1); border: none; padding: 5px 12px; border-radius: 8px; color: #f44336; font-size: 0.75rem;">🚪 Salir</button>
+                        </div>
                     `}
                 </div>
+                ${!autenticado ? `<div class="botones-movil-container" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">${botonesMovil}</div>` : ''}
             </div>
         `;
         
-        document.getElementById('btn-login')?.addEventListener('click', () => this.mostrarModalLogin());
-        document.getElementById('btn-logout')?.addEventListener('click', () => this.logout());
+        // Mover ThemeSwitcher al contenedor correspondiente
+        const themeDropdownDesktop = document.getElementById('theme-dropdown-desktop');
+        const themeDropdownMovil = document.getElementById('theme-dropdown-container');
+        const existingDropdown = document.querySelector('#theme-dropdown');
+        
+        if (existingDropdown && themeDropdownDesktop) {
+            themeDropdownDesktop.appendChild(existingDropdown);
+        }
+        
+        // Eventos
+        document.getElementById('btn-login-desktop')?.addEventListener('click', () => this.mostrarModalLogin());
+        document.getElementById('btn-login-movil')?.addEventListener('click', () => this.mostrarModalLogin());
+        document.getElementById('btn-logout-desktop')?.addEventListener('click', () => this.logout());
+        document.getElementById('btn-logout-movil')?.addEventListener('click', () => this.logout());
         
         const hamburger = document.getElementById('hamburger-btn');
         if (hamburger) {
@@ -306,7 +325,7 @@ export const app = {
         }
         
         window.dispatchEvent(new CustomEvent('header-ready'));
-    },
+    },    
 
 
     renderizarSidebar() {
