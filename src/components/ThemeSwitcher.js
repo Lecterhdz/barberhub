@@ -10,6 +10,10 @@ export const ThemeSwitcher = {
     
     temaActual: 'dark-amber',
     
+    getBasePath() {
+        return window.location.pathname.includes('/barberhub/') ? '/barberhub' : '';
+    },
+    
     init() {
         console.log('🎨 ThemeSwitcher init');
         
@@ -17,11 +21,8 @@ export const ThemeSwitcher = {
         if (temaGuardado) this.temaActual = temaGuardado;
         
         this.aplicarTema(this.temaActual);
-        
-        // Esperar a que el DOM esté listo y el header exista
         this.esperarHeaderYAgregarBoton();
         
-        // Escuchar cuando el header se renderice
         window.addEventListener('header-ready', () => {
             this.agregarBoton();
         });
@@ -41,7 +42,7 @@ export const ThemeSwitcher = {
                 console.log('✅ Header encontrado, botón agregado');
             } else if (intentos >= maxIntentos) {
                 clearInterval(check);
-                console.log('⚠️ No se encontró header-actions después de varios intentos');
+                console.log('⚠️ No se encontró header-actions');
             }
         }, 200);
     },
@@ -56,6 +57,7 @@ export const ThemeSwitcher = {
         if (document.getElementById('theme-dropdown')) return;
         
         const temaActualObj = this.temas.find(t => t.id === this.temaActual);
+        const basePath = this.getBasePath();
         
         const dropdown = document.createElement('div');
         dropdown.id = 'theme-dropdown';
@@ -131,9 +133,9 @@ export const ThemeSwitcher = {
             document.head.appendChild(themeLink);
         }
         
-        // Usar ruta relativa correcta para GitHub Pages
-        const basePath = window.location.pathname.includes('/barberhub/') ? '/barberhub' : '';        
-        themeLink.href = `/src/themes/${themeId}.css`;
+        const basePath = this.getBasePath();
+        themeLink.href = `${basePath}/src/themes/${themeId}.css`;
+        console.log('Cargando tema:', themeLink.href);
     }
 };
 
