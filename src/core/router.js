@@ -15,6 +15,15 @@ export const router = {
         '/admin/reportes': 'admin/reportes'
     },
     
+    getBasePath() {
+        // Detectar si estamos en GitHub Pages
+        const pathname = window.location.pathname;
+        if (pathname.includes('/barberhub/')) {
+            return '/barberhub';
+        }
+        return '';
+    },
+    
     async cargarVista() {
         let ruta = window.location.hash.substring(1);
         if (!ruta) ruta = '/portal/agendar';
@@ -33,23 +42,30 @@ export const router = {
         container.innerHTML = '<div style="text-align: center; padding: 40px;">Cargando...</div>';
         
         try {
-            const base = import.meta.env.BASE_URL;
-            const res = await fetch(`${base}src/views/${viewPath}.html`);
+            const basePath = this.getBasePath();
+            const url = `${basePath}/src/views/${viewPath}.html`;
+            console.log('Fetching:', url);
+            
+            const res = await fetch(url);
             
             if (res.ok) {
                 let html = await res.text();
                 container.innerHTML = html;
                 
-                // ✅ Forzar ejecución de scripts
+                // Ejecutar scripts
                 const scripts = container.querySelectorAll('script');
                 scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    if (oldScript.src) {
-                        newScript.src = oldScript.src;
-                    } else {
-                        newScript.textContent = oldScript.textContent;
+                    try {
+                        const newScript = document.createElement('script');
+                        if (oldScript.src) {
+                            newScript.src = oldScript.src;
+                        } else {
+                            newScript.textContent = oldScript.textContent;
+                        }
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    } catch(e) {
+                        console.warn('Error ejecutando script:', e);
                     }
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
                 
                 console.log('✅ Vista cargada:', viewPath);
