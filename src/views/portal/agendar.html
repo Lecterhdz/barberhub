@@ -191,15 +191,26 @@
             const container = document.getElementById('horas-grid');
             if (!container) return;
             
-            const citasConfirmadas = window.app?.estado?.cache?.citas?.filter(c => 
-                c.fecha === fechaSeleccionada && c.estado === 'confirmada'
+            // Obtener citas confirmadas y pendientes para la fecha y barbero seleccionado
+            const citasOcupadas = window.app?.estado?.cache?.citas?.filter(c => 
+                c.fecha === fechaSeleccionada && 
+                c.barberoId === barberoSeleccionado?.id &&
+                c.estado !== 'cancelada'
             ) || [];
-            const horasOcupadas = citasConfirmadas.map(c => c.hora);
+            
+            const horasOcupadas = citasOcupadas.map(c => c.hora);
             
             const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            
             container.innerHTML = horas.map(h => `
-                <div class="hora-card ${horasOcupadas.includes(h) ? 'ocupada' : ''}" data-hora="${h}">
-                    ${h} ${horasOcupadas.includes(h) ? '❌' : ''}
+                <div class="hora-card ${horasOcupadas.includes(h) ? 'ocupada' : ''}" 
+                     data-hora="${h}"
+                     style="background: ${horasOcupadas.includes(h) ? 'rgba(244,67,54,0.1)' : 'var(--bg-secondary)'}; 
+                            cursor: ${horasOcupadas.includes(h) ? 'not-allowed' : 'pointer'};
+                            opacity: ${horasOcupadas.includes(h) ? '0.6' : '1'};
+                            text-decoration: ${horasOcupadas.includes(h) ? 'line-through' : 'none'};">
+                    ${h}
+                    ${horasOcupadas.includes(h) ? ' ❌ OCUPADO' : ''}
                 </div>
             `).join('');
             
@@ -252,7 +263,21 @@
                 alert('Completa nombre y teléfono');
                 return;
             }
+            // ✅ VALIDAR: Verificar si ya existe una cita en el mismo horario con el mismo barbero
+            const citasExistentes = window.app?.estado?.cache?.citas || [];
+            const citaExistente = citasExistentes.find(c => 
+                c.barberoId === barberoSeleccionado.id && 
+                c.fecha === fechaSeleccionada && 
+                c.hora === horaSeleccionada &&
+                c.estado !== 'cancelada'  // No contar citas canceladas
+            );
             
+            if (citaExistente) {
+                alert(`❌ El barbero ${barberoSeleccionado.nombre} ya tiene una cita agendada el ${fechaSeleccionada} a las ${horaSeleccionada}. Por favor selecciona otro horario.`);
+                // Recargar horas disponibles
+                renderizarHoras();
+                return;
+            }            
             // Procesar comprobante si existe
             let comprobanteData = null;
             if (comprobante) {
@@ -284,7 +309,12 @@
             };
             
             await window.storage.guardar('citas', nuevaCita);
-            
+            // Actualizar caché
+            if (window.app) {
+                const citasActuales = window.app.estado.cache.citas || [];
+                citasActuales.push(nuevaCita);
+                window.app.estado.cache.citas = citasActuales;
+            }            
             // WhatsApp message
             const mensajeWhatsApp = `Hola%20BarberHub%2C%20quiero%20agendar%20una%20cita%3A%0A%0A👤%20Cliente%3A%20${encodeURIComponent(nombre)}%0A📞%20Teléfono%3A%20${telefono}%0A✂️%20Servicio%3A%20${servicioSeleccionado.nombre}%0A💈%20Barbero%3A%20${barberoSeleccionado.nombre}%0A📅%20Fecha%3A%20${fechaSeleccionada}%0A⏰%20Hora%3A%20${horaSeleccionada}%0A💰%20Total%3A%20%24${servicioSeleccionado.precio}%0A💵%20Depósito%3A%20%2450%20${comprobante ? '(Comprobante adjunto)' : '(Pendiente)'}`;
             
