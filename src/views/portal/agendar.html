@@ -117,11 +117,14 @@
         
         let servicios = [];
         let barberos = [];
+        let citasExistentes = [];
         
-        function cargarDatos() {
+        async function cargarDatos() {
             servicios = window.app?.estado?.cache?.servicios || [];
             barberos = window.app?.estado?.cache?.barberos || [];
-            console.log('Datos:', servicios.length, 'servicios,', barberos.length, 'barberos');
+            // ✅ Cargar citas directamente desde storage para validación
+            citasExistentes = await window.storage.obtenerTodos('citas') || [];
+            console.log('Datos:', servicios.length, 'servicios,', barberos.length, 'barberos,', citasExistentes.length, 'citas');
             renderizarServicios();
         }
         
@@ -153,10 +156,12 @@
                 </div>
             `).join('');
             document.querySelectorAll('.barbero-card').forEach(card => {
-                card.onclick = () => {
+                card.onclick = async () => {
                     document.querySelectorAll('.barbero-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
                     barberoSeleccionado = barberos.find(b => b.id == card.dataset.id);
+                    // ✅ Recargar citas al seleccionar barbero
+                    citasExistentes = await window.storage.obtenerTodos('citas') || [];
                     siguientePaso();
                 };
             });
@@ -178,27 +183,34 @@
                 </div>
             `).join('');
             document.querySelectorAll('.fecha-card').forEach(card => {
-                card.onclick = () => {
+                card.onclick = async () => {
                     document.querySelectorAll('.fecha-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
                     fechaSeleccionada = card.dataset.fecha;
+                    // ✅ Recargar citas al seleccionar fecha
+                    citasExistentes = await window.storage.obtenerTodos('citas') || [];
                     renderizarHoras();
                 };
             });
         }
         
-        function renderizarHoras() {
+        async function renderizarHoras() {
             const container = document.getElementById('horas-grid');
             if (!container) return;
             
-            // Obtener citas confirmadas y pendientes para la fecha y barbero seleccionado
-            const citasOcupadas = window.app?.estado?.cache?.citas?.filter(c => 
-                c.fecha === fechaSeleccionada && 
-                c.barberoId === barberoSeleccionado?.id &&
-                c.estado !== 'cancelada'
-            ) || [];
+            // ✅ Asegurar que citasExistentes esté actualizado
+            citasExistentes = await window.storage.obtenerTodos('citas') || [];
             
-            const horasOcupadas = citasOcupadas.map(c => c.hora);
+            // Filtrar horas ocupadas para el barbero y fecha seleccionados
+            const horasOcupadas = citasExistentes
+                .filter(c => 
+                    c.barberoId === barberoSeleccionado?.id && 
+                    c.fecha === fechaSeleccionada &&
+                    c.estado !== 'cancelada'
+                )
+                .map(c => c.hora);
+            
+            console.log('Horas ocupadas para', barberoSeleccionado?.nombre, fechaSeleccionada, ':', horasOcupadas);
             
             const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
             
@@ -263,22 +275,24 @@
                 alert('Completa nombre y teléfono');
                 return;
             }
-            // ✅ VALIDAR: Verificar si ya existe una cita en el mismo horario con el mismo barbero
-            const citasExistentes = window.app?.estado?.cache?.citas || [];
+            
+            // ✅ VALIDAR ANTES DE GUARDAR - Verificar si ya existe una cita
+            citasExistentes = await window.storage.obtenerTodos('citas') || [];
+            
             const citaExistente = citasExistentes.find(c => 
                 c.barberoId === barberoSeleccionado.id && 
                 c.fecha === fechaSeleccionada && 
                 c.hora === horaSeleccionada &&
-                c.estado !== 'cancelada'  // No contar citas canceladas
+                c.estado !== 'cancelada'
             );
             
             if (citaExistente) {
                 alert(`❌ El barbero ${barberoSeleccionado.nombre} ya tiene una cita agendada el ${fechaSeleccionada} a las ${horaSeleccionada}. Por favor selecciona otro horario.`);
-                // Recargar horas disponibles
-                renderizarHoras();
+                await renderizarHoras();
                 return;
-            }            
-            // Procesar comprobante si existe
+            }
+            
+            // Procesar comprobante
             let comprobanteData = null;
             if (comprobante) {
                 const reader = new FileReader();
@@ -309,20 +323,21 @@
             };
             
             await window.storage.guardar('citas', nuevaCita);
+            
             // Actualizar caché
             if (window.app) {
                 const citasActuales = window.app.estado.cache.citas || [];
                 citasActuales.push(nuevaCita);
                 window.app.estado.cache.citas = citasActuales;
-            }            
+            }
+            
             // WhatsApp message
             const mensajeWhatsApp = `Hola%20BarberHub%2C%20quiero%20agendar%20una%20cita%3A%0A%0A👤%20Cliente%3A%20${encodeURIComponent(nombre)}%0A📞%20Teléfono%3A%20${telefono}%0A✂️%20Servicio%3A%20${servicioSeleccionado.nombre}%0A💈%20Barbero%3A%20${barberoSeleccionado.nombre}%0A📅%20Fecha%3A%20${fechaSeleccionada}%0A⏰%20Hora%3A%20${horaSeleccionada}%0A💰%20Total%3A%20%24${servicioSeleccionado.precio}%0A💵%20Depósito%3A%20%2450%20${comprobante ? '(Comprobante adjunto)' : '(Pendiente)'}`;
             
             const whatsappLink = `https://wa.me/521234567890?text=${mensajeWhatsApp}`;
             
-            alert('✅ Cita agendada correctamente\n\nTe enviaremos un mensaje de confirmación.');
+            alert('✅ Cita agendada correctamente');
             
-            // Preguntar si quiere enviar WhatsApp
             if (confirm('¿Enviar detalles de la cita por WhatsApp?')) {
                 window.open(whatsappLink, '_blank');
             }
@@ -337,6 +352,9 @@
             document.getElementById('paso-1').style.display = 'block';
             document.getElementById('cliente-form').reset();
             document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+            
+            // Recargar citas para actualizar horas ocupadas
+            citasExistentes = await window.storage.obtenerTodos('citas') || [];
         }
         
         document.getElementById('btn-volver-1')?.addEventListener('click', pasoAnterior);
