@@ -61,7 +61,7 @@
             const errorDiv = document.getElementById('mensaje-error');
             
             if (!busqueda) {
-                errorDiv.textContent = '⚠️ Ingresa tu número de teléfono o nombre';
+                errorDiv.textContent = '⚠️ Ingresa tu número de teléfono';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -70,29 +70,26 @@
             telefonoActual = busqueda;
             sessionStorage.setItem('cliente_telefono', busqueda);
             
-            console.log('🔍 Buscando citas para:', busqueda);
+            console.log('🔍 Buscando citas para teléfono:', busqueda);
             
-            // Obtener todas las citas
             const todasCitas = await window.storage.obtenerTodos('citas') || [];
-            console.log('📦 Total citas en DB:', todasCitas.length);
             
-            // Filtrar por teléfono o por nombre
+            // Filtrar EXACTAMENTE por teléfono (como string)
             citas = todasCitas.filter(c => {
                 const telefonoCita = String(c.clienteTelefono || '');
-                const nombreCita = String(c.clienteNombre || '').toLowerCase();
-                const busquedaLower = busqueda.toLowerCase();
-                
-                return telefonoCita === busqueda || 
-                       nombreCita.includes(busquedaLower) ||
-                       telefonoCita.includes(busqueda);
+                return telefonoCita === busqueda;
             });
             
             console.log('📞 Citas encontradas:', citas.length);
             
             if (citas.length === 0) {
-                const resultadosDiv = document.getElementById('resultados');
-                resultadosDiv.style.display = 'block';
-                document.getElementById('lista-proximas').innerHTML = '<div style="text-align: center; padding: 40px;">No se encontraron citas para este número o nombre</div>';
+                document.getElementById('resultados').style.display = 'block';
+                document.getElementById('lista-proximas').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        No se encontraron citas para el teléfono: ${busqueda}<br>
+                        <small>Verifica que el número sea correcto</small>
+                    </div>
+                `;
                 document.getElementById('lista-historial').innerHTML = '';
                 return;
             }
