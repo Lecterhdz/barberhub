@@ -3,11 +3,12 @@
     
     <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
         <h3>🔍 Buscar mis citas</h3>
-        <p style="font-size: 0.85rem; margin-bottom: 15px;">Ingresa tu número de teléfono para ver tus citas</p>
+        <p style="font-size: 0.85rem; margin-bottom: 15px;">Ingresa tu número de teléfono o nombre para ver tus citas</p>
         <div style="display: flex; gap: 10px;">
-            <input type="tel" id="telefono-busqueda" placeholder="Ej: 555-1234" style="flex: 1; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary);">
+            <input type="text" id="telefono-busqueda" placeholder="Ej: 555-1234 o tu nombre" style="flex: 1; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary);">
             <button id="btn-buscar" style="padding: 12px 24px; background: var(--color-primary); border: none; border-radius: 10px; color: white; cursor: pointer;">Buscar 🔍</button>
         </div>
+        <div id="mensaje-error" style="color: #f44336; margin-top: 10px; display: none;"></div>
     </div>
     
     <div id="resultados" style="display: none;">
@@ -22,25 +23,11 @@
 
 <script>
     (function() {
+        console.log('🔵 Mis Citas - Inicializando');
+        
         let citas = [];
         let telefonoActual = '';
         
-        async function buscarCitas() {
-            const telefono = document.getElementById('telefono-busqueda').value.trim();
-            if (!telefono) {
-                alert('Ingresa tu número de teléfono');
-                return;
-            }
-            
-            telefonoActual = telefono;
-            sessionStorage.setItem('cliente_telefono', telefono);
-            
-            const todasCitas = await window.storage.obtenerTodos('citas') || [];
-            citas = todasCitas.filter(c => c.clienteTelefono === telefono);
-            
-            document.getElementById('resultados').style.display = 'block';
-            renderizarCitas();
-        }
         // ============================================
         // REGLAS DE CANCELACIÓN Y TOLERANCIA
         // ============================================
@@ -63,7 +50,61 @@
             const fechaHoraCita = new Date(`${fecha}T${hora}:00`);
             const ahora = new Date();
             return fechaHoraCita < ahora;
-        }        
+        }
+        
+        // ============================================
+        // BÚSQUEDA DE CITAS
+        // ============================================
+        
+        async function buscarCitas() {
+            const busqueda = document.getElementById('telefono-busqueda').value.trim();
+            const errorDiv = document.getElementById('mensaje-error');
+            
+            if (!busqueda) {
+                errorDiv.textContent = '⚠️ Ingresa tu número de teléfono o nombre';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            errorDiv.style.display = 'none';
+            telefonoActual = busqueda;
+            sessionStorage.setItem('cliente_telefono', busqueda);
+            
+            console.log('🔍 Buscando citas para:', busqueda);
+            
+            // Obtener todas las citas
+            const todasCitas = await window.storage.obtenerTodos('citas') || [];
+            console.log('📦 Total citas en DB:', todasCitas.length);
+            
+            // Filtrar por teléfono o por nombre
+            citas = todasCitas.filter(c => {
+                const telefonoCita = String(c.clienteTelefono || '');
+                const nombreCita = String(c.clienteNombre || '').toLowerCase();
+                const busquedaLower = busqueda.toLowerCase();
+                
+                return telefonoCita === busqueda || 
+                       nombreCita.includes(busquedaLower) ||
+                       telefonoCita.includes(busqueda);
+            });
+            
+            console.log('📞 Citas encontradas:', citas.length);
+            
+            if (citas.length === 0) {
+                const resultadosDiv = document.getElementById('resultados');
+                resultadosDiv.style.display = 'block';
+                document.getElementById('lista-proximas').innerHTML = '<div style="text-align: center; padding: 40px;">No se encontraron citas para este número o nombre</div>';
+                document.getElementById('lista-historial').innerHTML = '';
+                return;
+            }
+            
+            document.getElementById('resultados').style.display = 'block';
+            renderizarCitas();
+        }
+        
+        // ============================================
+        // RENDERIZADO DE CITAS
+        // ============================================
+        
         function renderizarCitas() {
             const hoy = new Date().toISOString().split('T')[0];
             
@@ -72,6 +113,8 @@
             
             const historial = citas.filter(c => c.fecha < hoy || c.estado === 'cancelada')
                 .sort((a, b) => b.fecha.localeCompare(a.fecha));
+            
+            console.log('📅 Próximas:', proximas.length, 'Historial:', historial.length);
             
             renderizarLista('lista-proximas', proximas, true);
             renderizarLista('lista-historial', historial, false);
@@ -125,15 +168,18 @@
                         estadoTexto = '❌ Cancelada'; 
                         estadoClass = 'estado-cancelada';
                         break;
+                    default:
+                        estadoTexto = '📌 Pendiente';
+                        estadoClass = 'estado-pendiente';
                 }
                 
                 return `
                     <div style="background: var(--bg-secondary); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 3px solid ${c.estado === 'pendiente' ? '#ff9800' : c.estado === 'confirmada' ? '#4caf50' : c.estado === 'cancelada' ? '#f44336' : '#2196f3'};">
                         <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
                             <div style="flex: 1;">
-                                <div><strong>${c.servicioNombre}</strong> - $${c.precio}</div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary);">📅 ${c.fecha} - ${c.hora}</div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary);">💈 ${c.barberoNombre}</div>
+                                <div><strong>${c.servicioNombre || 'Servicio'}</strong> - $${c.precio || 0}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">📅 ${c.fecha} - ${c.hora || '--:--'}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">💈 ${c.barberoNombre || 'Barbero'}</div>
                                 <div style="margin-top: 8px;">
                                     <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: ${c.estado === 'pendiente' ? 'rgba(255,152,0,0.2)' : c.estado === 'confirmada' ? 'rgba(76,175,80,0.2)' : c.estado === 'cancelada' ? 'rgba(244,67,54,0.2)' : 'rgba(33,150,243,0.2)'}; color: ${c.estado === 'pendiente' ? '#ff9800' : c.estado === 'confirmada' ? '#4caf50' : c.estado === 'cancelada' ? '#f44336' : '#2196f3'};">
                                         ${estadoTexto}
@@ -163,7 +209,10 @@
             }).join('');
         }
         
-        // Modificar la función cancelarCita para agregar validación
+        // ============================================
+        // CANCELAR CITA
+        // ============================================
+        
         window.cancelarCita = async function(id) {
             const cita = citas.find(c => c.id === id);
             if (!cita) return;
@@ -189,7 +238,10 @@
             alert('✅ Cita cancelada correctamente');
         };
         
-        // Eventos
+        // ============================================
+        // EVENTOS
+        // ============================================
+        
         document.getElementById('btn-buscar')?.addEventListener('click', buscarCitas);
         document.getElementById('telefono-busqueda')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') buscarCitas();
