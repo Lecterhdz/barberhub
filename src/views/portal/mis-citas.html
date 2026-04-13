@@ -3,12 +3,12 @@
     
     <div style="background: var(--bg-secondary); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
         <h3>🔍 Buscar mis citas</h3>
-        <p style="font-size: 0.85rem; margin-bottom: 15px;">Ingresa tu número de teléfono o nombre para ver tus citas</p>
+        <p style="font-size: 0.85rem; margin-bottom: 15px;">Ingresa tu número de teléfono para ver tus citas</p>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="telefono-busqueda" placeholder="Ej: 555-1234 o tu nombre" style="flex: 1; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary);">
+            <input type="tel" id="telefono-busqueda" placeholder="Ej: 555-1234" style="flex: 1; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary);">
             <button id="btn-buscar" style="padding: 12px 24px; background: var(--color-primary); border: none; border-radius: 10px; color: white; cursor: pointer;">Buscar 🔍</button>
         </div>
-        <div id="mensaje-error" style="color: #f44336; margin-top: 10px; display: none;"></div>
+        <div id="mensaje-info" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-secondary);"></div>
     </div>
     
     <div id="resultados" style="display: none;">
@@ -23,232 +23,112 @@
 
 <script>
     (function() {
-        console.log('🔵 Mis Citas - Inicializando');
+        console.log('🔵 Mis Citas - Versión corregida');
         
-        let citas = [];
-        let telefonoActual = '';
-        
-        // ============================================
-        // REGLAS DE CANCELACIÓN Y TOLERANCIA
-        // ============================================
-        
-        function puedeCancelar(fecha, hora) {
-            const fechaHoraCita = new Date(`${fecha}T${hora}:00`);
-            const ahora = new Date();
-            const diferenciaHoras = (fechaHoraCita - ahora) / (1000 * 60 * 60);
-            return diferenciaHoras >= 2;
-        }
-        
-        function estaEnTolerancia(fecha, hora) {
-            const fechaHoraCita = new Date(`${fecha}T${hora}:00`);
-            const ahora = new Date();
-            const diferenciaMinutos = (fechaHoraCita - ahora) / (1000 * 60);
-            return diferenciaMinutos <= 15 && diferenciaMinutos > 0;
-        }
-        
-        function haExpirado(fecha, hora) {
-            const fechaHoraCita = new Date(`${fecha}T${hora}:00`);
-            const ahora = new Date();
-            return fechaHoraCita < ahora;
-        }
-        
-        // ============================================
-        // BÚSQUEDA DE CITAS
-        // ============================================
+        let citasEncontradas = [];
         
         async function buscarCitas() {
-            const busqueda = document.getElementById('telefono-busqueda').value.trim();
-            const errorDiv = document.getElementById('mensaje-error');
+            const telefono = document.getElementById('telefono-busqueda').value.trim();
+            const infoDiv = document.getElementById('mensaje-info');
             
-            if (!busqueda) {
-                errorDiv.textContent = '⚠️ Ingresa tu número de teléfono';
-                errorDiv.style.display = 'block';
+            if (!telefono) {
+                infoDiv.innerHTML = '⚠️ Ingresa tu número de teléfono';
+                infoDiv.style.color = '#f44336';
                 return;
             }
             
-            errorDiv.style.display = 'none';
-            telefonoActual = busqueda;
-            sessionStorage.setItem('cliente_telefono', busqueda);
+            infoDiv.innerHTML = '🔍 Buscando...';
+            infoDiv.style.color = 'var(--text-secondary)';
             
-            console.log('🔍 Buscando citas para teléfono:', busqueda);
-            
+            // Obtener todas las citas
             const todasCitas = await window.storage.obtenerTodos('citas') || [];
+            console.log('Total citas en DB:', todasCitas.length);
             
-            // Filtrar EXACTAMENTE por teléfono (como string)
-            citas = todasCitas.filter(c => {
-                const telefonoCita = String(c.clienteTelefono || '');
-                return telefonoCita === busqueda;
-            });
+            // Filtrar por teléfono exacto
+            citasEncontradas = todasCitas.filter(c => String(c.clienteTelefono) === String(telefono));
+            console.log('Citas encontradas para', telefono, ':', citasEncontradas.length);
             
-            console.log('📞 Citas encontradas:', citas.length);
-            
-            if (citas.length === 0) {
+            if (citasEncontradas.length === 0) {
+                infoDiv.innerHTML = `📞 No se encontraron citas para el teléfono: ${telefono}`;
                 document.getElementById('resultados').style.display = 'block';
-                document.getElementById('lista-proximas').innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        No se encontraron citas para el teléfono: ${busqueda}<br>
-                        <small>Verifica que el número sea correcto</small>
-                    </div>
-                `;
+                document.getElementById('lista-proximas').innerHTML = '<div style="text-align: center; padding: 40px;">No hay citas</div>';
                 document.getElementById('lista-historial').innerHTML = '';
                 return;
             }
             
+            infoDiv.innerHTML = `📞 Se encontraron ${citasEncontradas.length} citas`;
             document.getElementById('resultados').style.display = 'block';
             renderizarCitas();
         }
         
-        // ============================================
-        // RENDERIZADO DE CITAS
-        // ============================================
-        
         function renderizarCitas() {
             const hoy = new Date().toISOString().split('T')[0];
             
-            const proximas = citas.filter(c => c.fecha >= hoy && c.estado !== 'cancelada')
+            const proximas = citasEncontradas.filter(c => c.fecha >= hoy && c.estado !== 'cancelada')
                 .sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.hora || '').localeCompare(b.hora || ''));
             
-            const historial = citas.filter(c => c.fecha < hoy || c.estado === 'cancelada')
+            const historial = citasEncontradas.filter(c => c.fecha < hoy || c.estado === 'cancelada')
                 .sort((a, b) => b.fecha.localeCompare(a.fecha));
             
-            console.log('📅 Próximas:', proximas.length, 'Historial:', historial.length);
+            console.log('Próximas:', proximas.length, 'Historial:', historial.length);
             
-            renderizarLista('lista-proximas', proximas, true);
-            renderizarLista('lista-historial', historial, false);
-        }
-        
-        function renderizarLista(containerId, citasLista, mostrarAcciones) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            if (citasLista.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">No hay citas</div>';
-                return;
+            // Renderizar próximas
+            const proximasDiv = document.getElementById('lista-proximas');
+            if (proximas.length === 0) {
+                proximasDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No hay citas próximas</div>';
+            } else {
+                proximasDiv.innerHTML = proximas.map(c => `
+                    <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 3px solid ${c.estado === 'pendiente' ? '#ff9800' : '#4caf50'};">
+                        <div><strong>${c.servicioNombre || 'Servicio'}</strong> - $${c.precio || 0}</div>
+                        <div>📅 ${c.fecha} - ${c.hora || '--:--'}</div>
+                        <div>💈 ${c.barberoNombre || 'Barbero'}</div>
+                        <div>📌 Estado: ${c.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Confirmada'}</div>
+                        ${c.estado !== 'cancelada' && c.fecha >= hoy ? `<button onclick="cancelarCita(${c.id})" style="margin-top: 10px; padding: 5px 10px; background: rgba(244,67,54,0.1); border: 1px solid #f44336; border-radius: 5px; color: #f44336; cursor: pointer;">Cancelar</button>` : ''}
+                    </div>
+                `).join('');
             }
             
-            container.innerHTML = citasLista.map(c => {
-                const puedeCancelar = mostrarAcciones && 
-                                      c.estado !== 'cancelada' && 
-                                      c.estado !== 'completada' &&
-                                      puedeCancelar(c.fecha, c.hora) &&
-                                      !haExpirado(c.fecha, c.hora);
-                
-                const enTolerancia = !haExpirado(c.fecha, c.hora) && estaEnTolerancia(c.fecha, c.hora);
-                const expirada = haExpirado(c.fecha, c.hora);
-                
-                let estadoTexto = '';
-                let estadoClass = '';
-                let mensajeExtra = '';
-                
-                switch(c.estado) {
-                    case 'pendiente': 
-                        estadoTexto = '⏳ Pendiente'; 
-                        estadoClass = 'estado-pendiente';
-                        if (expirada && !puedeCancelar) {
-                            mensajeExtra = '<div style="font-size: 0.7rem; color: #f44336; margin-top: 5px;">⚠️ Cita expirada. Ya no es válida.</div>';
-                        } else if (enTolerancia && !puedeCancelar) {
-                            mensajeExtra = '<div style="font-size: 0.7rem; color: #ff9800; margin-top: 5px;">⏰ Tienes 15 minutos de tolerancia. ¡Date prisa!</div>';
-                        }
-                        break;
-                    case 'confirmada': 
-                        estadoTexto = '✅ Confirmada'; 
-                        estadoClass = 'estado-confirmada';
-                        if (enTolerancia) {
-                            mensajeExtra = '<div style="font-size: 0.7rem; color: #ff9800; margin-top: 5px;">⏰ Tienes 15 minutos de tolerancia.</div>';
-                        }
-                        break;
-                    case 'completada': 
-                        estadoTexto = '🎉 Completada'; 
-                        estadoClass = 'estado-completada';
-                        break;
-                    case 'cancelada': 
-                        estadoTexto = '❌ Cancelada'; 
-                        estadoClass = 'estado-cancelada';
-                        break;
-                    default:
-                        estadoTexto = '📌 Pendiente';
-                        estadoClass = 'estado-pendiente';
-                }
-                
-                return `
-                    <div style="background: var(--bg-secondary); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 3px solid ${c.estado === 'pendiente' ? '#ff9800' : c.estado === 'confirmada' ? '#4caf50' : c.estado === 'cancelada' ? '#f44336' : '#2196f3'};">
-                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
-                            <div style="flex: 1;">
-                                <div><strong>${c.servicioNombre || 'Servicio'}</strong> - $${c.precio || 0}</div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary);">📅 ${c.fecha} - ${c.hora || '--:--'}</div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary);">💈 ${c.barberoNombre || 'Barbero'}</div>
-                                <div style="margin-top: 8px;">
-                                    <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: ${c.estado === 'pendiente' ? 'rgba(255,152,0,0.2)' : c.estado === 'confirmada' ? 'rgba(76,175,80,0.2)' : c.estado === 'cancelada' ? 'rgba(244,67,54,0.2)' : 'rgba(33,150,243,0.2)'}; color: ${c.estado === 'pendiente' ? '#ff9800' : c.estado === 'confirmada' ? '#4caf50' : c.estado === 'cancelada' ? '#f44336' : '#2196f3'};">
-                                        ${estadoTexto}
-                                    </span>
-                                </div>
-                                ${mensajeExtra}
-                            </div>
-                            ${puedeCancelar ? `
-                                <div style="margin-left: 15px;">
-                                    <button onclick="cancelarCita(${c.id})" style="padding: 8px 16px; background: rgba(244,67,54,0.1); border: 1px solid #f44336; border-radius: 8px; color: #f44336; cursor: pointer; transition: all 0.2s;">
-                                        ❌ Cancelar
-                                    </button>
-                                    <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 5px; text-align: center;">
-                                        (2 horas antes)
-                                    </div>
-                                </div>
-                            ` : (c.estado === 'pendiente' && !puedeCancelar && !expirada ? `
-                                <div style="margin-left: 15px;">
-                                    <div style="padding: 8px 16px; background: rgba(100,100,100,0.1); border-radius: 8px; color: var(--text-secondary); font-size: 0.8rem;">
-                                        ⏰ No se puede cancelar<br><small>(menos de 2 horas)</small>
-                                    </div>
-                                </div>
-                            ` : '')}
-                        </div>
+            // Renderizar historial
+            const historialDiv = document.getElementById('lista-historial');
+            if (historial.length === 0) {
+                historialDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No hay historial</div>';
+            } else {
+                historialDiv.innerHTML = historial.map(c => `
+                    <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 15px; margin-bottom: 10px; opacity: 0.7; border-left: 3px solid ${c.estado === 'cancelada' ? '#f44336' : '#2196f3'};">
+                        <div><strong>${c.servicioNombre || 'Servicio'}</strong> - $${c.precio || 0}</div>
+                        <div>📅 ${c.fecha} - ${c.hora || '--:--'}</div>
+                        <div>💈 ${c.barberoNombre || 'Barbero'}</div>
+                        <div>📌 Estado: ${c.estado === 'cancelada' ? '❌ Cancelada' : '✅ Completada'}</div>
                     </div>
-                `;
-            }).join('');
+                `).join('');
+            }
         }
-        
-        // ============================================
-        // CANCELAR CITA
-        // ============================================
         
         window.cancelarCita = async function(id) {
-            const cita = citas.find(c => c.id === id);
-            if (!cita) return;
+            if (!confirm('¿Cancelar esta cita?')) return;
             
-            // Validar si se puede cancelar (2 horas antes)
-            if (!puedeCancelar(cita.fecha, cita.hora)) {
-                alert('❌ No se puede cancelar la cita. Debes hacerlo con al menos 2 horas de anticipación.');
-                return;
+            const todasCitas = await window.storage.obtenerTodos('citas') || [];
+            const cita = todasCitas.find(c => c.id === id);
+            if (cita) {
+                cita.estado = 'cancelada';
+                await window.storage.guardar('citas', cita);
+                // Actualizar la lista local
+                const index = citasEncontradas.findIndex(c => c.id === id);
+                if (index !== -1) citasEncontradas[index].estado = 'cancelada';
+                renderizarCitas();
+                alert('✅ Cita cancelada');
             }
-            
-            if (!confirm('¿Cancelar esta cita? Esta acción no se puede deshacer.')) return;
-            
-            cita.estado = 'cancelada';
-            await window.storage.guardar('citas', cita);
-            
-            // Actualizar caché
-            if (window.app) {
-                const index = window.app.estado.cache.citas.findIndex(c => c.id === id);
-                if (index !== -1) window.app.estado.cache.citas[index] = cita;
-            }
-            
-            await buscarCitas();
-            alert('✅ Cita cancelada correctamente');
         };
         
-        // ============================================
-        // EVENTOS
-        // ============================================
-        
+        // Eventos
         document.getElementById('btn-buscar')?.addEventListener('click', buscarCitas);
         document.getElementById('telefono-busqueda')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') buscarCitas();
         });
         
         document.getElementById('tab-proximas')?.addEventListener('click', () => {
-            document.getElementById('tab-proximas').classList.add('active');
             document.getElementById('tab-proximas').style.borderBottom = '2px solid var(--color-primary)';
             document.getElementById('tab-proximas').style.color = 'var(--color-primary)';
-            document.getElementById('tab-historial').classList.remove('active');
             document.getElementById('tab-historial').style.borderBottom = 'none';
             document.getElementById('tab-historial').style.color = 'var(--text-secondary)';
             document.getElementById('lista-proximas').style.display = 'block';
@@ -256,10 +136,8 @@
         });
         
         document.getElementById('tab-historial')?.addEventListener('click', () => {
-            document.getElementById('tab-historial').classList.add('active');
             document.getElementById('tab-historial').style.borderBottom = '2px solid var(--color-primary)';
             document.getElementById('tab-historial').style.color = 'var(--color-primary)';
-            document.getElementById('tab-proximas').classList.remove('active');
             document.getElementById('tab-proximas').style.borderBottom = 'none';
             document.getElementById('tab-proximas').style.color = 'var(--text-secondary)';
             document.getElementById('lista-proximas').style.display = 'none';
