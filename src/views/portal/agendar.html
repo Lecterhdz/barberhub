@@ -276,9 +276,8 @@
                 return;
             }
             
-            // ✅ VALIDAR ANTES DE GUARDAR - Verificar si ya existe una cita
+            // ✅ VALIDAR horario ocupado
             citasExistentes = await window.storage.obtenerTodos('citas') || [];
-            
             const citaExistente = citasExistentes.find(c => 
                 c.barberoId === barberoSeleccionado.id && 
                 c.fecha === fechaSeleccionada && 
@@ -287,9 +286,44 @@
             );
             
             if (citaExistente) {
-                alert(`❌ El barbero ${barberoSeleccionado.nombre} ya tiene una cita agendada el ${fechaSeleccionada} a las ${horaSeleccionada}. Por favor selecciona otro horario.`);
+                alert(`❌ El barbero ${barberoSeleccionado.nombre} ya tiene una cita agendada el ${fechaSeleccionada} a las ${horaSeleccionada}.`);
                 await renderizarHoras();
                 return;
+            }
+            
+            // ✅ GUARDAR O ACTUALIZAR CLIENTE
+            let clientes = await window.storage.obtenerTodos('clientes') || [];
+            let clienteExistente = clientes.find(c => c.telefono === telefono);
+            
+            if (clienteExistente) {
+                // Actualizar datos del cliente existente
+                clienteExistente.nombre = nombre;
+                clienteExistente.email = email || clienteExistente.email;
+                clienteExistente.visitas = (clienteExistente.visitas || 0) + 1;
+                clienteExistente.ultimaVisita = fechaSeleccionada;
+                await window.storage.guardar('clientes', clienteExistente);
+                console.log('✅ Cliente actualizado:', clienteExistente.nombre);
+            } else {
+                // Crear nuevo cliente
+                const nuevoCliente = {
+                    id: Date.now(),
+                    nombre: nombre,
+                    telefono: telefono,
+                    email: email || '',
+                    visitas: 1,
+                    gastoTotal: servicioSeleccionado.precio,
+                    ultimaVisita: fechaSeleccionada,
+                    estado: 'activo',
+                    fechaRegistro: new Date().toISOString()
+                };
+                await window.storage.guardar('clientes', nuevoCliente);
+                clientes.push(nuevoCliente);
+                console.log('✅ Nuevo cliente creado:', nuevoCliente.nombre);
+            }
+            
+            // Actualizar caché de clientes
+            if (window.app) {
+                window.app.estado.cache.clientes = await window.storage.obtenerTodos('clientes');
             }
             
             // Procesar comprobante
@@ -324,7 +358,7 @@
             
             await window.storage.guardar('citas', nuevaCita);
             
-            // Actualizar caché
+            // Actualizar caché de citas
             if (window.app) {
                 const citasActuales = window.app.estado.cache.citas || [];
                 citasActuales.push(nuevaCita);
@@ -334,7 +368,7 @@
             // WhatsApp message
             const mensajeWhatsApp = `Hola%20BarberHub%2C%20quiero%20agendar%20una%20cita%3A%0A%0A👤%20Cliente%3A%20${encodeURIComponent(nombre)}%0A📞%20Teléfono%3A%20${telefono}%0A✂️%20Servicio%3A%20${servicioSeleccionado.nombre}%0A💈%20Barbero%3A%20${barberoSeleccionado.nombre}%0A📅%20Fecha%3A%20${fechaSeleccionada}%0A⏰%20Hora%3A%20${horaSeleccionada}%0A💰%20Total%3A%20%24${servicioSeleccionado.precio}%0A💵%20Depósito%3A%20%2450%20${comprobante ? '(Comprobante adjunto)' : '(Pendiente)'}`;
             
-            const whatsappLink = `https://wa.me/521234567890?text=${mensajeWhatsApp}`;
+            const whatsappLink = `https://wa.me/524641177116?text=${mensajeWhatsApp}`;
             
             alert('✅ Cita agendada correctamente');
             
